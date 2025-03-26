@@ -25,9 +25,9 @@ def create_app(config_name='development'):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
-    mail.init_app(app)  # Inicializa o Flask-Mail
+    mail.init_app(app)
     
-    # Registra os blueprints utilizando a função do pacote routes
+    # Registra os blueprints utilizando a função do módulo routes/__init__.py
     from .routes import register_blueprints
     register_blueprints(app)
     

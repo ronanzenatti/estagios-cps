@@ -222,4 +222,20 @@ def get_unidade_statistics(unidade_id):
         'cursos_ativos': Curso.query.filter_by(unidade_id=unidade_id, ativo=True).count(),
         'total_envolvidos': Envolvido.query.filter_by(unidade_id=unidade_id).count(),
         'orientadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Orientador').count(),
-        'facilitadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='
+        'facilitadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Facilitador').count()
+    }
+    
+    # Distribuição de envolvidos por curso
+    cursos_stats = []
+    cursos = Curso.query.filter_by(unidade_id=unidade_id).all()
+    for curso in cursos:
+        orientadores_count = len([o for o in curso.orientadores if o.ativo])
+        cursos_stats.append({
+            'nome': curso.nome,
+            'orientadores': orientadores_count,
+            'ativo': curso.ativo
+        })
+    
+    stats['cursos_stats'] = cursos_stats
+    
+    return stats
