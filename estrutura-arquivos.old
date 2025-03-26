@@ -1,0 +1,72 @@
+projeto_estagio_cps/
+│
+├── app/
+│   ├── __init__.py               # Inicialização da aplicação Flask
+│   ├── config.py                 # Configurações do aplicativo
+│   ├── models/                   # Modelos de dados (SQLAlchemy)
+│   │   ├── __init__.py
+│   │   ├── users.py              # Modelo de usuários (Diretores e Administradores)
+│   │   ├── unidades.py           # Modelo de unidades (Etec/Fatec)
+│   │   ├── cursos.py             # Modelo de cursos
+│   │   └── envolvidos.py         # Modelo de envolvidos com estágio
+│   │
+│   ├── controllers/              # Controladores (lógica de negócio)
+│   │   ├── __init__.py
+│   │   ├── auth.py               # Controlador de autenticação
+│   │   ├── admin.py              # Controlador para administradores
+│   │   ├── diretor.py            # Controlador para diretores
+│   │   ├── unidades.py           # Controlador de unidades
+│   │   ├── cursos.py             # Controlador de cursos
+│   │   └── envolvidos.py         # Controlador de envolvidos
+│   │
+│   ├── routes.py                 # Arquivo único de todas as rotas
+│   │
+│   ├── templates/                # Templates HTML
+│   │   ├── base.html             # Template base
+│   │   ├── auth/                 # Templates de autenticação
+│   │   │   ├── login.html
+│   │   │   └── reset_password.html
+│   │   ├── admin/                # Templates para administradores
+│   │   │   ├── dashboard.html
+│   │   │   ├── unidades/
+│   │   │   │   ├── list.html
+│   │   │   │   ├── create.html
+│   │   │   │   ├── edit.html
+│   │   │   │   └── view.html
+│   │   │   └── ...
+│   │   ├── diretor/              # Templates para diretores
+│   │   │   ├── dashboard.html
+│   │   │   ├── perfil.html
+│   │   │   └── ...
+│   │   ├── cursos/               # Templates de cursos
+│   │   │   ├── list.html
+│   │   │   ├── create.html
+│   │   │   ├── edit.html
+│   │   │   └── view.html
+│   │   └── envolvidos/           # Templates de envolvidos
+│   │       ├── list.html
+│   │       ├── create.html
+│   │       ├── edit.html
+│   │       └── view.html
+│   │
+│   ├── static/                   # Arquivos estáticos
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── img/
+│   │
+│   └── utils/                    # Utilitários
+│       ├── __init__.py
+│       ├── auth.py               # Funções de autenticação
+│       ├── validators.py         # Funções de validação
+│       ├── decorators.py         # Decoradores personalizados
+│       └── email.py              # Funções para e-mail
+│
+├── migrations/                   # Migrações de banco de dados
+│
+├── venv/                         # Ambiente virtual (não versionado)
+│
+├── .env                          # Variáveis de ambiente (não versionado)
+├── .gitignore                    # Arquivos ignorados pelo git
+├── requirements.txt              # Dependências do projeto
+├── run.py                        # Script para executar o aplicativo
+└── README.md                     # Documentação do projeto

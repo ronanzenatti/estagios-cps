@@ -12,3 +12,11 @@ DB_PASSWORD=sua_senha_aqui
 
 # Configuração da URI do SQLAlchemy
 DATABASE_URI=mysql+pymysql://root:sua_senha_aqui@localhost/estagio_cps
+
+# Configurações do Email
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=seu_email@gmail.com
+MAIL_PASSWORD=sua_senha_ou_app_password
+MAIL_DEFAULT_SENDER=noreply@estagio.cps.sp.gov.br

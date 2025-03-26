@@ -3,8 +3,9 @@ projeto_estagio_cps/
 ├── app/
 │   ├── __init__.py               # Inicialização da aplicação Flask
 │   ├── config.py                 # Configurações do aplicativo
+│   │
 │   ├── models/                   # Modelos de dados (SQLAlchemy)
-│   │   ├── __init__.py
+│   │   ├── __init__.py           # Inicializa SQLAlchemy e importa modelos
 │   │   ├── users.py              # Modelo de usuários (Diretores e Administradores)
 │   │   ├── unidades.py           # Modelo de unidades (Etec/Fatec)
 │   │   ├── cursos.py             # Modelo de cursos
@@ -19,35 +20,71 @@ projeto_estagio_cps/
 │   │   ├── cursos.py             # Controlador de cursos
 │   │   └── envolvidos.py         # Controlador de envolvidos
 │   │
-│   ├── routes.py                 # Arquivo único de todas as rotas
+│   ├── routes/                   # Organização modular de rotas com blueprints
+│   │   ├── __init__.py           # Define os blueprints e a função register_blueprints
+│   │   ├── main_routes.py        # Rotas principais e manipuladores de erro
+│   │   ├── auth_routes.py        # Rotas de autenticação
+│   │   ├── admin_routes.py       # Rotas para administradores
+│   │   ├── diretor_routes.py     # Rotas para diretores
+│   │   ├── unidades_routes.py    # Rotas para unidades
+│   │   ├── cursos_routes.py      # Rotas para cursos
+│   │   └── envolvidos_routes.py  # Rotas para envolvidos
 │   │
 │   ├── templates/                # Templates HTML
 │   │   ├── base.html             # Template base
+│   │   ├── index.html            # Página inicial
+│   │   ├── dashboard.html        # Dashboard genérico
+│   │   ├── perfil.html           # Perfil de usuário
+│   │   ├── sobre.html            # Página sobre
+│   │   ├── contato.html          # Página de contato
+│   │   ├── ajuda.html            # Página de ajuda
+│   │   ├── termos.html           # Termos de uso
+│   │   ├── privacidade.html      # Política de privacidade
+│   │   ├── errors/               # Templates de erro
+│   │   │   ├── 403.html          # Erro de acesso negado
+│   │   │   ├── 404.html          # Erro de página não encontrada
+│   │   │   └── 500.html          # Erro interno do servidor
+│   │   ├── email/                # Templates de email
+│   │   │   ├── reset_password.html
+│   │   │   ├── reset_password.txt
+│   │   │   ├── boas_vindas.html
+│   │   │   └── boas_vindas.txt
 │   │   ├── auth/                 # Templates de autenticação
 │   │   │   ├── login.html
-│   │   │   └── reset_password.html
+│   │   │   ├── recuperar_senha.html
+│   │   │   ├── nova_senha.html
+│   │   │   └── alterar_senha.html
 │   │   ├── admin/                # Templates para administradores
 │   │   │   ├── dashboard.html
-│   │   │   ├── unidades/
-│   │   │   │   ├── list.html
-│   │   │   │   ├── create.html
-│   │   │   │   ├── edit.html
-│   │   │   │   └── view.html
-│   │   │   └── ...
+│   │   │   └── usuarios/
+│   │   │       ├── listar.html
+│   │   │       └── novo.html
 │   │   ├── diretor/              # Templates para diretores
 │   │   │   ├── dashboard.html
 │   │   │   ├── perfil.html
-│   │   │   └── ...
+│   │   │   ├── alterar_senha.html
+│   │   │   └── reports/
+│   │   │       ├── envolvidos.html
+│   │   │       └── cursos.html
+│   │   ├── unidades/             # Templates de unidades
+│   │   │   ├── listar.html
+│   │   │   ├── listar_todos.html
+│   │   │   ├── novo.html
+│   │   │   ├── editar.html
+│   │   │   └── visualizar.html
 │   │   ├── cursos/               # Templates de cursos
-│   │   │   ├── list.html
-│   │   │   ├── create.html
-│   │   │   ├── edit.html
-│   │   │   └── view.html
+│   │   │   ├── listar.html
+│   │   │   ├── listar_todos.html
+│   │   │   ├── novo.html
+│   │   │   ├── editar.html
+│   │   │   └── visualizar.html
 │   │   └── envolvidos/           # Templates de envolvidos
-│   │       ├── list.html
-│   │       ├── create.html
-│   │       ├── edit.html
-│   │       └── view.html
+│   │       ├── listar.html
+│   │       ├── listar_todos.html
+│   │       ├── novo.html
+│   │       ├── editar.html
+│   │       ├── visualizar.html
+│   │       └── buscar_cpf.html
 │   │
 │   ├── static/                   # Arquivos estáticos
 │   │   ├── css/
@@ -66,7 +103,9 @@ projeto_estagio_cps/
 ├── venv/                         # Ambiente virtual (não versionado)
 │
 ├── .env                          # Variáveis de ambiente (não versionado)
+├── .env.sh                       # Script de ambiente para desenvolvimento
 ├── .gitignore                    # Arquivos ignorados pelo git
+├── .gitattributes                # Atributos do git
 ├── requirements.txt              # Dependências do projeto
 ├── run.py                        # Script para executar o aplicativo
 └── README.md                     # Documentação do projeto

@@ -19,7 +19,7 @@ def enviar_email_async(app, msg):
     """
     with app.app_context():
         try:
-            from app import mail
+            from app import mail  # Importação correta do objeto mail
             mail.send(msg)
         except Exception as e:
             current_app.logger.error(f"Erro ao enviar email: {str(e)}")
