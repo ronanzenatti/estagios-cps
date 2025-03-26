@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Gestão de Estágio - CPS{% endblock %}</title>
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    
+    {% block styles %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
+                <img src="{{ url_for('static', filename='img/logo-cps.png') }}" alt="Logo CPS" height="40" class="me-2">
+                <span>Estágio CPS</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="{{ url_for('main.dashboard') }}">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        
+                        {% if current_user.is_admin() %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="unidadesDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-building me-1"></i> Unidades
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{{ url_for('unidades.listar') }}">Listar Todas</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('unidades.novo') }}">Nova Unidade</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('unidades.listar_por_tipo', tipo='Fatec') }}">Listar Fatecs</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('unidades.listar_por_tipo', tipo='Etec') }}">Listar Etecs</a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                        
+                        {% if current_user.is_diretor() %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint.startswith('unidades') %}active{% endif %}" 
+                                   href="{{ url_for('unidades.visualizar', id=current_user.unidade_id) }}">
+                                    <i class="bi bi-building me-1"></i> Minha Unidade
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="cursosDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-mortarboard-fill me-1"></i> Cursos
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if current_user.is_admin() %}
+                                    <li><a class="dropdown-item" href="{{ url_for('cursos.listar') }}">Todos os Cursos</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                
+                                {% if current_user.is_diretor() %}
+                                    <li><a class="dropdown-item" href="{{ url_for('cursos.listar', unidade_id=current_user.unidade_id) }}">Listar Cursos</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('cursos.novo', unidade_id=current_user.unidade_id) }}">Novo Curso</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="envolvidosDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-people-fill me-1"></i> Envolvidos
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if current_user.is_admin() %}
+                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.listar') }}">Todos os Envolvidos</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                
+                                {% if current_user.is_diretor() %}
+                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.listar', unidade_id=current_user.unidade_id) }}">Listar Todos</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.listar_por_tipo', tipo='Orientador', unidade_id=current_user.unidade_id) }}">Listar Orientadores</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.listar_por_tipo', tipo='Facilitador', unidade_id=current_user.unidade_id) }}">Listar Facilitadores</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.novo', unidade_id=current_user.unidade_id) }}">Novo Envolvido</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.buscar_por_cpf') }}">Buscar por CPF</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        
+                        {% if current_user.is_admin() %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-gear-fill me-1"></i> Administração
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.listar_usuarios') }}">Usuários</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.novo_usuario') }}">Novo Administrador</a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle me-1"></i> {{ current_user.nome or current_user.email }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('main.perfil') }}">Meu Perfil</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.alterar_senha') }}">Alterar Senha</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Sair</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">
+                                <i class="bi bi-house-door me-1"></i> Início
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'main.sobre' %}active{% endif %}" href="{{ url_for('main.sobre') }}">
+                                <i class="bi bi-info-circle me-1"></i> Sobre
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'main.contato' %}active{% endif %}" href="{{ url_for('main.contato') }}">
+                                <i class="bi bi-envelope me-1"></i> Contato
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-light ms-2" href="{{ url_for('auth.login') }}">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Entrar
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="bi {% if category == 'success' %}bi-check-circle-fill{% elif category == 'danger' %}bi-exclamation-triangle-fill{% elif category == 'warning' %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    
+    <!-- Main Content -->
+    <main class="flex-shrink-0 py-4">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-dark text-white">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3">Sistema de Gestão de Estágio</h5>
+                    <p class="small">Centro Paula Souza - Unidade de Ensino Superior de Graduação (CESU)</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="mb-3">Links Úteis</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="{{ url_for('main.sobre') }}" class="text-white text-decoration-none">Sobre</a></li>
+                        <li><a href="{{ url_for('main.contato') }}" class="text-white text-decoration-none">Contato</a></li>
+                        <li><a href="{{ url_for('main.ajuda') }}" class="text-white text-decoration-none">Ajuda</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="mb-3">Documentos</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="{{ url_for('main.termos') }}" class="text-white text-decoration-none">Termos de Uso</a></li>
+                        <li><a href="{{ url_for('main.privacidade') }}" class="text-white text-decoration-none">Política de Privacidade</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="small">© 2025 Centro Paula Souza. Todos os direitos reservados.</div>
+                <div>
+                    <a href="https://www.cps.sp.gov.br" target="_blank" class="text-white me-2"><i class="bi bi-globe fs-5"></i></a>
+                    <a href="https://www.linkedin.com/school/fatecsp/" target="_blank" class="text-white me-2"><i class="bi bi-linkedin fs-5"></i></a>
+                    <a href="https://www.facebook.com/centropaulasouzasp" target="_blank" class="text-white"><i class="bi bi-facebook fs-5"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
