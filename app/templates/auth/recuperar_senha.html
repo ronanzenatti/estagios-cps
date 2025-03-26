@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Recuperar Senha - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .reset-card {
+        max-width: 450px;
+        margin: 0 auto;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .reset-header {
+        padding: 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+    }
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .reset-logo {
+        max-width: 100px;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card reset-card">
+                <div class="reset-header">
+                    <img src="{{ url_for('static', filename='img/logo-cps.png') }}" alt="Logo CPS" class="reset-logo">
+                    <h4 class="mb-0">Recuperar Senha</h4>
+                    <p class="text-muted small">Sistema de Gestão de Estágio - CPS</p>
+                </div>
+                <div class="card-body p-4">
+                    <p class="card-text text-center mb-4">
+                        Informe seu email institucional abaixo para receber instruções de como redefinir sua senha.
+                    </p>
+                    
+                    <form method="POST" action="{{ url_for('auth.recuperar_senha') }}">
+                        {{ csrf_token() }}
+                        
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email Institucional</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="seu.email@cps.sp.gov.br" required>
+                            </div>
+                            <div class="form-text">
+                                Exemplo: e046dir@cps.sp.gov.br (para diretores) ou admin@cps.sp.gov.br (para administradores)
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary py-2">
+                                <i class="bi bi-send me-2"></i>Enviar Instruções
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-white py-3">
+                    <div class="text-center">
+                        <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                            <i class="bi bi-arrow-left me-1"></i>Voltar para o login
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <small>Se você não receber o email de recuperação em alguns minutos, verifique sua pasta de spam ou entre em contato com o suporte.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Foca no campo de email quando a página carrega
+        document.getElementById('email').focus();
+    });
+</script>
+{% endblock %}
