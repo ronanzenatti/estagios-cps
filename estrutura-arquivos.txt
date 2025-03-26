@@ -35,11 +35,6 @@ projeto_estagio_cps/
 │   │   ├── index.html            # Página inicial
 │   │   ├── dashboard.html        # Dashboard genérico
 │   │   ├── perfil.html           # Perfil de usuário
-│   │   ├── sobre.html            # Página sobre
-│   │   ├── contato.html          # Página de contato
-│   │   ├── ajuda.html            # Página de ajuda
-│   │   ├── termos.html           # Termos de uso
-│   │   ├── privacidade.html      # Política de privacidade
 │   │   ├── errors/               # Templates de erro
 │   │   │   ├── 403.html          # Erro de acesso negado
 │   │   │   ├── 404.html          # Erro de página não encontrada
