@@ -40,9 +40,11 @@ def register_blueprints(app):
     app.register_blueprint(cursos_bp)
     app.register_blueprint(envolvidos_bp)
     
-    # Registra manipuladores de erro personalizados
-    app.register_error_handler(404, lambda e: main_bp.handle_error_404())
-    app.register_error_handler(403, lambda e: main_bp.handle_error_403())
-    app.register_error_handler(500, lambda e: main_bp.handle_error_500())
+    # Registra manipuladores de erro personalizados usando as funções definidas em main_routes.py
+    from .main_routes import handle_error_404, handle_error_403, handle_error_500
+    
+    app.register_error_handler(404, handle_error_404)
+    app.register_error_handler(403, handle_error_403)
+    app.register_error_handler(500, handle_error_500)
     
     return app

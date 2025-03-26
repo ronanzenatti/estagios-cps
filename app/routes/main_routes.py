@@ -120,3 +120,15 @@ def diretor_redirect():
         return redirect(url_for('diretor.dashboard'))
     flash('Você não tem permissão para acessar a área de diretor.', 'danger')
     return redirect(url_for('main.dashboard'))
+
+def handle_error_404():
+    """Manipulador personalizado para erro 404 (Página não encontrada)"""
+    return render_template('errors/404.html'), 404
+
+def handle_error_403():
+    """Manipulador personalizado para erro 403 (Acesso proibido)"""
+    return render_template('errors/403.html'), 403
+
+def handle_error_500():
+    """Manipulador personalizado para erro 500 (Erro interno do servidor)"""
+    return render_template('errors/500.html'), 500

@@ -10,7 +10,7 @@ from . import admin_bp
 from ..utils.decorators import admin_required
 from ..controllers import admin as admin_controller
 from ..controllers import auth as auth_controller
-from ..models import User, Unidade
+from ..models import User, Unidade, db
 
 @admin_bp.route('/dashboard')
 @login_required

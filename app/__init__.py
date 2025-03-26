@@ -24,8 +24,8 @@ def create_app(config_name='development'):
     login_manager.init_app(app)
     csrf.init_app(app)
     
-    # Registra o blueprint principal
-    from .routes import main
-    app.register_blueprint(main)
+    # Registra os blueprints utilizando a função do pacote routes
+    from .routes import register_blueprints
+    register_blueprints(app)
     
     return app

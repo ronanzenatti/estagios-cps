@@ -10,7 +10,7 @@ from datetime import datetime
 
 from . import auth_bp
 from ..controllers import auth as auth_controller
-from ..models import User
+from ..models import User, db
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
