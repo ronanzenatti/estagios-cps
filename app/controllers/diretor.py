@@ -75,19 +75,13 @@ def get_diretor_statistics(unidade_id):
     Returns:
         dict: Dicionário com as estatísticas
     """
-    from ..models import Curso, Envolvido, AtividadeEstagio
+    from ..models import Curso, Envolvido
     
     stats = {
         'total_cursos': Curso.query.filter_by(unidade_id=unidade_id).count(),
         'total_envolvidos': Envolvido.query.filter_by(unidade_id=unidade_id).count(),
         'total_orientadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Orientador').count(),
-        'total_facilitadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Facilitador').count(),
-        'atividades': {
-            'pendentes': AtividadeEstagio.query.filter_by(unidade_id=unidade_id, status='Pendente').count(),
-            'em_andamento': AtividadeEstagio.query.filter_by(unidade_id=unidade_id, status='Em Andamento').count(),
-            'concluidas': AtividadeEstagio.query.filter_by(unidade_id=unidade_id, status='Concluída').count(),
-            'canceladas': AtividadeEstagio.query.filter_by(unidade_id=unidade_id, status='Cancelada').count()
-        }
+        'total_facilitadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Facilitador').count()
     }
     
     # Envolvidos por curso (apenas para orientadores)

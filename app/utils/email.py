@@ -121,30 +121,3 @@ def enviar_email_boas_vindas(user, senha_temporaria=None):
                                   user=user, 
                                   senha_temporaria=senha_temporaria)
     )
-
-
-def enviar_email_notificacao_atividade(envolvido, atividade):
-    """
-    Envia um email notificando um envolvido sobre uma nova atividade.
-    
-    Args:
-        envolvido (Envolvido): Objeto do envolvido
-        atividade (AtividadeEstagio): Objeto da atividade
-        
-    Returns:
-        bool: True se o email foi enviado com sucesso, False caso contrário
-    """
-    if not envolvido.email:
-        current_app.logger.warning(f"Não foi possível enviar email para {envolvido.nome} (ID: {envolvido.id}): Email não cadastrado")
-        return False
-    
-    return enviar_email(
-        assunto=f'[Estágio CPS] Nova Atividade: {atividade.descricao}',
-        destinatarios=[envolvido.email],
-        texto_corpo=render_template('email/nova_atividade.txt', 
-                                   envolvido=envolvido, 
-                                   atividade=atividade),
-        html_corpo=render_template('email/nova_atividade.html', 
-                                  envolvido=envolvido, 
-                                  atividade=atividade)
-    )
