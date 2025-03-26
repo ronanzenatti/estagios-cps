@@ -1,0 +1,27 @@
+# Framework Flask e extensões
+Flask==2.1.2
+Flask-SQLAlchemy==2.5.1
+Flask-Migrate==3.1.0
+Flask-Login==0.6.1
+Flask-WTF==1.0.1
+Flask-Mail==0.9.1
+email-validator==1.2.1
+
+# Banco de dados MySQL
+PyMySQL==1.0.2
+mysqlclient==2.1.0
+
+# Segurança e autenticação
+Werkzeug==2.1.2
+itsdangerous==2.1.2
+python-dotenv==0.20.0
+
+# Utilitários
+click==8.1.3
+Jinja2==3.1.2
+MarkupSafe==2.1.1
+python-dateutil==2.8.2
+six==1.16.0
+
+# Documentação e testes
+wtforms==3.0.1
