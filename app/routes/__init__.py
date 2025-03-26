@@ -24,13 +24,25 @@ from . import cursos_routes
 from . import envolvidos_routes
 from . import main_routes
 
-# Lista de blueprints para registrar na aplicação
-blueprints = [
-    auth_bp,
-    admin_bp,
-    diretor_bp,
-    unidades_bp,
-    cursos_bp,
-    envolvidos_bp,
-    main_bp,
-]
+# Registra os blueprints na aplicação
+def register_blueprints(app):
+    """
+    Registra todos os blueprints na aplicação Flask.
+    
+    Args:
+        app: Aplicação Flask
+    """
+    app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(diretor_bp)
+    app.register_blueprint(unidades_bp)
+    app.register_blueprint(cursos_bp)
+    app.register_blueprint(envolvidos_bp)
+    
+    # Registra manipuladores de erro personalizados
+    app.register_error_handler(404, lambda e: main_bp.handle_error_404())
+    app.register_error_handler(403, lambda e: main_bp.handle_error_403())
+    app.register_error_handler(500, lambda e: main_bp.handle_error_500())
+    
+    return app
