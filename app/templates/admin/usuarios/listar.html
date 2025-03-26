@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Usuários - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .user-role {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .role-admin {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .role-diretor {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .user-actions {
+        white-space: nowrap;
+    }
+    .user-card {
+        transition: all 0.2s;
+    }
+    .user-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+    }
+    .empty-state {
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Gerenciar Usuários</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.novo_usuario') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Novo Administrador
+        </a>
+    </div>
+</div>
+
+<!-- Filtros e busca -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="btn-group me-2" role="group" aria-label="Filtrar por papel">
+            <a href="{{ url_for('admin.listar_usuarios') }}" class="btn btn-outline-secondary{% if not request.args.get('role') %} active{% endif %}">Todos</a>
+            <a href="{{ url_for('admin.listar_usuarios', role='admin') }}" class="btn btn-outline-primary{% if request.args.get('role') == 'admin' %} active{% endif %}">Administradores</a>
+            <a href="{{ url_for('admin.listar_usuarios', role='diretor') }}" class="btn btn-outline-success{% if request.args.get('role') == 'diretor' %} active{% endif %}">Diretores</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <form method="GET" action="{{ url_for('admin.listar_usuarios') }}">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Buscar por email ou nome" 
+                       name="q" value="{{ request.args.get('q', '') }}">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de usuários -->
+{% if usuarios %}
+<div class="table-responsive d-none d-md-block">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Email</th>
+                <th>Nome</th>
+                <th>Papel</th>
+                <th>Unidade</th>
+                <th>Último Login</th>
+                <th>Criado em</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.id }}</td>
+                <td>{{ usuario.email }}</td>
+                <td>{{ usuario.nome or '—' }}</td>
+                <td>
+                    {% if usuario.role == 'admin' %}
+                    <span class="user-role role-admin">Administrador</span>
+                    {% elif usuario.role == 'diretor' %}
+                    <span class="user-role role-diretor">Diretor</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if usuario.unidade %}
+                    <a href="{{ url_for('unidades.visualizar', id=usuario.unidade.id) }}">
+                        {{ usuario.unidade.tipo }} {{ usuario.unidade.numero }}
+                    </a>
+                    {% else %}
+                    —
+                    {% endif %}
+                </td>
+                <td>
+                    {% if usuario.last_login %}
+                    <small class="text-muted">{{ usuario.last_login.strftime('%d/%m/%Y %H:%M') }}</small>
+                    {% else %}
+                    <small class="text-muted">Nunca</small>
+                    {% endif %}
+                </td>
+                <td>
+                    <small class="text-muted">{{ usuario.created_at.strftime('%d/%m/%Y') }}</small>
+                </td>
+                <td class="text-end user-actions">
+                    <form method="POST" action="{{ url_for('admin.resetar_senha_usuario', id=usuario.id) }}" 
+                          class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha deste usuário?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Resetar Senha">
+                            <i class="bi bi-key"></i>
+                        </button>
+                    </form>
+                    
+                    {% if usuario.id != current_user.id %}
+                    <form method="POST" action="{{ url_for('admin.excluir_usuario', id=usuario.id) }}" 
+                          class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir Usuário">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Visão em cards para dispositivos móveis -->
+<div class="d-md-none">
+    <div class="row g-3">
+        {% for usuario in usuarios %}
+        <div class="col-12">
+            <div class="card user-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">
+                            {{ usuario.nome or usuario.email }}
+                        </h5>
+                        <div>
+                            {% if usuario.role == 'admin' %}
+                            <span class="user-role role-admin">Admin</span>
+                            {% elif usuario.role == 'diretor' %}
+                            <span class="user-role role-diretor">Diretor</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <p class="card-text">
+                        <i class="bi bi-envelope me-1 text-muted"></i> {{ usuario.email }}
+                    </p>
+                    
+                    {% if usuario.unidade %}
+                    <p class="card-text">
+                        <i class="bi bi-building me-1 text-muted"></i> 
+                        <a href="{{ url_for('unidades.visualizar', id=usuario.unidade.id) }}">
+                            {{ usuario.unidade.tipo }} {{ usuario.unidade.numero }}
+                        </a>
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <small class="text-muted">
+                            {% if usuario.last_login %}
+                            Último acesso: {{ usuario.last_login.strftime('%d/%m/%Y %H:%M') }}
+                            {% else %}
+                            Nunca acessou
+                            {% endif %}
+                        </small>
+                        
+                        <div>
+                            <form method="POST" action="{{ url_for('admin.resetar_senha_usuario', id=usuario.id) }}" 
+                                class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha deste usuário?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Resetar Senha">
+                                    <i class="bi bi-key"></i> Resetar Senha
+                                </button>
+                            </form>
+                            
+                            {% if usuario.id != current_user.id %}
+                            <form method="POST" action="{{ url_for('admin.excluir_usuario', id=usuario.id) }}" 
+                                class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir Usuário">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<!-- Estado vazio -->
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-people"></i>
+    </div>
+    <h4>Nenhum usuário encontrado</h4>
+    <p class="text-muted">
+        {% if request.args.get('q') %}
+        Não encontramos usuários correspondentes à sua busca "{{ request.args.get('q') }}".
+        {% else %}
+        Não há usuários cadastrados no sistema.
+        {% endif %}
+    </p>
+    <a href="{{ url_for('admin.novo_usuario') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus-fill me-1"></i> Adicionar Usuário
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adiciona confirmação para exclusão de usuários
+        const deleteButtons = document.querySelectorAll('.btn-outline-danger');
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                const confirmDelete = confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');
+                if (!confirmDelete) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
