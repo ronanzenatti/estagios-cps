@@ -14,8 +14,8 @@ class Envolvido(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     cpf = db.Column(db.String(14), nullable=False, unique=True)
-    cargo = db.Column(db.String(100), nullable=False)
-    tipo = db.Column(db.String(12), nullable=False)  # 'Facilitador' ou 'Orientador'
+    cargo = db.Column(db.String(100), nullable=True)
+    tipo = db.Column(db.String(12), nullable=True)  # 'Facilitador' ou 'Orientador'
     telefone = db.Column(db.String(20), nullable=True)
     email = db.Column(db.String(100), nullable=True)
     ativo = db.Column(db.Boolean, default=True)
