@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Alterar Senha - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .password-card {
+        max-width: 550px;
+        margin: 0 auto;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .password-header {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+    }
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .password-criteria {
+        font-size: 0.85rem;
+    }
+    .password-criteria li {
+        margin-bottom: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Alterar Senha</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('diretor.perfil') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para Perfil
+        </a>
+    </div>
+</div>
+
+<div class="password-card mb-4">
+    <div class="password-header">
+        <h4 class="mb-0">
+            <i class="bi bi-shield-lock me-2"></i>Alterar Senha
+        </h4>
+        <p class="text-muted mb-0">Atualize sua senha para manter sua conta segura</p>
+    </div>
+    <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('diretor.alterar_senha') }}" id="password-form">
+            {{ csrf_token() }}
+            
+            <div class="mb-3">
+                <label for="senha_atual" class="form-label">Senha Atual</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                    <input type="password" class="form-control" id="senha_atual" name="senha_atual" 
+                           placeholder="Digite sua senha atual" required>
+                    <button class="btn btn-outline-secondary" type="button" id="toggle-current">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <div class="mb-3">
+                <label for="nova_senha" class="form-label">Nova Senha</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" class="form-control" id="nova_senha" name="nova_senha" 
+                           placeholder="Digite sua nova senha" required minlength="6">
+                    <button class="btn btn-outline-secondary" type="button" id="toggle-new">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="confirmar_senha" class="form-label">Confirme a Nova Senha</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" 
+                           placeholder="Confirme sua nova senha" required minlength="6">
+                    <button class="btn btn-outline-secondary" type="button" id="toggle-confirm">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <h6 class="card-title mb-2"><i class="bi bi-info-circle me-2"></i>Requisitos de Senha</h6>
+                            <ul class="password-criteria ps-3 mb-0">
+                                <li>Mínimo de 6 caracteres</li>
+                                <li>Recomendamos incluir letras maiúsculas e minúsculas</li>
+                                <li>Recomendamos incluir números e caracteres especiais</li>
+                                <li>Evite informações pessoais óbvias</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-center justify-content-center mt-3 mt-md-0">
+                    <div class="text-center">
+                        <i class="bi bi-shield-check text-success fs-1 mb-2"></i>
+                        <p class="mb-0 small">Manter sua senha segura protege seus dados</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('diretor.perfil') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary" id="submit-btn">
+                    <i class="bi bi-check-circle me-2"></i>Salvar Nova Senha
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="card-footer bg-white py-3">
+        <div class="alert alert-warning mb-0">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Aviso:</strong> Após alterar sua senha, você será desconectado do sistema e precisará fazer login novamente.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Foca no campo de senha atual quando a página carrega
+        document.getElementById('senha_atual').focus();
+        
+        // Função para mostrar/esconder senha
+        function togglePasswordVisibility(inputId, buttonId) {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            
+            button.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        }
+        
+        // Ativa a funcionalidade para todos os campos de senha
+        togglePasswordVisibility('senha_atual', 'toggle-current');
+        togglePasswordVisibility('nova_senha', 'toggle-new');
+        togglePasswordVisibility('confirmar_senha', 'toggle-confirm');
+        
+        // Validação para garantir que as senhas coincidem
+        const form = document.getElementById('password-form');
+        form.addEventListener('submit', function(e) {
+            const novaSenha = document.getElementById('nova_senha').value;
+            const confirmarSenha = document.getElementById('confirmar_senha').value;
+            
+            if (novaSenha !== confirmarSenha) {
+                e.preventDefault();
+                alert('As senhas não coincidem. Por favor, verifique.');
+            }
+        });
+    });
+</script>
+{% endblock %}

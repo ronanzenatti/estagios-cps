@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório de Envolvidos - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .card-header.report-header {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .report-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    .report-subtitle {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    .report-card {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    .envolvido-type {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .type-orientador {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-facilitador {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .envolvido-cpf {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+    }
+    .status-badge {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .status-active {
+        background-color: #28a745;
+    }
+    .status-inactive {
+        background-color: #dc3545;
+    }
+    .report-section {
+        margin-bottom: 2rem;
+    }
+    .report-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+    .report-footer {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+    }
+    .print-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    @media print {
+        .print-btn, .navbar, .footer {
+            display: none !important;
+        }
+        .container {
+            width: 100% !important;
+            max-width: none !important;
+        }
+        .report-card {
+            break-inside: avoid;
+            box-shadow: none;
+            border: 1px solid #dee2e6;
+        }
+        body {
+            padding-top: 0 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Relatório de Envolvidos</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Imprimir
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportToCSV()">
+                <i class="bi bi-file-earmark-excel me-1"></i> Exportar
+            </button>
+        </div>
+        <a href="{{ url_for('diretor.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Cabeçalho do Relatório -->
+<div class="card report-card">
+    <div class="card-header report-header py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="report-title mb-1">Relatório de Envolvidos com Estágio</h5>
+                <p class="report-subtitle mb-0">{{ unidade.tipo }} {{ unidade.numero }} - {{ unidade.nome }}</p>
+            </div>
+            <div class="text-end">
+                <p class="report-subtitle mb-0">Data do Relatório: {{ today }}</p>
+                <p class="report-subtitle mb-0">Diretor: {{ unidade.nome_diretor }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="card bg-light h-100">
+                    <div class="card-body text-center">
+                        <h1 class="display-4 fw-bold text-primary">{{ orientadores|length + facilitadores|length }}</h1>
+                        <p class="mb-0">Total de Envolvidos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="card bg-light h-100">
+                    <div class="card-body text-center">
+                        <h1 class="display-4 fw-bold text-info">{{ orientadores|length }}</h1>
+                        <p class="mb-0">Orientadores</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light h-100">
+                    <div class="card-body text-center">
+                        <h1 class="display-4 fw-bold text-success">{{ facilitadores|length }}</h1>
+                        <p class="mb-0">Facilitadores</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Seção dos Orientadores -->
+<div class="report-section">
+    <h3 class="report-section-title">
+        <i class="bi bi-person-workspace me-2"></i>Orientadores
+    </h3>
+    
+    {% if orientadores %}
+    <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Cargo</th>
+                    <th>Contato</th>
+                    <th>Cursos</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orientador in orientadores %}
+                <tr>
+                    <td>{{ orientador.nome }}</td>
+                    <td><span class="envolvido-cpf">{{ orientador.cpf }}</span></td>
+                    <td>{{ orientador.cargo }}</td>
+                    <td>
+                        {% if orientador.email %}
+                        <small><i class="bi bi-envelope me-1"></i> {{ orientador.email }}</small><br>
+                        {% endif %}
+                        {% if orientador.telefone %}
+                        <small><i class="bi bi-telephone me-1"></i> {{ orientador.telefone }}</small>
+                        {% endif %}
+                        {% if not orientador.email and not orientador.telefone %}
+                        <small class="text-muted">Não informado</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% for curso in orientador.cursos %}
+                        <span class="badge bg-light text-dark">{{ curso.nome }}</span>
+                        {% else %}
+                        <small class="text-muted">Nenhum curso associado</small>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if orientador.ativo %}
+                        <span class="status-badge status-active"></span> Ativo
+                        {% else %}
+                        <span class="status-badge status-inactive"></span> Inativo
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Não há orientadores cadastrados nesta unidade.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Seção dos Facilitadores -->
+<div class="report-section">
+    <h3 class="report-section-title">
+        <i class="bi bi-person-badge me-2"></i>Facilitadores
+    </h3>
+    
+    {% if facilitadores %}
+    <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Cargo</th>
+                    <th>Contato</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for facilitador in facilitadores %}
+                <tr>
+                    <td>{{ facilitador.nome }}</td>
+                    <td><span class="envolvido-cpf">{{ facilitador.cpf }}</span></td>
+                    <td>{{ facilitador.cargo }}</td>
+                    <td>
+                        {% if facilitador.email %}
+                        <small><i class="bi bi-envelope me-1"></i> {{ facilitador.email }}</small><br>
+                        {% endif %}
+                        {% if facilitador.telefone %}
+                        <small><i class="bi bi-telephone me-1"></i> {{ facilitador.telefone }}</small>
+                        {% endif %}
+                        {% if not facilitador.email and not facilitador.telefone %}
+                        <small class="text-muted">Não informado</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if facilitador.ativo %}
+                        <span class="status-badge status-active"></span> Ativo
+                        {% else %}
+                        <span class="status-badge status-inactive"></span> Inativo
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Não há facilitadores cadastrados nesta unidade.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Rodapé do Relatório -->
+<div class="report-footer">
+    <p>Este relatório foi gerado automaticamente pelo Sistema de Gestão de Estágio - CPS em {{ today }}</p>
+    <p>{{ unidade.tipo }} {{ unidade.numero }} - {{ unidade.nome }} | {{ unidade.cidade }}</p>
+</div>
+
+<!-- Botão de impressão fixo -->
+<button class="btn btn-primary rounded-circle print-btn" onclick="window.print()" title="Imprimir Relatório">
+    <i class="bi bi-printer"></i>
+</button>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function exportToCSV() {
+        // Função para exportar os dados das tabelas para CSV
+        function downloadCSV(filename, csv) {
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Função para converter tabela para CSV
+        function tableToCSV(tableId, title) {
+            const table = document.querySelector(tableId);
+            if (!table) return '';
+            
+            const rows = table.querySelectorAll('tr');
+            let csv = title + '\n';
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = [], cols = rows[i].querySelectorAll('td, th');
+                
+                for (let j = 0; j < cols.length; j++) {
+                    // Remove HTML e limpa o texto
+                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""');
+                    row.push('"' + data + '"');
+                }
+                
+                csv += row.join(',') + '\n';
+            }
+            
+            return csv;
+        }
+        
+        // Gerar CSV para orientadores e facilitadores
+        const orientadoresCSV = tableToCSV('table:nth-of-type(1)', 'ORIENTADORES');
+        const facilitadoresCSV = tableToCSV('table:nth-of-type(2)', 'FACILITADORES');
+        
+        // Combinar os dois CSVs
+        const csv = 'RELATÓRIO DE ENVOLVIDOS - {{ unidade.nome }}\n' +
+                   'Data: {{ today }}\n\n' +
+                   orientadoresCSV + '\n' + facilitadoresCSV;
+        
+        // Download do arquivo
+        downloadCSV('Relatorio_Envolvidos_{{ unidade.numero }}.csv', csv);
+    }
+</script>
+{% endblock %}

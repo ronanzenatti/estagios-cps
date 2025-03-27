@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .profile-card {
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .profile-header {
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .profile-image {
+        width: 120px;
+        height: 120px;
+        background-color: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #6c757d;
+        margin: 0 auto 1.5rem;
+    }
+    .profile-info {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .required-field:after {
+        content: " *";
+        color: #dc3545;
+    }
+    .card-footer {
+        background-color: #f8f9fa;
+    }
+    .unidade-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .type-fatec {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-etec {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Meu Perfil</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('diretor.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="profile-card mb-4">
+    <div class="profile-header text-center">
+        <div class="profile-image">
+            <i class="bi bi-person"></i>
+        </div>
+        <h4 class="mb-0">{{ user.nome }}</h4>
+        <p class="text-muted mb-0">Diretor</p>
+        <div class="mt-2">
+            <span class="unidade-badge {% if unidade.tipo == 'Fatec' %}type-fatec{% else %}type-etec{% endif %}">
+                {{ unidade.tipo }} {{ unidade.numero }}
+            </span>
+        </div>
+    </div>
+    
+    <div class="profile-info">
+        <h5 class="section-header mb-3"><i class="bi bi-person-badge me-2"></i> Informações Pessoais</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Nome Completo</div>
+                    <div>{{ user.nome }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Email Institucional</div>
+                    <div>{{ user.email }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="profile-info">
+        <h5 class="section-header mb-3"><i class="bi bi-building me-2"></i> Informações da Unidade</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="mb-3">
+                    <div class="info-label">Nome da Unidade</div>
+                    <div>{{ unidade.nome }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Cidade</div>
+                    <div>{{ unidade.cidade }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Telefone</div>
+                    <div>{{ unidade.telefone }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Email de Contato</div>
+                    <div>{{ unidade.email_diretor }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('diretor.perfil') }}" id="editar-perfil-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="card-body p-4">
+            <h5 class="mb-3">Atualizar Informações</h5>
+            <p class="text-muted mb-4">Você pode atualizar seu nome e o telefone da unidade.</p>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="nome" class="form-label required-field">Nome Completo</label>
+                    <input type="text" class="form-control" id="nome" name="nome" 
+                           value="{{ unidade.nome_diretor }}"
+                           placeholder="Seu nome completo" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="telefone" class="form-label required-field">Telefone da Unidade</label>
+                    <input type="tel" class="form-control" id="telefone" name="telefone" 
+                           value="{{ unidade.telefone }}"
+                           placeholder="(00) 00000-0000" required>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Para alterar sua senha, use a opção <a href="{{ url_for('diretor.alterar_senha') }}" class="alert-link">Alterar Senha</a>.
+            </div>
+        </div>
+        
+        <div class="card-footer p-3">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('diretor.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Ações Adicionais -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0"><i class="bi bi-gear me-2"></i> Ações Adicionais</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="d-grid">
+                    <a href="{{ url_for('diretor.alterar_senha') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-key me-2"></i> Alterar Senha
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-grid">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">
+                        <i class="bi bi-box-arrow-right me-2"></i> Sair do Sistema
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Formata o campo de telefone enquanto o usuário digita
+        const telefoneInput = document.getElementById('telefone');
+        telefoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length <= 10) {
+                // Telefone fixo
+                if (value.length > 2) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                }
+                if (value.length > 9) {
+                    value = `${value.substring(0, 9)}-${value.substring(9)}`;
+                }
+            } else {
+                // Celular
+                if (value.length > 2) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                }
+                if (value.length > 10) {
+                    value = `${value.substring(0, 10)}-${value.substring(10, 14)}`;
+                }
+            }
+            
+            e.target.value = value;
+        });
+    });
+</script
