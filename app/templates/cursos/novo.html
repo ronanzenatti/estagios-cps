@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Curso - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .form-card {
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .form-header {
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .form-instructions {
+        font-size: 0.9rem;
+        border-left: 3px solid #0d6efd;
+        padding-left: 1rem;
+        margin: 1.5rem 0;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .required-field:after {
+        content: " *";
+        color: #dc3545;
+    }
+    .card-footer {
+        background-color: #f8f9fa;
+    }
+    .unidade-info {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .unidade-nome {
+        font-weight: 600;
+        color: #495057;
+    }
+    .unidade-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .type-fatec {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-etec {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Novo Curso</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para lista
+        </a>
+    </div>
+</div>
+
+<div class="form-card mb-4">
+    <div class="form-header">
+        <h4 class="mb-0"><i class="bi bi-mortarboard-fill me-2"></i> Adicionar Curso</h4>
+        <p class="text-muted mb-0">Cadastre um novo curso para uma unidade Fatec ou Etec</p>
+    </div>
+    
+    <div class="card-body p-4">
+        <div class="form-instructions bg-light p-3">
+            <p class="mb-0">
+                <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+                Complete os campos obrigatórios (*). Após a criação do curso, orientadores poderão ser associados a ele.
+            </p>
+        </div>
+        
+        {% if unidade %}
+        <div class="unidade-info mt-4">
+            <div class="d-flex align-items-center mb-2">
+                <span class="unidade-badge {% if unidade.tipo == 'Fatec' %}type-fatec{% else %}type-etec{% endif %}">
+                    {{ unidade.tipo }} {{ unidade.numero }}
+                </span>
+            </div>
+            <p class="mb-0">
+                <strong>Unidade:</strong> <span class="unidade-nome">{{ unidade.nome }}</span>
+            </p>
+            <small class="text-muted">{{ unidade.cidade }}</small>
+        </div>
+        {% elif current_user.is_admin() %}
+        <div class="mb-4">
+            <label for="unidade_id" class="form-label required-field">Selecione a Unidade</label>
+            <select class="form-select" id="unidade_id" name="unidade_id" required>
+                <option value="" selected disabled>Selecione uma unidade</option>
+                {% for unidade in unidades %}
+                <option value="{{ unidade.id }}">{{ unidade.tipo }} {{ unidade.numero }} - {{ unidade.nome }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text">Selecione a unidade à qual o curso será vinculado.</div>
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('cursos.novo', unidade_id=unidade.id if unidade else None) }}" id="novo-curso-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            {% if current_user.is_admin() and not unidade %}
+            <input type="hidden" name="unidade_id" id="hidden_unidade_id">
+            {% endif %}
+            
+            <div class="mb-3">
+                <label for="nome" class="form-label required-field">Nome do Curso</label>
+                <input type="text" class="form-control" id="nome" name="nome" 
+                       placeholder="Nome completo do curso" required>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="codigo" class="form-label">Código do Curso</label>
+                    <input type="text" class="form-control" id="codigo" name="codigo" 
+                           placeholder="Ex: ADS, GPI, GTI">
+                    <div class="form-text">Código ou sigla do curso, se aplicável.</div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="descricao" class="form-label">Descrição</label>
+                <textarea class="form-control" id="descricao" name="descricao" 
+                          placeholder="Descrição ou informações adicionais sobre o curso" rows="3"></textarea>
+            </div>
+            
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" checked>
+                <label class="form-check-label" for="ativo">
+                    Ativo
+                </label>
+                <div class="form-text">Indica se o curso está disponível para associação com orientadores.</div>
+            </div>
+        </div>
+        
+        <div class="card-footer p-3">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Adicionar Curso
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Foca no campo de nome quando a página carrega
+        {% if unidade or not current_user.is_admin() %}
+        document.getElementById('nome').focus();
+        {% else %}
+        document.getElementById('unidade_id').focus();
+        {% endif %}
+        
+        // Para administradores: sincroniza os campos de unidade
+        {% if current_user.is_admin() and not unidade %}
+        const unidadeSelect = document.getElementById('unidade_id');
+        const hiddenUnidadeInput = document.getElementById('hidden_unidade_id');
+        
+        unidadeSelect.addEventListener('change', function() {
+            hiddenUnidadeInput.value = this.value;
+        });
+        {% endif %}
+        
+        // Validação do formulário antes do envio
+        const form = document.getElementById('novo-curso-form');
+        form.addEventListener('submit', function(e) {
+            // Verifica se a unidade foi selecionada (para administradores)
+            {% if current_user.is_admin() and not unidade %}
+            if (!hiddenUnidadeInput.value) {
+                e.preventDefault();
+                alert('Por favor, selecione uma unidade.');
+                return;
+            }
+            {% endif %}
+            
+            // Verifica se o nome foi preenchido
+            const nome = document.getElementById('nome').value.trim();
+            if (!nome) {
+                e.preventDefault();
+                alert('O nome do curso é obrigatório.');
+                document.getElementById('nome').focus();
+            }
+        });
+    });
+</script>
+{% endblock %}

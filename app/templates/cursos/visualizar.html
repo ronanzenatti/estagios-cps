@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}{{ curso.nome }} - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .curso-card {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .curso-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1.5rem;
+    }
+    .curso-codigo {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    .info-section {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .section-header {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+    .status-badge {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .status-active {
+        background-color: #28a745;
+    }
+    .status-inactive {
+        background-color: #dc3545;
+    }
+    .unidade-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .type-fatec {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-etec {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .orientador-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .orientador-item {
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        background-color: #f8f9fa;
+        transition: all 0.2s;
+    }
+    .orientador-item:hover {
+        background-color: #e9ecef;
+    }
+    .orientador-item-inactive {
+        opacity: 0.7;
+    }
+    .empty-list {
+        padding: 2rem;
+        text-align: center;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+    .empty-list-icon {
+        font-size: 2.5rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        {% if curso.codigo %}
+        <span class="curso-codigo">{{ curso.codigo }}</span> -
+        {% endif %}
+        {{ curso.nome }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('cursos.editar', id=curso.id) }}" class="btn btn-sm btn-outline-primary me-2">
+            <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="bi bi-trash me-1"></i> Excluir
+        </button>
+        <a href="{{ url_for('cursos.listar', unidade_id=curso.unidade_id) }}" class="btn btn-sm btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para lista
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Coluna principal com informações do curso -->
+    <div class="col-lg-8">
+        <div class="curso-card mb-4">
+            <div class="curso-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">Informações do Curso</h4>
+                    <p class="text-muted mb-0">Detalhes do curso e orientadores</p>
+                </div>
+                <div>
+                    {% if curso.ativo %}
+                    <span class="badge bg-success">Ativo</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inativo</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Nome</div>
+                            <div>{{ curso.nome }}</div>
+                        </div>
+                        {% if curso.codigo %}
+                        <div class="mb-3">
+                            <div class="info-label">Código</div>
+                            <div class="curso-codigo">{{ curso.codigo }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Status</div>
+                            <div>
+                                {% if curso.ativo %}
+                                <span class="status-badge status-active"></span> Ativo
+                                {% else %}
+                                <span class="status-badge status-inactive"></span> Inativo
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="info-label">Orientadores Associados</div>
+                            <div>{{ orientadores|length }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h5 class="section-header"><i class="bi bi-building me-2"></i> Unidade</h5>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="unidade-badge {% if curso.unidade.tipo == 'Fatec' %}type-fatec{% else %}type-etec{% endif %}">
+                                {{ curso.unidade.tipo }} {{ curso.unidade.numero }}
+                            </span>
+                        </div>
+                        <div class="mb-0">
+                            <a href="{{ url_for('unidades.visualizar', id=curso.unidade_id) }}" class="text-decoration-none">
+                                {{ curso.unidade.nome }}
+                            </a>
+                            <span class="badge bg-secondary ms-2">{{ curso.unidade.cidade }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if curso.descricao %}
+            <div class="info-section">
+                <h5 class="section-header"><i class="bi bi-info-circle me-2"></i> Descrição</h5>
+                <div class="row">
+                    <div class="col-md-12">
+                        <p class="mb-0">{{ curso.descricao }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center p-3">
+                <div class="text-muted small">
+                    <strong>Cadastrado em:</strong> {{ curso.created_at.strftime('%d/%m/%Y') }}
+                </div>
+                <div class="text-muted small">
+                    <strong>Última atualização:</strong> {{ curso.updated_at.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de Orientadores Associados -->
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="bi bi-people-fill me-2"></i> Orientadores Associados</h5>
+                <span class="badge bg-primary rounded-pill">{{ orientadores|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if orientadores %}
+                <div class="orientador-list">
+                    {% for orientador in orientadores %}
+                    <div class="orientador-item{% if not orientador.ativo %} orientador-item-inactive{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ orientador.nome }}</h6>
+                                <small class="text-muted">
+                                    {{ orientador.cargo }}
+                                    {% if not orientador.ativo %}
+                                    <span class="badge bg-secondary ms-2">Inativo</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('envolvidos.visualizar', id=orientador.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i> Visualizar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-list">
+                    <div class="empty-list-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h5>Nenhum orientador associado</h5>
+                    <p class="text-muted">Este curso ainda não possui orientadores associados.</p>
+                    <p class="text-muted small">Orientadores podem ser adicionados na seção de gerenciamento de envolvidos.</p>
+                    <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id, tipo='Orientador') }}" class="btn btn-primary">
+                        <i class="bi bi-person-plus-fill me-1"></i> Adicionar Orientador
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coluna lateral com ações e informações adicionais -->
+    <div class="col-lg-4">
+        <!-- Ações rápidas -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-lightning-charge me-2"></i> Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('cursos.editar', id=curso.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i> Editar Informações
+                    </a>
+                    
+                    <form method="POST" action="{{ url_for('cursos.toggle_status', id=curso.id) }}" class="d-grid">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {% if curso.ativo %}
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-toggle-off me-2"></i> Desativar Curso
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-outline-success">
+                            <i class="bi bi-toggle-on me-2"></i> Ativar Curso
+                        </button>
+                        {% endif %}
+                    </form>
+                    
+                    <a href="{{ url_for('envolvidos.listar', unidade_id=curso.unidade_id, tipo='Orientador') }}" class="btn btn-outline-info">
+                        <i class="bi bi-people me-2"></i> Ver Orientadores da Unidade
+                    </a>
+                    
+                    <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id, tipo='Orientador') }}" class="btn btn-outline-success">
+                        <i class="bi bi-person-plus me-2"></i> Adicionar Orientador
+                    </a>
+                    
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="bi bi-trash me-2"></i> Excluir Curso
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informações adicionais -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i> Informações Adicionais</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="info-label">Status</div>
+                    <div>
+                        {% if curso.ativo %}
+                        <span class="badge bg-success">Ativo</span> 
+                        <small class="text-muted">O curso pode receber novos orientadores</small>
+                        {% else %}
+                        <span class="badge bg-secondary">Inativo</span>
+                        <small class="text-muted">O curso não pode receber novos orientadores</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="info-label">Orientadores</div>
+                    <div>
+                        <strong>{{ orientadores|length }}</strong> orientador(es) associado(s)
+                        <div class="progress mt-1" style="height: 6px;">
+                            <div class="progress-bar bg-primary" role="progressbar" 
+                                 style="width: {{ (orientadores|selectattr('ativo')|list|length / orientadores|length * 100) if orientadores else 0 }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {{ orientadores|selectattr('ativo')|list|length }} ativo(s) / 
+                            {{ orientadores|rejectattr('ativo')|list|length }} inativo(s)
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="mb-0">
+                    <div class="info-label">Unidade</div>
+                    <div>
+                        <a href="{{ url_for('unidades.visualizar', id=curso.unidade_id) }}">
+                            {{ curso.unidade.tipo }} {{ curso.unidade.numero }} - {{ curso.unidade.nome }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Você tem certeza que deseja excluir o curso <strong>{{ curso.nome }}</strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                
+                {% if orientadores %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle-fill me-2"></i> 
+                    <strong>Atenção!</strong> Este curso possui {{ orientadores|length }} orientador(es) associado(s).
+                    A exclusão removerá estas associações.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('cursos.excluir', id=curso.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Excluir Curso</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adiciona confirmação para alteração de status
+        const toggleForm = document.querySelector('form[action*="toggle_status"]');
+        if (toggleForm) {
+            toggleForm.addEventListener('submit', function(e) {
+                const isActive = {{ 'true' if curso.ativo else 'false' }};
+                const confirmMessage = isActive 
+                    ? 'Tem certeza que deseja desativar este curso?' 
+                    : 'Tem certeza que deseja ativar este curso?';
+                
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Cursos - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .curso-card {
+        transition: all 0.2s;
+    }
+    .curso-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .curso-actions {
+        white-space: nowrap;
+    }
+    .curso-codigo {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+    }
+    .empty-state {
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+    .status-badge {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .status-active {
+        background-color: #28a745;
+    }
+    .status-inactive {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        {% if unidade %}
+            Cursos - {{ unidade.nome }}
+        {% else %}
+            Todos os Cursos
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if unidade %}
+            <a href="{{ url_for('cursos.novo', unidade_id=unidade.id) }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Novo Curso
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filtros e busca -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="btn-group me-2" role="group" aria-label="Filtrar por status">
+            <a href="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-secondary{% if not status_filter %} active{% endif %}">Todos</a>
+            <a href="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None, status='ativo') }}" class="btn btn-outline-success{% if status_filter == 'ativo' %} active{% endif %}">Ativos</a>
+            <a href="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None, status='inativo') }}" class="btn btn-outline-danger{% if status_filter == 'inativo' %} active{% endif %}">Inativos</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <form method="GET" action="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None) }}">
+            {% if unidade %}
+                <input type="hidden" name="unidade_id" value="{{ unidade.id }}">
+            {% endif %}
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Buscar por nome ou código" 
+                       name="q" value="{{ request.args.get('q', '') }}">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de cursos -->
+{% if cursos %}
+<div class="table-responsive d-none d-md-block">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Nome</th>
+                <th>Código</th>
+                <th>Orientadores</th>
+                <th>Descrição</th>
+                <th>Status</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for curso in cursos %}
+            <tr>
+                <td><strong>{{ curso.nome }}</strong></td>
+                <td>
+                    {% if curso.codigo %}
+                    <span class="curso-codigo">{{ curso.codigo }}</span>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>{{ curso.orientadores|length }}</td>
+                <td>
+                    {% if curso.descricao %}
+                    <small class="text-muted">{{ curso.descricao|truncate(50) }}</small>
+                    {% else %}
+                    <small class="text-muted">Sem descrição</small>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if curso.ativo %}
+                    <span class="status-badge status-active"></span> Ativo
+                    {% else %}
+                    <span class="status-badge status-inactive"></span> Inativo
+                    {% endif %}
+                </td>
+                <td class="text-end curso-actions">
+                    <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ url_for('cursos.editar', id=curso.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" 
+                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ curso.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    
+                    <!-- Modal de Confirmação de Exclusão -->
+                    <div class="modal fade" id="deleteModal{{ curso.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Você tem certeza que deseja excluir o curso <strong>{{ curso.nome }}</strong>?</p>
+                                    <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                    
+                                    {% if curso.orientadores %}
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-info-circle-fill me-2"></i> 
+                                        <strong>Atenção:</strong> Este curso possui {{ curso.orientadores|length }} orientador(es) associado(s).
+                                        A exclusão removerá estas associações.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <form method="POST" action="{{ url_for('cursos.excluir', id=curso.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-danger">Excluir Curso</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Visão em cards para dispositivos móveis -->
+<div class="d-md-none">
+    <div class="row g-3">
+        {% for curso in cursos %}
+        <div class="col-12">
+            <div class="card curso-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">{{ curso.nome }}</h5>
+                        {% if curso.ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inativo</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if curso.codigo %}
+                    <p class="card-text mb-1">
+                        <i class="bi bi-upc me-1 text-muted"></i> <span class="curso-codigo">{{ curso.codigo }}</span>
+                    </p>
+                    {% endif %}
+                    
+                    <p class="card-text mb-1">
+                        <i class="bi bi-people me-1 text-muted"></i> Orientadores: {{ curso.orientadores|length }}
+                    </p>
+                    
+                    {% if curso.descricao %}
+                    <p class="card-text mb-3">
+                        <i class="bi bi-info-circle me-1 text-muted"></i> {{ curso.descricao|truncate(100) }}
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-eye me-1"></i> Visualizar
+                        </a>
+                        
+                        <div>
+                            <a href="{{ url_for('cursos.editar', id=curso.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModalMobile{{ curso.id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Modal de Confirmação de Exclusão Mobile -->
+                        <div class="modal fade" id="deleteModalMobile{{ curso.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Você tem certeza que deseja excluir o curso <strong>{{ curso.nome }}</strong>?</p>
+                                        <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form method="POST" action="{{ url_for('cursos.excluir', id=curso.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-danger">Excluir Curso</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<!-- Estado vazio -->
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-mortarboard-fill"></i>
+    </div>
+    <h4>Nenhum curso encontrado</h4>
+    <p class="text-muted">
+        {% if request.args.get('q') %}
+        Não encontramos cursos correspondentes à sua busca "{{ request.args.get('q') }}".
+        {% elif status_filter %}
+        Não há cursos {{ status_filter }}s cadastrados.
+        {% else %}
+        Não há cursos cadastrados nesta unidade.
+        {% endif %}
+    </p>
+    {% if unidade %}
+    <a href="{{ url_for('cursos.novo', unidade_id=unidade.id) }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Adicionar Curso
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adiciona funcionalidade de ordenação à tabela
+        const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+        
+        const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
+            v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+        )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+        
+        document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+            const table = th.closest('table');
+            const tbody = table.querySelector('tbody');
+            Array.from(tbody.querySelectorAll('tr'))
+                .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+                .forEach(tr => tbody.appendChild(tr) );
+        })));
+    });
+</script>
+{% endblock %}
