@@ -6,12 +6,12 @@ SECRET_KEY=sua_chave_secreta_aqui_substitua_por_algo_seguro
 
 # Configurações do Banco de Dados
 DB_HOST=localhost
-DB_NAME=estagio_cps
+DB_NAME=estagio
 DB_USER=root
-DB_PASSWORD=sua_senha_aqui
+DB_PASSWORD=123456
 
 # Configuração da URI do SQLAlchemy
-DATABASE_URI=mysql+pymysql://root:sua_senha_aqui@localhost/estagio_cps
+DATABASE_URI=mysql+pymysql://root:123456@localhost/estagio
 
 # Configurações do Email
 MAIL_SERVER=smtp.gmail.com
