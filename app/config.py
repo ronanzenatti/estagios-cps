@@ -27,7 +27,7 @@ class DevelopmentConfig(Config):
     """Configuração de desenvolvimento"""
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI') or \
-        'mysql+pymysql://root:password@localhost/estagio_cps'
+        'mysql+pymysql://root:123456@localhost:3307/estagio'
 
 
 class ProductionConfig(Config):
@@ -60,7 +60,7 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     """Configuração de testes"""
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:password@localhost/estagio_cps_test'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:123456@localhost:3307/estagio'
 
 
 # Dicionário de configurações disponíveis

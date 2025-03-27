@@ -7,23 +7,27 @@
     .login-card {
         max-width: 450px;
         margin: 0 auto;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         border-radius: 10px;
         overflow: hidden;
     }
+
     .login-header {
         padding: 20px;
         text-align: center;
         background-color: #f8f9fa;
         border-bottom: 1px solid #ddd;
     }
+
     .form-control:focus {
         border-color: #0d6efd;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
+
     .btn-login {
         font-weight: 600;
     }
+
     .login-logo {
         max-width: 120px;
         margin-bottom: 15px;
@@ -43,34 +47,34 @@
                 </div>
                 <div class="card-body p-4">
                     <h5 class="card-title text-center mb-4">Login</h5>
-                    
+
                     <form method="POST" action="{{ url_for('auth.login') }}">
-                        {{ csrf_token() }}
-                        
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                         <div class="mb-3">
                             <label for="email" class="form-label">Email Institucional</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                <input type="email" class="form-control" id="email" name="email" 
-                                       placeholder="seu.email@cps.sp.gov.br" required>
+                                <input type="email" class="form-control" id="email" name="email"
+                                    placeholder="seu.email@cps.sp.gov.br" required>
                             </div>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label for="password" class="form-label">Senha</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                                <input type="password" class="form-control" id="password" name="password" 
-                                       placeholder="Sua senha" required>
+                                <input type="password" class="form-control" id="password" name="password"
+                                    placeholder="Sua senha" required>
                             </div>
                         </div>
-                        
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-login py-2">
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
                             </button>
                         </div>
-                        
+
                         <div class="text-center mt-3">
                             <a href="{{ url_for('auth.recuperar_senha') }}" class="text-decoration-none">
                                 <i class="bi bi-question-circle me-1"></i>Esqueceu sua senha?
@@ -82,7 +86,7 @@
                     <p class="text-muted mb-0 small">Diretores e administradores autorizados</p>
                 </div>
             </div>
-            
+
             <div class="text-center mt-4">
                 <a href="{{ url_for('main.index') }}" class="text-decoration-none">
                     <i class="bi bi-arrow-left me-1"></i>Voltar para a página inicial
@@ -95,7 +99,7 @@
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Foca no campo de email quando a página carrega
         document.getElementById('email').focus();
     });
