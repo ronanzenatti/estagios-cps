@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Buscar Envolvido por CPF - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .search-card {
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .search-header {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+    }
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .result-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        transition: all 0.3s;
+    }
+    .result-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .envolvido-type {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .type-orientador {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-facilitador {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .status-badge {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .status-active {
+        background-color: #28a745;
+    }
+    .status-inactive {
+        background-color: #dc3545;
+    }
+    .cpf-example {
+        color: #6c757d;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Buscar Envolvido por CPF</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('envolvidos.listar', unidade_id=current_user.unidade_id if current_user.is_diretor() else None) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para lista
+        </a>
+    </div>
+</div>
+
+<div class="search-card mb-4">
+    <div class="search-header">
+        <h4 class="mb-0"><i class="bi bi-search me-2"></i> Busca por CPF</h4>
+        <p class="text-muted mb-0">Encontre um envolvido pelo número de CPF</p>
+    </div>
+    <div class="card-body p-4">
+        <p>
+            Digite o CPF do envolvido (orientador ou facilitador) que deseja encontrar. 
+            A busca funciona com ou sem pontuação.
+        </p>
+        
+        <form method="GET" action="{{ url_for('envolvidos.buscar_por_cpf') }}" id="buscar-cpf-form">
+            <div class="mb-3">
+                <label for="cpf" class="form-label">CPF</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                    <input type="text" class="form-control" id="cpf" name="cpf" 
+                           placeholder="000.000.000-00" 
+                           value="{{ cpf }}" required>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search me-1"></i> Buscar
+                    </button>
+                </div>
+                <div class="form-text">
+                    Exemplos: <span class="cpf-example">123.456.789-00</span> ou <span class="cpf-example">12345678900</span>
+                </div>
+            </div>
+        </form>
+        
+        {% if cpf and not envolvido %}
+        <div class="alert alert-warning mt-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Aviso:</strong> Nenhum envolvido encontrado com o CPF <strong>{{ cpf }}</strong>.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if envolvido %}
+<div class="result-card">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h4 class="mb-1">{{ envolvido.nome }}</h4>
+            <div>
+                {% if envolvido.tipo == 'Orientador' %}
+                <span class="envolvido-type type-orientador">Orientador</span>
+                {% else %}
+                <span class="envolvido-type type-facilitador">Facilitador</span>
+                {% endif %}
+                
+                {% if envolvido.ativo %}
+                <span class="ms-2"><span class="status-badge status-active"></span> Ativo</span>
+                {% else %}
+                <span class="ms-2"><span class="status-badge status-inactive"></span> Inativo</span>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-primary">
+                <i class="bi bi-eye me-1"></i> Visualizar Detalhes
+            </a>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <p><strong>CPF:</strong> {{ envolvido.cpf }}</p>
+            <p><strong>Cargo:</strong> {{ envolvido.cargo }}</p>
+            <p>
+                <strong>Unidade:</strong> 
+                <a href="{{ url_for('unidades.visualizar', id=envolvido.unidade_id) }}">
+                    {{ envolvido.unidade.tipo }} {{ envolvido.unidade.numero }} - {{ envolvido.unidade.nome }}
+                </a>
+            </p>
+        </div>
+        <div class="col-md-6">
+            <p>
+                <strong>Email:</strong> 
+                {% if envolvido.email %}
+                <a href="mailto:{{ envolvido.email }}">{{ envolvido.email }}</a>
+                {% else %}
+                <span class="text-muted">Não informado</span>
+                {% endif %}
+            </p>
+            <p>
+                <strong>Telefone:</strong> 
+                {% if envolvido.telefone %}
+                <a href="tel:{{ envolvido.telefone }}">{{ envolvido.telefone }}</a>
+                {% else %}
+                <span class="text-muted">Não informado</span>
+                {% endif %}
+            </p>
+            <p><strong>Cadastrado em:</strong> {{ envolvido.created_at.strftime('%d/%m/%Y') }}</p>
+        </div>
+    </div>
+    
+    {% if envolvido.is_orientador %}
+    <div class="mt-3">
+        <strong>Cursos Associados:</strong>
+        <ul class="mt-2">
+            {% for curso in envolvido.cursos %}
+            <li>
+                {{ curso.nome }}
+                {% if not curso.ativo %}
+                <span class="badge bg-secondary ms-1">Inativo</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <div class="d-flex justify-content-center mt-4">
+        <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <form method="POST" action="{{ url_for('envolvidos.toggle_status', id=envolvido.id) }}" class="me-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if envolvido.ativo %}
+            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Tem certeza que deseja desativar este envolvido?')">
+                <i class="bi bi-toggle-off me-1"></i> Desativar
+            </button>
+            {% else %}
+            <button type="submit" class="btn btn-outline-success" onclick="return confirm('Tem certeza que deseja ativar este envolvido?')">
+                <i class="bi bi-toggle-on me-1"></i> Ativar
+            </button>
+            {% endif %}
+        </form>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="bi bi-trash me-1"></i> Excluir
+        </button>
+    </div>
+    
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
+                    <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                    
+                    {% if envolvido.is_orientador and envolvido.cursos %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle-fill me-2"></i> 
+                        <strong>Atenção:</strong> Este orientador está associado a {{ envolvido.cursos|length }} curso(s). 
+                        A exclusão removerá estas associações.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Foca no campo de CPF quando a página carrega se estiver vazio
+        const cpfInput = document.getElementById('cpf');
+        if (!cpfInput.value) {
+            cpfInput.focus();
+        }
+        
+        // Formata o campo de CPF enquanto o usuário digita
+        cpfInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length > 3) {
+                value = value.substring(0, 3) + '.' + value.substring(3);
+            }
+            if (value.length > 7) {
+                value = value.substring(0, 7) + '.' + value.substring(7);
+            }
+            if (value.length > 11) {
+                value = value.substring(0, 11) + '-' + value.substring(11, 13);
+            }
+            
+            e.target.value = value;
+        });
+    });
+</script>
+{% endblock %}

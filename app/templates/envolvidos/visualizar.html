@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}{{ envolvido.nome }} - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .envolvido-card {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .envolvido-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1.5rem;
+    }
+    .envolvido-cpf {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    .envolvido-type {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .type-orientador {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-facilitador {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .info-section {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .section-header {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+    .cursos-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .curso-item {
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        background-color: #f8f9fa;
+        transition: all 0.2s;
+    }
+    .curso-item:hover {
+        background-color: #e9ecef;
+    }
+    .curso-item-inactive {
+        opacity: 0.7;
+    }
+    .curso-badge {
+        font-size: 0.75rem;
+    }
+    .status-badge {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .status-active {
+        background-color: #28a745;
+    }
+    .status-inactive {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        {{ envolvido.nome }}
+        <span class="text-muted h5">
+            {% if envolvido.is_orientador %}
+            Orientador
+            {% else %}
+            Facilitador
+            {% endif %}
+        </span>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-sm btn-outline-primary me-2">
+            <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="bi bi-trash me-1"></i> Excluir
+        </button>
+        <a href="{{ url_for('envolvidos.listar', unidade_id=envolvido.unidade_id) }}" class="btn btn-sm btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para lista
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Coluna principal com informações do envolvido -->
+    <div class="col-lg-8">
+        <div class="envolvido-card mb-4">
+            <div class="envolvido-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">Informações Pessoais</h4>
+                    <p class="text-muted mb-0">Detalhes do envolvido com estágio</p>
+                </div>
+                <div>
+                    {% if envolvido.tipo == 'Orientador' %}
+                    <span class="envolvido-type type-orientador">Orientador</span>
+                    {% else %}
+                    <span class="envolvido-type type-facilitador">Facilitador</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Nome</div>
+                            <div>{{ envolvido.nome }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="info-label">CPF</div>
+                            <div class="envolvido-cpf">{{ envolvido.cpf }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Cargo</div>
+                            <div>{{ envolvido.cargo }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="info-label">Status</div>
+                            <div>
+                                {% if envolvido.ativo %}
+                                <span class="status-badge status-active"></span> Ativo
+                                {% else %}
+                                <span class="status-badge status-inactive"></span> Inativo
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h5 class="section-header"><i class="bi bi-building me-2"></i> Unidade</h5>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mb-0">
+                            <a href="{{ url_for('unidades.visualizar', id=envolvido.unidade_id) }}" class="text-decoration-none">
+                                {{ envolvido.unidade.nome }}
+                            </a>
+                            <span class="badge bg-secondary ms-2">{{ envolvido.unidade.cidade }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h5 class="section-header"><i class="bi bi-telephone me-2"></i> Informações de Contato</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Email</div>
+                            <div>
+                                {% if envolvido.email %}
+                                <a href="mailto:{{ envolvido.email }}">{{ envolvido.email }}</a>
+                                {% else %}
+                                <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Telefone</div>
+                            <div>
+                                {% if envolvido.telefone %}
+                                <a href="tel:{{ envolvido.telefone }}">{{ envolvido.telefone }}</a>
+                                {% else %}
+                                <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center p-3">
+                <div class="text-muted small">
+                    <strong>Cadastrado em:</strong> {{ envolvido.created_at.strftime('%d/%m/%Y') }}
+                </div>
+                <div class="text-muted small">
+                    <strong>Última atualização:</strong> {{ envolvido.updated_at.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+        
+        {% if envolvido.is_orientador %}
+        <!-- Cursos associados (apenas para orientadores) -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-lightning-charge me-2"></i> Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i> Editar Informações
+                    </a>
+                    
+                    <form method="POST" action="{{ url_for('envolvidos.toggle_status', id=envolvido.id) }}" class="d-grid">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {% if envolvido.ativo %}
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-toggle-off me-2"></i> Desativar
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-outline-success">
+                            <i class="bi bi-toggle-on me-2"></i> Ativar
+                        </button>
+                        {% endif %}
+                    </form>
+                    
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="bi bi-trash me-2"></i> Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informações adicionais -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle me-2"></i> Informações Adicionais</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="info-label">Tipo</div>
+                    <div>
+                        {% if envolvido.is_orientador %}
+                        <span class="envolvido-type type-orientador">Orientador</span>
+                        {% else %}
+                        <span class="envolvido-type type-facilitador">Facilitador</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if envolvido.is_orientador %}
+                <div class="mb-3">
+                    <div class="info-label">Cursos Associados</div>
+                    <div><strong>{{ envolvido.cursos|length }}</strong> curso(s)</div>
+                </div>
+                {% endif %}
+                
+                <div class="mb-0">
+                    <div class="info-label">Unidade</div>
+                    <div>
+                        <a href="{{ url_for('unidades.visualizar', id=envolvido.unidade_id) }}">
+                            {{ envolvido.unidade.tipo }} {{ envolvido.unidade.numero }} - {{ envolvido.unidade.nome }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- QR Code para detalhes do envolvido -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-qr-code me-2"></i> QR Code</h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ url_for('envolvidos.visualizar', id=envolvido.id, _external=True) }}" 
+                     alt="QR Code para detalhes do envolvido"
+                     class="img-fluid border p-2 rounded">
+                <p class="text-muted small mt-2 mb-0">Escaneie para acessar os detalhes deste envolvido</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                
+                {% if envolvido.is_orientador and envolvido.cursos %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle-fill me-2"></i> 
+                    <strong>Atenção:</strong> Este orientador está associado a {{ envolvido.cursos|length }} curso(s). 
+                    A exclusão removerá estas associações.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adiciona confirmação para alteração de status
+        const toggleForm = document.querySelector('form[action*="toggle_status"]');
+        if (toggleForm) {
+            toggleForm.addEventListener('submit', function(e) {
+                const isActive = {{ 'true' if envolvido.ativo else 'false' }};
+                const confirmMessage = isActive 
+                    ? 'Tem certeza que deseja desativar este envolvido?' 
+                    : 'Tem certeza que deseja ativar este envolvido?';
+                
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="bi bi-mortarboard-fill me-2"></i> Cursos Associados</h5>
+                <span class="badge bg-primary">{{ envolvido.cursos|length }} curso(s)</span>
+            </div>
+            <div class="card-body">
+                {% if envolvido.cursos %}
+                <div class="cursos-list">
+                    {% for curso in envolvido.cursos %}
+                    <div class="curso-item{% if not curso.ativo %} curso-item-inactive{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ curso.nome }}</h6>
+                                <small class="text-muted">
+                                    {% if curso.codigo %}
+                                    Código: {{ curso.codigo }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                {% if curso.ativo %}
+                                <span class="badge bg-success curso-badge">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-secondary curso-badge">Inativo</span>
+                                {% endif %}
+                                <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Este orientador não possui cursos associados. Por favor, edite o cadastro e adicione pelo menos um curso.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Coluna lateral com ações e estatísticas -->
+    <div class="col-lg-4">
+        <!-- Ações rápidas -->
+        <div class="card mb-4">

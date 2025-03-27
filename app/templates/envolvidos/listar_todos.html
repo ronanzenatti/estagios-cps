@@ -1,0 +1,681 @@
+{% extends "base.html" %}
+
+{% block title %}Todos os Envolvidos - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .envolvido-card {
+        transition: all 0.2s;
+    }
+    .envolvido-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .envolvido-type {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .type-orientador {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-facilitador {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .unidade-badge {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+    }
+    .envolvido-actions {
+        white-space: nowrap;
+    }
+    .envolvido-cpf {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+    }
+    .empty-state {
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+    .filter-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .filter-group {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .filter-group:last-child {
+        border-bottom: none;
+    }
+    .unidade-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .unidade-list-item {
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .unidade-list-item:hover {
+        background-color: #f8f9fa;
+    }
+    .unidade-list-item.active {
+        background-color: #e9ecef;
+        font-weight: 500;
+    }
+    .status-badge {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .status-active {
+        background-color: #28a745;
+    }
+    .status-inactive {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Todos os Envolvidos CPS</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('envolvidos.novo') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Novo Envolvido
+        </a>
+    </div>
+</div>
+
+<!-- Contador e estatísticas -->
+<div class="alert bg-light mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-3">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                    <i class="bi bi-people fs-1 text-primary"></i>
+                </div>
+                <div>
+                    <span class="d-block text-muted">Total de Envolvidos</span>
+                    <span class="fs-4 fw-bold">{{ envolvidos|length }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                    <i class="bi bi-person-workspace fs-1 text-primary"></i>
+                </div>
+                <div>
+                    <span class="d-block text-muted">Orientadores</span>
+                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list|length }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                    <i class="bi bi-person-badge fs-1 text-success"></i>
+                </div>
+                <div>
+                    <span class="d-block text-muted">Facilitadores</span>
+                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list|length }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                    <i class="bi bi-building fs-1 text-info"></i>
+                </div>
+                <div>
+                    <span class="d-block text-muted">Unidades</span>
+                    <span class="fs-4 fw-bold">{{ unidades|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Coluna de filtros -->
+    <div class="col-lg-3">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i> Filtros</h5>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-title">Tipo</div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoTodos" value="todos" checked>
+                    <label class="form-check-label" for="tipoTodos">
+                        Todos
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoOrientador" value="Orientador">
+                    <label class="form-check-label" for="tipoOrientador">
+                        Orientadores
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoFacilitador" value="Facilitador">
+                    <label class="form-check-label" for="tipoFacilitador">
+                        Facilitadores
+                    </label>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-title">Status</div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="statusFilter" id="statusTodos" value="todos" checked>
+                    <label class="form-check-label" for="statusTodos">
+                        Todos
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="statusFilter" id="statusAtivo" value="ativo">
+                    <label class="form-check-label" for="statusAtivo">
+                        Ativos
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="statusFilter" id="statusInativo" value="inativo">
+                    <label class="form-check-label" for="statusInativo">
+                        Inativos
+                    </label>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <div class="filter-title">Unidades</div>
+                <input type="text" class="form-control form-control-sm mb-2" id="unidadeSearch" placeholder="Buscar unidade...">
+                <div class="unidade-list">
+                    <div class="unidade-list-item active" data-unidade="todas">
+                        Todas as unidades
+                    </div>
+                    {% for unidade in unidades %}
+                    <div class="unidade-list-item" data-unidade="{{ unidade.id }}">
+                        {{ unidade.tipo }} {{ unidade.numero }} - {{ unidade.nome }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <span id="resultCount" class="text-muted small">Exibindo {{ envolvidos|length }} envolvidos</span>
+                </div>
+                <div>
+                    <a href="{{ url_for('envolvidos.novo') }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-person-plus-fill me-1"></i> Novo Envolvido
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Variáveis para os elementos DOM
+        const viewGrid = document.getElementById('viewGrid');
+        const viewList = document.getElementById('viewList');
+        const gridView = document.getElementById('gridView');
+        const listView = document.getElementById('listView');
+        const emptyState = document.getElementById('emptyState');
+        const emptyStateMessage = document.getElementById('emptyStateMessage');
+        const resultCount = document.getElementById('resultCount');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const resetFilters = document.getElementById('resetFilters');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        const unidadeSearch = document.getElementById('unidadeSearch');
+        const unidadeListItems = document.querySelectorAll('.unidade-list-item');
+        const radioTipos = document.querySelectorAll('input[name="tipoFilter"]');
+        const radioStatus = document.querySelectorAll('input[name="statusFilter"]');
+        const envolvidoItems = document.querySelectorAll('.envolvido-item');
+        
+        // Alternar entre visualização em grade e lista
+        viewGrid.addEventListener('click', function() {
+            gridView.style.display = 'block';
+            listView.style.display = 'none';
+            viewGrid.classList.add('active');
+            viewList.classList.remove('active');
+        });
+        
+        viewList.addEventListener('click', function() {
+            gridView.style.display = 'none';
+            listView.style.display = 'block';
+            viewGrid.classList.remove('active');
+            viewList.classList.add('active');
+        });
+        
+        // Filtragem de envolvidos
+        function filterEnvolvidos() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedUnidade = document.querySelector('.unidade-list-item.active').getAttribute('data-unidade');
+            const selectedTipo = document.querySelector('input[name="tipoFilter"]:checked').value;
+            const selectedStatus = document.querySelector('input[name="statusFilter"]:checked').value;
+            
+            let visibleCount = 0;
+            
+            envolvidoItems.forEach(item => {
+                const tipo = item.getAttribute('data-tipo');
+                const status = item.getAttribute('data-status');
+                const unidade = item.getAttribute('data-unidade');
+                const nome = item.getAttribute('data-nome');
+                const cpf = item.getAttribute('data-cpf');
+                
+                const matchesTipo = selectedTipo === 'todos' || tipo === selectedTipo;
+                const matchesStatus = selectedStatus === 'todos' || status === selectedStatus;
+                const matchesUnidade = selectedUnidade === 'todas' || unidade === selectedUnidade;
+                const matchesSearch = nome.toLowerCase().includes(searchTerm) || 
+                                    cpf.toLowerCase().includes(searchTerm);
+                
+                if (matchesTipo && matchesStatus && matchesUnidade && matchesSearch) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Atualiza o contador de resultados
+            resultCount.textContent = `Exibindo ${visibleCount} de ${envolvidoItems.length} envolvidos`;
+            
+            // Exibe ou oculta o estado vazio
+            if (visibleCount === 0) {
+                emptyState.style.display = 'block';
+                gridView.style.display = 'none';
+                listView.style.display = 'none';
+                
+                // Personaliza a mensagem de estado vazio
+                let message = 'Não foram encontrados envolvidos com os filtros selecionados.';
+                
+                if (searchTerm) {
+                    message = `Não foram encontrados envolvidos correspondentes à busca "${searchTerm}".`;
+                } else {
+                    const filters = [];
+                    
+                    if (selectedTipo !== 'todos') {
+                        filters.push(`tipo ${selectedTipo}`);
+                    }
+                    
+                    if (selectedStatus !== 'todos') {
+                        filters.push(`status ${selectedStatus}`);
+                    }
+                    
+                    if (selectedUnidade !== 'todas') {
+                        const unidadeText = document.querySelector(`.unidade-list-item[data-unidade="${selectedUnidade}"]`).textContent.trim();
+                        filters.push(`unidade ${unidadeText}`);
+                    }
+                    
+                    if (filters.length > 0) {
+                        message = `Não foram encontrados envolvidos com ${filters.join(' e ')}.`;
+                    }
+                }
+                
+                emptyStateMessage.textContent = message;
+            } else {
+                emptyState.style.display = 'none';
+                if (viewGrid.classList.contains('active')) {
+                    gridView.style.display = 'block';
+                } else {
+                    listView.style.display = 'block';
+                }
+            }
+        }
+        
+        // Eventos para filtragem
+        searchButton.addEventListener('click', filterEnvolvidos);
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                filterEnvolvidos();
+            }
+        });
+        
+        // Filtro por tipo
+        radioTipos.forEach(radio => {
+            radio.addEventListener('change', filterEnvolvidos);
+        });
+        
+        // Filtro por status
+        radioStatus.forEach(radio => {
+            radio.addEventListener('change', filterEnvolvidos);
+        });
+        
+        // Filtro por unidade
+        unidadeListItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove a classe 'active' de todos os itens
+                unidadeListItems.forEach(i => i.classList.remove('active'));
+                
+                // Adiciona a classe 'active' ao item clicado
+                this.classList.add('active');
+                
+                // Filtra os envolvidos
+                filterEnvolvidos();
+            });
+        });
+        
+        // Busca de unidades
+        unidadeSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            unidadeListItems.forEach(item => {
+                const unidadeText = item.textContent.trim().toLowerCase();
+                
+                if (unidadeText === 'todas as unidades' || unidadeText.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Limpar filtros
+        function clearFilters() {
+            // Limpa a busca
+            searchInput.value = '';
+            
+            // Reseta o filtro de tipo
+            document.getElementById('tipoTodos').checked = true;
+            
+            // Reseta o filtro de status
+            document.getElementById('statusTodos').checked = true;
+            
+            // Reseta o filtro de unidade
+            unidadeListItems.forEach(i => i.classList.remove('active'));
+            document.querySelector('[data-unidade="todas"]').classList.add('active');
+            
+            // Limpa a busca de unidades
+            unidadeSearch.value = '';
+            unidadeListItems.forEach(item => {
+                item.style.display = '';
+            });
+            
+            // Atualiza a visualização
+            filterEnvolvidos();
+        }
+        
+        resetFilters.addEventListener('click', clearFilters);
+        clearFiltersBtn.addEventListener('click', clearFilters);
+        
+        // Adiciona funcionalidade de ordenação à tabela
+        const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+        
+        const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
+            v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+        )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+        
+        document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+            const table = th.closest('table');
+            const tbody = table.querySelector('tbody');
+            Array.from(tbody.querySelectorAll('tr'))
+                .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+                .forEach(tr => tbody.appendChild(tr) );
+        })));
+    });
+</script>
+{% endblock %}text-center">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="resetFilters">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coluna principal com a lista de envolvidos -->
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="bi bi-list me-2"></i> Lista de Envolvidos</h5>
+                <div class="d-flex">
+                    <div class="input-group input-group-sm me-2">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Buscar por nome ou CPF...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary active" id="viewGrid">
+                            <i class="bi bi-grid"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="viewList">
+                            <i class="bi bi-list-ul"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Visualização em Grade (padrão) -->
+                <div id="gridView">
+                    <div class="row g-3" id="envolvidosGrid">
+                        {% for envolvido in envolvidos %}
+                        <div class="col-md-6 col-lg-4 envolvido-item" 
+                             data-tipo="{{ envolvido.tipo }}" 
+                             data-status="{{ 'ativo' if envolvido.ativo else 'inativo' }}"
+                             data-unidade="{{ envolvido.unidade_id }}"
+                             data-nome="{{ envolvido.nome }}"
+                             data-cpf="{{ envolvido.cpf }}">
+                            <div class="card envolvido-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title mb-0">{{ envolvido.nome }}</h5>
+                                        {% if envolvido.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        {% if envolvido.tipo == 'Orientador' %}
+                                        <span class="envolvido-type type-orientador">Orientador</span>
+                                        {% else %}
+                                        <span class="envolvido-type type-facilitador">Facilitador</span>
+                                        {% endif %}
+                                        <span class="unidade-badge ms-1">{{ envolvido.unidade.tipo }} {{ envolvido.unidade.numero }}</span>
+                                    </div>
+                                    
+                                    <p class="card-text mb-1">
+                                        <i class="bi bi-person-badge me-1 text-muted"></i> CPF: <span class="envolvido-cpf">{{ envolvido.cpf }}</span>
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        <i class="bi bi-building me-1 text-muted"></i> {{ envolvido.unidade.nome }}
+                                    </p>
+                                    
+                                    {% if envolvido.email %}
+                                    <p class="card-text mb-1">
+                                        <i class="bi bi-envelope me-1 text-muted"></i> {{ envolvido.email }}
+                                    </p>
+                                    {% endif %}
+                                    
+                                    {% if envolvido.telefone %}
+                                    <p class="card-text mb-3">
+                                        <i class="bi bi-telephone me-1 text-muted"></i> {{ envolvido.telefone }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer bg-white border-top">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye me-1"></i> Visualizar
+                                        </a>
+                                        
+                                        <div>
+                                            <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ envolvido.id }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Modal de Confirmação de Exclusão -->
+                            <div class="modal fade" id="deleteModal{{ envolvido.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirmar Exclusão</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
+                                            <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                            
+                                            {% if envolvido.is_orientador and envolvido.cursos %}
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-info-circle-fill me-2"></i> 
+                                                <strong>Atenção:</strong> Este orientador está associado a {{ envolvido.cursos|length }} curso(s). 
+                                                A exclusão removerá estas associações.
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Visualização em Lista (alternativa) -->
+                <div id="listView" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Tipo</th>
+                                    <th>Unidade</th>
+                                    <th>Cargo</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="envolvidosTable">
+                                {% for envolvido in envolvidos %}
+                                <tr class="envolvido-item"
+                                    data-tipo="{{ envolvido.tipo }}" 
+                                    data-status="{{ 'ativo' if envolvido.ativo else 'inativo' }}"
+                                    data-unidade="{{ envolvido.unidade_id }}"
+                                    data-nome="{{ envolvido.nome }}"
+                                    data-cpf="{{ envolvido.cpf }}">
+                                    <td><strong>{{ envolvido.nome }}</strong></td>
+                                    <td><span class="envolvido-cpf">{{ envolvido.cpf }}</span></td>
+                                    <td>
+                                        {% if envolvido.tipo == 'Orientador' %}
+                                        <span class="envolvido-type type-orientador">Orientador</span>
+                                        {% else %}
+                                        <span class="envolvido-type type-facilitador">Facilitador</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="unidade-badge">{{ envolvido.unidade.tipo }} {{ envolvido.unidade.numero }}</span>
+                                        <small class="d-block">{{ envolvido.unidade.nome }}</small>
+                                    </td>
+                                    <td>{{ envolvido.cargo }}</td>
+                                    <td>
+                                        {% if envolvido.ativo %}
+                                        <span class="status-badge status-active"></span> Ativo
+                                        {% else %}
+                                        <span class="status-badge status-inactive"></span> Inativo
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" 
+                                                data-bs-toggle="modal" data-bs-target="#deleteModalList{{ envolvido.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        
+                                        <!-- Modal de Confirmação de Exclusão (Lista) -->
+                                        <div class="modal fade" id="deleteModalList{{ envolvido.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
+                                                        <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Estado vazio (quando filtro não retornar resultados) -->
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h4>Nenhum envolvido encontrado</h4>
+                    <p class="text-muted" id="emptyStateMessage">
+                        Não há envolvidos que correspondam aos critérios de busca selecionados.
+                    </p>
+                    <button type="button" class="btn btn-primary" id="clearFiltersBtn">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Filtros
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-white 

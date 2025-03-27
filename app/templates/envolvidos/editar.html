@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Editar {{ envolvido.nome }} - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .form-card {
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .form-header {
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .form-instructions {
+        font-size: 0.9rem;
+        border-left: 3px solid #0d6efd;
+        padding-left: 1rem;
+        margin: 1.5rem 0;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .required-field:after {
+        content: " *";
+        color: #dc3545;
+    }
+    .card-footer {
+        background-color: #f8f9fa;
+    }
+    .custom-control-label {
+        cursor: pointer;
+    }
+    .curso-checkbox-list {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+    }
+    .curso-item {
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s;
+    }
+    .curso-item:hover {
+        background-color: #f8f9fa;
+    }
+    .curso-item-inactive {
+        opacity: 0.7;
+    }
+    .tipo-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    .tipo-orientador {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .tipo-facilitador {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Editar Envolvido</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="bi bi-eye me-1"></i> Visualizar
+        </a>
+        <a href="{{ url_for('envolvidos.listar', unidade_id=envolvido.unidade_id) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para lista
+        </a>
+    </div>
+</div>
+
+<div class="form-card mb-4">
+    <div class="form-header">
+        <h4 class="mb-0"><i class="bi bi-person-gear me-2"></i> Editar Envolvido</h4>
+        <p class="text-muted mb-0">Atualize as informações de {{ envolvido.nome }}</p>
+    </div>
+    
+    <div class="card-body p-4">
+        <div class="form-instructions bg-light p-3">
+            <p class="mb-0">
+                <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+                Complete todos os campos obrigatórios (*). Para alterar o tipo do envolvido entre Orientador e Facilitador, 
+                use o seletor abaixo. Orientadores devem estar associados a pelo menos um curso.
+            </p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('envolvidos.editar', id=envolvido.id) }}" id="editar-envolvido-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="row mt-4">
+                <div class="col-md-8 mb-3">
+                    <label for="nome" class="form-label required-field">Nome Completo</label>
+                    <input type="text" class="form-control" id="nome" name="nome" 
+                           value="{{ envolvido.nome }}"
+                           placeholder="Nome completo do envolvido" required>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <label for="tipo" class="form-label required-field">Tipo</label>
+                    <select class="form-select" id="tipo" name="tipo" required>
+                        <option value="Orientador" {% if envolvido.tipo == 'Orientador' %}selected{% endif %}>Orientador</option>
+                        <option value="Facilitador" {% if envolvido.tipo == 'Facilitador' %}selected{% endif %}>Facilitador</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="cpf" class="form-label required-field">CPF</label>
+                    <input type="text" class="form-control" id="cpf" name="cpf" 
+                           value="{{ envolvido.cpf }}"
+                           placeholder="000.000.000-00" required>
+                </div>
+                
+                <div class="col-md-8 mb-3">
+                    <label for="cargo" class="form-label required-field">Cargo</label>
+                    <input type="text" class="form-control" id="cargo" name="cargo" 
+                           value="{{ envolvido.cargo }}"
+                           placeholder="Cargo ou função na instituição" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="telefone" class="form-label">Telefone</label>
+                    <input type="tel" class="form-control" id="telefone" name="telefone" 
+                           value="{{ envolvido.telefone or '' }}"
+                           placeholder="(00) 00000-0000">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           value="{{ envolvido.email or '' }}"
+                           placeholder="email@exemplo.com">
+                </div>
+            </div>
+            
+            <!-- Seção de Cursos (mostrada apenas para orientadores) -->
+            <div id="cursos-section" class="mt-4" {% if envolvido.tipo != 'Orientador' %}style="display: none;"{% endif %}>
+                <h5 class="mb-3">Cursos Associados</h5>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Selecione pelo menos um curso para este orientador.
+                </div>
+                
+                {% if cursos %}
+                <div class="curso-checkbox-list">
+                    {% for curso in cursos %}
+                    <div class="curso-item{% if not curso.ativo %} curso-item-inactive{% endif %}">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="cursos_ids" value="{{ curso.id }}" id="curso{{ curso.id }}"
+                                   {% if curso in envolvido.cursos %}checked{% endif %}
+                                   {% if not curso.ativo %}disabled title="Curso inativo"{% endif %}>
+                            <label class="form-check-label d-flex justify-content-between align-items-center" for="curso{{ curso.id }}">
+                                <div>
+                                    {{ curso.nome }}
+                                    {% if curso.codigo %}
+                                    <small class="text-muted ms-2">({{ curso.codigo }})</small>
+                                    {% endif %}
+                                </div>
+                                {% if not curso.ativo %}
+                                <span class="badge bg-secondary">Inativo</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Não há cursos cadastrados para esta unidade. Por favor, cadastre cursos primeiro.
+                </div>
+                {% endif %}
+            </div>
+            
+            <hr class="my-4">
+            
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="ativo" name="ativo" 
+                       {% if envolvido.ativo %}checked{% endif %}>
+                <label class="form-check-label" for="ativo">
+                    Ativo
+                </label>
+                <div class="form-text">Envolvidos inativos não aparecerão nas listagens padrão.</div>
+            </div>
+            
+            <div class="alert alert-warning mt-4">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Atenção:</strong> Ao alterar o tipo do envolvido de Orientador para Facilitador, 
+                todas as associações com cursos serão removidas.
+            </div>
+        </div>
+        
+        <div class="card-footer p-3">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Formata o campo de CPF enquanto o usuário digita
+        const cpfInput = document.getElementById('cpf');
+        cpfInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length > 3) {
+                value = value.substring(0, 3) + '.' + value.substring(3);
+            }
+            if (value.length > 7) {
+                value = value.substring(0, 7) + '.' + value.substring(7);
+            }
+            if (value.length > 11) {
+                value = value.substring(0, 11) + '-' + value.substring(11, 13);
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Formata o campo de telefone enquanto o usuário digita
+        const telefoneInput = document.getElementById('telefone');
+        telefoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length <= 10) {
+                // Telefone fixo
+                if (value.length > 2) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                }
+                if (value.length > 9) {
+                    value = `${value.substring(0, 9)}-${value.substring(9)}`;
+                }
+            } else {
+                // Celular
+                if (value.length > 2) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                }
+                if (value.length > 10) {
+                    value = `${value.substring(0, 10)}-${value.substring(10, 14)}`;
+                }
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Mostra/esconde a seção de cursos dependendo do tipo selecionado
+        const tipoSelect = document.getElementById('tipo');
+        const cursosSection = document.getElementById('cursos-section');
+        
+        tipoSelect.addEventListener('change', function() {
+            if (this.value === 'Orientador') {
+                cursosSection.style.display = 'block';
+            } else {
+                cursosSection.style.display = 'none';
+                // Desmarca todas as caixas de seleção de cursos
+                document.querySelectorAll('input[name="cursos_ids"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            }
+        });
+        
+        // Validação do formulário antes do envio
+        const form = document.getElementById('editar-envolvido-form');
+        form.addEventListener('submit', function(e) {
+            // Verifica se o tipo é Orientador e se pelo menos um curso está selecionado
+            if (tipoSelect.value === 'Orientador') {
+                const hasCursoChecked = Array.from(document.querySelectorAll('input[name="cursos_ids"]:not([disabled])')).some(checkbox => checkbox.checked);
+                
+                if (!hasCursoChecked) {
+                    e.preventDefault();
+                    alert('Orientadores devem estar associados a pelo menos um curso ativo.');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Envolvidos - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .envolvido-card {
+        transition: all 0.2s;
+    }
+    .envolvido-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .envolvido-type {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .type-orientador {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-facilitador {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .envolvido-actions {
+        white-space: nowrap;
+    }
+    .envolvido-cpf {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+    }
+    .empty-state {
+        padding: 3rem 1.5rem;
+        text-align: center;
+    }
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+    .status-badge {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    .status-active {
+        background-color: #28a745;
+    }
+    .status-inactive {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        {% if tipo_filtro %}
+            {{ tipo_filtro }}es
+        {% else %}
+            Envolvidos
+        {% endif %}
+        {% if unidade %}
+            - {{ unidade.nome }}
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id if unidade else None) }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Novo Envolvido
+        </a>
+    </div>
+</div>
+
+<!-- Filtros e busca -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="btn-group me-2" role="group" aria-label="Filtrar por tipo">
+            <a href="{{ url_for('envolvidos.listar', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-secondary{% if not tipo_filtro %} active{% endif %}">Todos</a>
+            <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Orientador', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-primary{% if tipo_filtro == 'Orientador' %} active{% endif %}">Orientadores</a>
+            <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Facilitador', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-success{% if tipo_filtro == 'Facilitador' %} active{% endif %}">Facilitadores</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <form method="GET" action="{{ url_for('envolvidos.listar', unidade_id=unidade.id if unidade else None) }}">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Buscar por nome ou CPF" 
+                       name="q" value="{{ request.args.get('q', '') }}">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de envolvidos -->
+{% if envolvidos %}
+<div class="table-responsive d-none d-md-block">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Tipo</th>
+                <th>Cargo</th>
+                <th>Contato</th>
+                <th>Status</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for envolvido in envolvidos %}
+            <tr>
+                <td><strong>{{ envolvido.nome }}</strong></td>
+                <td><span class="envolvido-cpf">{{ envolvido.cpf }}</span></td>
+                <td>
+                    {% if envolvido.tipo == 'Orientador' %}
+                    <span class="envolvido-type type-orientador">Orientador</span>
+                    {% else %}
+                    <span class="envolvido-type type-facilitador">Facilitador</span>
+                    {% endif %}
+                </td>
+                <td>{{ envolvido.cargo }}</td>
+                <td>
+                    {% if envolvido.email %}
+                    <small><i class="bi bi-envelope me-1"></i> {{ envolvido.email }}</small><br>
+                    {% endif %}
+                    {% if envolvido.telefone %}
+                    <small><i class="bi bi-telephone me-1"></i> {{ envolvido.telefone }}</small>
+                    {% endif %}
+                    {% if not envolvido.email and not envolvido.telefone %}
+                    <small class="text-muted">Não informado</small>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if envolvido.ativo %}
+                    <span class="status-badge status-active"></span> Ativo
+                    {% else %}
+                    <span class="status-badge status-inactive"></span> Inativo
+                    {% endif %}
+                </td>
+                <td class="text-end envolvido-actions">
+                    <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" 
+                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ envolvido.id }}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    
+                    <!-- Modal de Confirmação de Exclusão -->
+                    <div class="modal fade" id="deleteModal{{ envolvido.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
+                                    <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Visão em cards para dispositivos móveis -->
+<div class="d-md-none">
+    <div class="row g-3">
+        {% for envolvido in envolvidos %}
+        <div class="col-12">
+            <div class="card envolvido-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0">{{ envolvido.nome }}</h5>
+                        {% if envolvido.ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inativo</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-2">
+                        {% if envolvido.tipo == 'Orientador' %}
+                        <span class="envolvido-type type-orientador">Orientador</span>
+                        {% else %}
+                        <span class="envolvido-type type-facilitador">Facilitador</span>
+                        {% endif %}
+                        <span class="ms-2">{{ envolvido.cargo }}</span>
+                    </div>
+                    
+                    <p class="card-text mb-1">
+                        <i class="bi bi-person-badge me-1 text-muted"></i> CPF: <span class="envolvido-cpf">{{ envolvido.cpf }}</span>
+                    </p>
+                    
+                    {% if envolvido.email %}
+                    <p class="card-text mb-1">
+                        <i class="bi bi-envelope me-1 text-muted"></i> {{ envolvido.email }}
+                    </p>
+                    {% endif %}
+                    
+                    {% if envolvido.telefone %}
+                    <p class="card-text mb-3">
+                        <i class="bi bi-telephone me-1 text-muted"></i> {{ envolvido.telefone }}
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-eye me-1"></i> Visualizar
+                        </a>
+                        
+                        <div>
+                            <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModalMobile{{ envolvido.id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Modal de Confirmação de Exclusão Mobile -->
+                        <div class="modal fade" id="deleteModalMobile{{ envolvido.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
+                                        <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<!-- Estado vazio -->
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-people"></i>
+    </div>
+    <h4>Nenhum envolvido encontrado</h4>
+    <p class="text-muted">
+        {% if request.args.get('q') %}
+        Não encontramos envolvidos correspondentes à sua busca "{{ request.args.get('q') }}".
+        {% elif tipo_filtro %}
+        Não há {{ tipo_filtro|lower }}es cadastrados no sistema.
+        {% else %}
+        Não há envolvidos cadastrados no sistema.
+        {% endif %}
+    </p>
+    <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id if unidade else None) }}" class="btn btn-primary">
+        <i class="bi bi-person-plus-fill me-1"></i> Adicionar Envolvido
+    </a>
+</div>
+{% endif %}
+
+<!-- Estatísticas (somente para administradores ou diretores) -->
+{% if envolvidos and (current_user.is_admin() or current_user.is_diretor()) %}
+<div class="card mt-4">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0">Estatísticas</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-primary bg-opacity-10">
+                        <i class="bi bi-people fs-4 text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Total de Envolvidos</h6>
+                        <h3 class="mb-0">{{ envolvidos|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-success bg-opacity-10">
+                        <i class="bi bi-person-workspace fs-4 text-success"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Orientadores</h6>
+                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-info bg-opacity-10">
+                        <i class="bi bi-person-badge fs-4 text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Facilitadores</h6>
+                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adiciona funcionalidade de ordenação à tabela
+        const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+        
+        const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
+            v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+        )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+        
+        document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+            const table = th.closest('table');
+            const tbody = table.querySelector('tbody');
+            Array.from(tbody.querySelectorAll('tr'))
+                .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+                .forEach(tr => tbody.appendChild(tr) );
+        })));
+    });
+</script>
+{% endblock %}
