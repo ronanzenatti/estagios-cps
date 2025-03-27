@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}{{ unidade.nome }} - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .unit-card {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .unit-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1.5rem;
+    }
+    .unit-code {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    .unit-type {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .type-fatec {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-etec {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .info-section {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .section-header {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+    .tab-content {
+        padding: 1.5rem;
+    }
+    .nav-tabs .nav-link {
+        color: #495057;
+    }
+    .nav-tabs .nav-link.active {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+    .stats-badge {
+        font-size: 0.9rem;
+        padding: 0.35rem 0.65rem;
+    }
+    .item-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .empty-list {
+        padding: 2rem;
+        text-align: center;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+    .empty-list-icon {
+        font-size: 2.5rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <span class="unit-code">{{ unidade.codigo }}</span>
+        {{ unidade.nome }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if current_user.is_admin() %}
+        <a href="{{ url_for('unidades.editar', id=unidade.id) }}" class="btn btn-sm btn-outline-primary me-2">
+            <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="bi bi-trash me-1"></i> Excluir
+        </button>
+        {% endif %}
+        <a href="{{ url_for('unidades.listar') }}" class="btn btn-sm btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para lista
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Coluna principal com informações da unidade -->
+    <div class="col-lg-8">
+        <div class="unit-card mb-4">
+            <div class="unit-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">Informações da Unidade</h4>
+                    <p class="text-muted mb-0">Detalhes da unidade e contatos</p>
+                </div>
+                <div>
+                    {% if unidade.tipo == 'Fatec' %}
+                    <span class="unit-type type-fatec">Fatec</span>
+                    {% else %}
+                    <span class="unit-type type-etec">Etec</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Nome</div>
+                            <div>{{ unidade.nome }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="info-label">Código</div>
+                            <div class="unit-code">{{ unidade.codigo }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Cidade</div>
+                            <div>{{ unidade.cidade }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="info-label">Telefone</div>
+                            <div>{{ unidade.telefone }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h5 class="section-header"><i class="bi bi-person-badge me-2"></i> Informações do Diretor</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Nome</div>
+                            <div>{{ unidade.nome_diretor }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="info-label">Email Institucional</div>
+                            <div>{{ unidade.email_institucional }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="info-label">Email de Contato</div>
+                            <div>{{ unidade.email_diretor }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center p-3">
+                <div class="text-muted small">
+                    <strong>Cadastrado em:</strong> {{ unidade.created_at.strftime('%d/%m/%Y') }}
+                </div>
+                <div class="text-muted small">
+                    <strong>Última atualização:</strong> {{ unidade.updated_at.strftime('%d/%m/%Y') }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Guias para Cursos, Orientadores e Facilitadores -->
+        <div class="card mb-4">
+            <div class="card-header bg-white p-0">
+                <ul class="nav nav-tabs" id="unidadeTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="cursos-tab" data-bs-toggle="tab" data-bs-target="#cursos" 
+                                type="button" role="tab" aria-controls="cursos" aria-selected="true">
+                            <i class="bi bi-mortarboard-fill me-1"></i> Cursos
+                            <span class="badge bg-primary rounded-pill ms-1">{{ cursos|length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="orientadores-tab" data-bs-toggle="tab" data-bs-target="#orientadores" 
+                                type="button" role="tab" aria-controls="orientadores" aria-selected="false">
+                            <i class="bi bi-person-workspace me-1"></i> Orientadores
+                            <span class="badge bg-primary rounded-pill ms-1">{{ orientadores|length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="facilitadores-tab" data-bs-toggle="tab" data-bs-target="#facilitadores" 
+                                type="button" role="tab" aria-controls="facilitadores" aria-selected="false">
+                            <i class="bi bi-person-badge me-1"></i> Facilitadores
+                            <span class="badge bg-primary rounded-pill ms-1">{{ facilitadores|length }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="tab-content" id="unidadeTabContent">
+                <!-- Aba de Cursos -->
+                <div class="tab-pane fade show active" id="cursos" role="tabpanel" aria-labelledby="cursos-tab">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Cursos Oferecidos</h5>
+                        <a href="{{ url_for('cursos.novo', unidade_id=unidade.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Curso
+                        </a>
+                    </div>
+                    
+                    {% if cursos %}
+                    <div class="table-responsive item-list">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Código</th>
+                                    <th>Orientadores</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for curso in cursos %}
+                                <tr>
+                                    <td><strong>{{ curso.nome }}</strong></td>
+                                    <td>{% if curso.codigo %}{{ curso.codigo }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                                    <td>{{ curso.orientadores|length }}</td>
+                                    <td>
+                                        {% if curso.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('cursos.editar', id=curso.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-list">
+                        <div class="empty-list-icon">
+                            <i class="bi bi-mortarboard"></i>
+                        </div>
+                        <h5>Nenhum curso cadastrado</h5>
+                        <p class="text-muted">Esta unidade ainda não possui cursos cadastrados.</p>
+                        <a href="{{ url_for('cursos.novo', unidade_id=unidade.id) }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Adicionar Curso
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Aba de Orientadores -->
+                <div class="tab-pane fade" id="orientadores" role="tabpanel" aria-labelledby="orientadores-tab">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Orientadores de Estágio</h5>
+                        <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id, tipo='Orientador') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Orientador
+                        </a>
+                    </div>
+                    
+                    {% if orientadores %}
+                    <div class="table-responsive item-list">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Cargo</th>
+                                    <th>Cursos</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for orientador in orientadores %}
+                                <tr>
+                                    <td><strong>{{ orientador.nome }}</strong></td>
+                                    <td>{{ orientador.cargo }}</td>
+                                    <td>{{ orientador.cursos|length }}</td>
+                                    <td>
+                                        {% if orientador.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ url_for('envolvidos.visualizar', id=orientador.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('envolvidos.editar', id=orientador.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-list">
+                        <div class="empty-list-icon">
+                            <i class="bi bi-person-workspace"></i>
+                        </div>
+                        <h5>Nenhum orientador cadastrado</h5>
+                        <p class="text-muted">Esta unidade ainda não possui orientadores de estágio cadastrados.</p>
+                        <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id, tipo='Orientador') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Adicionar Orientador
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Aba de Facilitadores -->
+                <div class="tab-pane fade" id="facilitadores" role="tabpanel" aria-labelledby="facilitadores-tab">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Facilitadores de Estágio</h5>
+                        <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id, tipo='Facilitador') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Novo Facilitador
+                        </a>
+                    </div>
+                    
+                    {% if facilitadores %}
+                    <div class="table-responsive item-list">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Cargo</th>
+                                    <th>Contato</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for facilitador in facilitadores %}
+                                <tr>
+                                    <td><strong>{{ facilitador.nome }}</strong></td>
+                                    <td>{{ facilitador.cargo }}</td>
+                                    <td>
+                                        {% if facilitador.email %}
+                                        <small>{{ facilitador.email }}</small>
+                                        {% elif facilitador.telefone %}
+                                        <small>{{ facilitador.telefone }}</small>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if facilitador.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ url_for('envolvidos.visualizar', id=facilitador.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('envolvidos.editar', id=facilitador.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-list">
+                        <div class="empty-list-icon">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <h5>Nenhum facilitador cadastrado</h5>
+                        <p class="text-muted">Esta unidade ainda não possui facilitadores de estágio cadastrados.</p>
+                        <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id, tipo='Facilitador') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Adicionar Facilitador
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coluna lateral com estatísticas e ações rápidas -->
+    <div class="col-lg-4">
+        <!-- Cartão de estatísticas -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-bar-chart-line me-2"></i> Estatísticas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">Total de cursos:</div>
+                    <span class="badge bg-primary stats-badge">{{ cursos|length }}</span>
+                </div>
+                <div class="progress mb-3" style="height: 6px;">
+                    <div class="progress-bar bg-primary" role="progressbar" 
+                         style="width: {{ (cursos|select('ativo')|list|length / cursos|length * 100) if cursos else 0 }}%"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">Orientadores:</div>
+                    <span class="badge bg-success stats-badge">{{ orientadores|length }}</span>
+                </div>
+                <div class="progress mb-3" style="height: 6px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ (orientadores|select('ativo')|list|length / orientadores|length * 100) if orientadores else 0 }}%"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">Facilitadores:</div>
+                    <span class="badge bg-info stats-badge">{{ facilitadores|length }}</span>
+                </div>
+                <div class="progress mb-3" style="height: 6px;">
+                    <div class="progress-bar bg-info" role="progressbar" 
+                         style="width: {{ (facilitadores|select('ativo')|list|length / facilitadores|length * 100) if facilitadores else 0 }}%"></div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <a href="#" class="btn btn-sm btn-outline-primary" id="btnToggleChart">
+                        <i class="bi bi-graph-up me-1"></i> Ver Estatísticas Detalhadas
+                    </a>
+                </div>
+                
+                <div id="statsChartContainer" class="mt-3" style="display: none;">
+                    <canvas id="statsChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cartão de ações rápidas -->
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-lightning-charge me-2"></i> Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('cursos.novo', unidade_id=unidade.id) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-mortarboard-fill me-2"></i> Adicionar Curso
+                    </a>
+                    <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id, tipo='Orientador') }}" class="btn btn-outline-success">
+                        <i class="bi bi-person-plus me-2"></i> Adicionar Orientador
+                    </a>
+                    <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id, tipo='Facilitador') }}" class="btn btn-outline-info">
+                        <i class="bi bi-person-plus me-2"></i> Adicionar Facilitador
+                    </a>
+                    {% if current_user.is_admin() %}
+                    <a href="{{ url_for('unidades.editar', id=unidade.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-pencil me-2"></i> Editar Unidade
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+{% if current_user.is_admin() %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Você tem certeza que deseja excluir a unidade <strong>{{ unidade.nome }}</strong>?</p>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> 
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita e também removerá:
+                    <ul class="mb-0 mt-2">
+                        <li><strong>{{ cursos|length }}</strong> cursos</li>
+                        <li><strong>{{ orientadores|length }}</strong> orientadores</li>
+                        <li><strong>{{ facilitadores|length }}</strong> facilitadores</li>
+                        <li>O usuário diretor associado a esta unidade</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('unidades.excluir', id=unidade.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Excluir Unidade</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Exibir/ocultar o gráfico de estatísticas
+        const btnToggleChart = document.getElementById('btnToggleChart');
+        const statsChartContainer = document.getElementById('statsChartContainer');
+        
+        btnToggleChart.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (statsChartContainer.style.display === 'none') {
+                statsChartContainer.style.display = 'block';
+                this.innerHTML = '<i class="bi bi-graph-down me-1"></i> Ocultar Estatísticas';
+                
+                // Inicializar o gráfico
+                createStatsChart();
+            } else {
+                statsChartContainer.style.display = 'none';
+                this.innerHTML = '<i class="bi bi-graph-up me-1"></i> Ver Estatísticas Detalhadas';
+            }
+        });
+        
+        // Função para criar o gráfico de estatísticas
+        function createStatsChart() {
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            
+            const statsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Cursos', 'Orientadores', 'Facilitadores'],
+                    datasets: [{
+                        label: 'Total',
+                        data: [{{ cursos|length }}, {{ orientadores|length }}, {{ facilitadores|length }}],
+                        backgroundColor: [
+                            'rgba(13, 110, 253, 0.7)',
+                            'rgba(25, 135, 84, 0.7)',
+                            'rgba(13, 202, 240, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgb(13, 110, 253)',
+                            'rgb(25, 135, 84)',
+                            'rgb(13, 202, 240)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

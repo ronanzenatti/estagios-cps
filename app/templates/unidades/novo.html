@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Unidade - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .form-card {
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .form-header {
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .form-instructions {
+        font-size: 0.9rem;
+        border-left: 3px solid #0d6efd;
+        padding-left: 1rem;
+        margin: 1.5rem 0;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .required-field:after {
+        content: " *";
+        color: #dc3545;
+    }
+    .card-footer {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Nova Unidade</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('unidades.listar') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para lista
+        </a>
+    </div>
+</div>
+
+<div class="form-card mb-4">
+    <div class="form-header">
+        <h4 class="mb-0"><i class="bi bi-building-add me-2"></i> Adicionar Unidade</h4>
+        <p class="text-muted mb-0">Cadastre uma nova unidade Fatec ou Etec no sistema</p>
+    </div>
+    
+    <div class="card-body p-4">
+        <div class="form-instructions bg-light p-3">
+            <p class="mb-0">
+                <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+                Complete todos os campos obrigatórios (*). Ao cadastrar uma nova unidade, um usuário diretor será automaticamente criado com a senha inicial igual ao número da unidade.
+            </p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('unidades.novo') }}" id="nova-unidade-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="row mt-4">
+                <div class="col-md-6 mb-3">
+                    <label for="tipo" class="form-label required-field">Tipo de Unidade</label>
+                    <select class="form-select" id="tipo" name="tipo" required>
+                        <option value="" selected disabled>Selecione o tipo</option>
+                        <option value="Fatec">Fatec</option>
+                        <option value="Etec">Etec</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="numero" class="form-label required-field">Número da Unidade</label>
+                    <input type="text" class="form-control" id="numero" name="numero" 
+                           placeholder="Ex: 001, 046, 271" required maxlength="3"
+                           pattern="[0-9]{1,3}">
+                    <div class="form-text">Apenas números, máximo 3 dígitos (Ex: 046 para Fatec São Paulo)</div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="nome" class="form-label required-field">Nome da Unidade</label>
+                <input type="text" class="form-control" id="nome" name="nome" 
+                       placeholder="Nome completo da unidade" required>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="cidade" class="form-label required-field">Cidade</label>
+                    <input type="text" class="form-control" id="cidade" name="cidade" 
+                           placeholder="Nome da cidade" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="telefone" class="form-label required-field">Telefone</label>
+                    <input type="tel" class="form-control" id="telefone" name="telefone" 
+                           placeholder="(00) 00000-0000" required>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h5 class="mb-3">Informações do Diretor</h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="nome_diretor" class="form-label required-field">Nome do Diretor</label>
+                    <input type="text" class="form-control" id="nome_diretor" name="nome_diretor" 
+                           placeholder="Nome completo do diretor" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="email_diretor" class="form-label required-field">Email de Contato do Diretor</label>
+                    <input type="email" class="form-control" id="email_diretor" name="email_diretor" 
+                           placeholder="Email pessoal ou alternativo" required>
+                    <div class="form-text">Email de contato pessoal do diretor (não o institucional)</div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>Importante:</strong> O email institucional do diretor será gerado automaticamente no formato <strong><span id="emailPreview">tipo0numero</span>dir@cps.sp.gov.br</strong> (Ex: f046dir@cps.sp.gov.br)
+            </div>
+            
+            <div class="card bg-light mb-4 mt-4">
+                <div class="card-body py-3">
+                    <h6 class="card-title mb-2"><i class="bi bi-shield-lock me-2"></i>Acesso do Diretor</h6>
+                    <p class="mb-0">O sistema criará automaticamente um usuário para o diretor com as seguintes credenciais:</p>
+                    <ul class="mb-0 mt-2">
+                        <li><strong>Email de login:</strong> <span id="loginPreview">tipo0numero</span>dir@cps.sp.gov.br</li>
+                        <li><strong>Senha inicial:</strong> número da unidade (Ex: 046)</li>
+                    </ul>
+                    <p class="mb-0 mt-2 text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Lembre-se de informar ao diretor que ele deve alterar a senha no primeiro acesso.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-footer p-3">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('unidades.listar') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-building-add me-1"></i> Adicionar Unidade
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Foca no campo de tipo quando a página carrega
+        document.getElementById('tipo').focus();
+        
+        // Atualiza a visualização do email institucional
+        function updateEmailPreview() {
+            const tipo = document.getElementById('tipo').value;
+            const numero = document.getElementById('numero').value;
+            
+            let emailPrefix = 'tipo0numero';
+            
+            if (tipo && numero) {
+                // Formatar o número com zeros à esquerda
+                const formattedNumber = numero.padStart(3, '0');
+                emailPrefix = (tipo === 'Fatec' ? 'f' : 'e') + formattedNumber;
+            }
+            
+            document.getElementById('emailPreview').textContent = emailPrefix;
+            document.getElementById('loginPreview').textContent = emailPrefix;
+        }
+        
+        // Adiciona os listeners de evento
+        document.getElementById('tipo').addEventListener('change', updateEmailPreview);
+        document.getElementById('numero').addEventListener('input', updateEmailPreview);
+        
+        // Validação do formulário
+        const form = document.getElementById('nova-unidade-form');
+        form.addEventListener('submit', function(e) {
+            const numero = document.getElementById('numero').value;
+            
+            if (!/^\d{1,3}$/.test(numero)) {
+                e.preventDefault();
+                alert('O número da unidade deve conter apenas dígitos (máximo 3).');
+            }
+        });
+        
+        // Adicionar máscara para o telefone
+        const telefoneInput = document.getElementById('telefone');
+        telefoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length <= 10) {
+                // Telefone fixo
+                if (value.length > 2) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                }
+                if (value.length > 9) {
+                    value = `${value.substring(0, 9)}-${value.substring(9)}`;
+                }
+            } else {
+                // Celular
+                if (value.length > 2) {
+                    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+                }
+                if (value.length > 10) {
+                    value = `${value.substring(0, 10)}-${value.substring(10, 14)}`;
+                }
+            }
+            
+            e.target.value = value;
+        });
+    });
+</script>
+{% endblock %}
