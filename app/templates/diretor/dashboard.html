@@ -24,41 +24,6 @@
         position: relative;
         height: 250px;
     }
-    .activity-timeline .timeline-item {
-        position: relative;
-        padding-left: 45px;
-        margin-bottom: 20px;
-    }
-    .activity-timeline .timeline-item:before {
-        content: '';
-        position: absolute;
-        left: 22px;
-        top: 0;
-        height: 100%;
-        width: 2px;
-        background: #dee2e6;
-    }
-    .activity-timeline .timeline-item:last-child:before {
-        display: none;
-    }
-    .activity-timeline .timeline-icon {
-        position: absolute;
-        left: 10px;
-        top: 0;
-        width: 25px;
-        height: 25px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        z-index: 1;
-    }
-    .quick-action-card {
-        transition: all 0.2s;
-    }
-    .quick-action-card:hover {
-        transform: scale(1.05);
-    }
     .unidade-badge {
         display: inline-block;
         padding: 0.5rem 0.75rem;
@@ -75,161 +40,145 @@
         background-color: rgba(25, 135, 84, 0.1);
         color: #198754;
     }
-    .welcome-message {
-        padding: 2rem;
-        background-color: #f8f9fa;
-        border-radius: 0.5rem;
-        margin-bottom: 2rem;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Dashboard Diretor</h1>
+    <h1 class="h2">Dashboard Diretor - {{ unidade.nome }}</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="{{ url_for('diretor.perfil') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-person-circle me-1"></i> Meu Perfil
-        </a>
+        <span class="unidade-badge {% if unidade.tipo == 'Fatec' %}type-fatec{% else %}type-etec{% endif %}">
+            {{ unidade.tipo }} {{ unidade.numero }}
+        </span>
     </div>
 </div>
 
-<!-- Boas vindas e informações da unidade -->
-<div class="welcome-message">
-    <div class="row">
-        <div class="col-md-9">
-            <h4>Bem-vindo, {{ current_user.nome }}</h4>
-            <p class="mb-0">
-                Você está acessando o painel administrativo para gerenciamento de estágios da sua unidade.
-                Aqui você pode gerenciar cursos, orientadores, facilitadores e gerar relatórios.
-            </p>
-        </div>
-        <div class="col-md-3 text-end">
-            <span class="unidade-badge {% if unidade.tipo == 'Fatec' %}type-fatec{% else %}type-etec{% endif %}">
-                {{ unidade.tipo }} {{ unidade.numero }}
-            </span>
-        </div>
-    </div>
-</div>
-
-<!-- Cards de estatísticas -->
+<!-- Envolvidos Estatísticas -->
 <div class="row g-4 mb-4">
-    <div class="col-md-6 col-xl-3">
+    <!-- Estatísticas Gerais de Envolvidos -->
+    <div class="col-md-4">
         <div class="card stat-card bg-primary text-white h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title">Total de Cursos</h6>
-                        <h2 class="display-5 fw-bold">{{ stats.total_cursos }}</h2>
-                    </div>
-                    <div class="stat-icon bg-white text-primary">
-                        <i class="bi bi-mortarboard-fill"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <div class="progress bg-primary-light">
-                        <div class="progress-bar bg-white" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer bg-primary-dark d-flex justify-content-between align-items-center py-2">
-                <small>Cursos ativos e inativos</small>
-                <a href="{{ url_for('cursos.listar', unidade_id=unidade.id) }}" class="text-white text-decoration-none">Ver detalhes <i class="bi bi-arrow-right"></i></a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="card stat-card bg-success text-white h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="card-title">Total de Envolvidos</h6>
                         <h2 class="display-5 fw-bold">{{ stats.total_envolvidos }}</h2>
                     </div>
-                    <div class="stat-icon bg-white text-success">
+                    <div class="stat-icon bg-white text-primary">
                         <i class="bi bi-people-fill"></i>
                     </div>
                 </div>
-                <div class="mt-3 d-flex justify-content-between">
-                    <small>Orientadores: {{ stats.total_orientadores }}</small>
-                    <small>Facilitadores: {{ stats.total_facilitadores }}</small>
-                </div>
             </div>
-            <div class="card-footer bg-success-dark d-flex justify-content-between align-items-center py-2">
-                <small>Envolvidos com estágio</small>
-                <a href="{{ url_for('envolvidos.listar', unidade_id=unidade.id) }}" class="text-white text-decoration-none">Ver detalhes <i class="bi bi-arrow-right"></i></a>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small>Ativos na unidade</small>
+                <a href="{{ url_for('envolvidos.listar', unidade_id=unidade.id) }}" class="text-white text-decoration-none">
+                    Ver todos <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6 col-xl-3">
-        <div class="card stat-card bg-info text-white h-100">
+    <!-- Distribuição de Tipos de Envolvidos (Específico por tipo de unidade) -->
+    {% if unidade.tipo == 'Fatec' %}
+    <div class="col-md-4">
+        <div class="card stat-card bg-success text-white h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="card-title">Orientadores</h6>
                         <h2 class="display-5 fw-bold">{{ stats.total_orientadores }}</h2>
                     </div>
-                    <div class="stat-icon bg-white text-info">
-                        <i class="bi bi-person-workspace"></i>
+                    <div class="stat-icon bg-white text-success">
+                        <i class="bi bi-person-badge"></i>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <div class="progress bg-info-light">
-                        <div class="progress-bar bg-white" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
+                <div class="mt-3 d-flex justify-content-between">
+                    <small>Coordenadores: {{ stats.total_coordenadores or 0 }}</small>
+                    <small>Apoio: {{ stats.total_apoio_fatec or 0 }}</small>
                 </div>
             </div>
-            <div class="card-footer bg-info-dark d-flex justify-content-between align-items-center py-2">
-                <small>Professores orientadores</small>
-                <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Orientador', unidade_id=unidade.id) }}" class="text-white text-decoration-none">Ver detalhes <i class="bi bi-arrow-right"></i></a>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small>Professores e coordenadores</small>
+                <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Orientador', unidade_id=unidade.id) }}" class="text-white text-decoration-none">
+                    Ver detalhes <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
-
-    <div class="col-md-6 col-xl-3">
-        <div class="card stat-card bg-warning text-white h-100">
+    {% else %}
+    <div class="col-md-4">
+        <div class="card stat-card bg-info text-white h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="card-title">Facilitadores</h6>
                         <h2 class="display-5 fw-bold">{{ stats.total_facilitadores }}</h2>
                     </div>
+                    <div class="stat-icon bg-white text-info">
+                        <i class="bi bi-person-workspace"></i>
+                    </div>
+                </div>
+                <div class="mt-3 d-flex justify-content-between">
+                    <small>ATAs: {{ stats.total_ata or 0 }}</small>
+                    <small>Apoio: {{ stats.total_apoio_etec or 0 }}</small>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small>Responsáveis na unidade</small>
+                <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Facilitador', unidade_id=unidade.id) }}" class="text-white text-decoration-none">
+                    Ver detalhes <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Total de Apoio -->
+    <div class="col-md-4">
+        <div class="card stat-card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Apoio</h6>
+                        <h2 class="display-5 fw-bold">{{ stats.total_apoio or 0 }}</h2>
+                    </div>
                     <div class="stat-icon bg-white text-warning">
-                        <i class="bi bi-person-badge"></i>
+                        <i class="bi bi-briefcase-fill"></i>
                     </div>
                 </div>
                 <div class="mt-3">
                     <div class="progress bg-warning-light">
-                        <div class="progress-bar bg-white" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar bg-white" role="progressbar" 
+                             style="width: {{ stats.total_apoio / stats.total_envolvidos * 100 if stats.total_envolvidos > 0 else 0 }}%" 
+                             aria-valuenow="{{ stats.total_apoio }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="{{ stats.total_envolvidos }}">
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="card-footer bg-warning-dark d-flex justify-content-between align-items-center py-2">
-                <small>Responsáveis na empresa</small>
-                <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Facilitador', unidade_id=unidade.id) }}" class="text-white text-decoration-none">Ver detalhes <i class="bi bi-arrow-right"></i></a>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small>Equipe de suporte</small>
+                <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Apoio', unidade_id=unidade.id) }}" class="text-white text-decoration-none">
+                    Ver detalhes <i class="bi bi-arrow-right"></i>
+                </a>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Ações Rápidas e Gráficos -->
 <div class="row g-4 mb-4">
-    <!-- Gráfico de Orientadores por Curso -->
+    <!-- Gráfico de Distribuição de Envolvidos -->
     <div class="col-lg-7">
         <div class="card h-100">
             <div class="card-header bg-white">
-                <h5 class="card-title mb-0">Orientadores por Curso</h5>
+                <h5 class="card-title mb-0">Distribuição de Envolvidos</h5>
             </div>
             <div class="card-body">
                 <div class="chart-container">
-                    <canvas id="orientadoresCursoChart"></canvas>
+                    <canvas id="envolvidosDistribuicaoChart"></canvas>
                 </div>
-            </div>
-            <div class="card-footer bg-white text-end">
-                <a href="{{ url_for('diretor.relatorio_cursos') }}" class="text-decoration-none">
-                    Ver relatório completo <i class="bi bi-arrow-right"></i>
-                </a>
             </div>
         </div>
     </div>
@@ -243,107 +192,50 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <a href="{{ url_for('cursos.novo', unidade_id=unidade.id) }}" class="text-decoration-none">
-                            <div class="card quick-action-card text-center p-3 h-100">
-                                <div class="mx-auto mb-3 rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="bi bi-mortarboard-fill"></i>
-                                </div>
-                                <h6 class="mb-0">Novo Curso</h6>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6">
                         <a href="{{ url_for('envolvidos.novo', unidade_id=unidade.id) }}" class="text-decoration-none">
-                            <div class="card quick-action-card text-center p-3 h-100">
-                                <div class="mx-auto mb-3 rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <div class="card text-center p-3 h-100">
+                                <div class="mx-auto mb-3 rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
                                     <i class="bi bi-person-plus-fill"></i>
                                 </div>
                                 <h6 class="mb-0">Novo Envolvido</h6>
                             </div>
                         </a>
                     </div>
+                    
+                    {% if unidade.tipo == 'Fatec' %}
                     <div class="col-md-6">
                         <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Orientador', unidade_id=unidade.id) }}" class="text-decoration-none">
-                            <div class="card quick-action-card text-center p-3 h-100">
-                                <div class="mx-auto mb-3 rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <div class="card text-center p-3 h-100">
+                                <div class="mx-auto mb-3 rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
                                     <i class="bi bi-person-badge"></i>
                                 </div>
                                 <h6 class="mb-0">Orientadores</h6>
                             </div>
                         </a>
                     </div>
+                    {% else %}
                     <div class="col-md-6">
                         <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Facilitador', unidade_id=unidade.id) }}" class="text-decoration-none">
-                            <div class="card quick-action-card text-center p-3 h-100">
-                                <div class="mx-auto mb-3 rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <div class="card text-center p-3 h-100">
+                                <div class="mx-auto mb-3 rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
                                     <i class="bi bi-person-workspace"></i>
                                 </div>
                                 <h6 class="mb-0">Facilitadores</h6>
                             </div>
                         </a>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4 mb-4">
-    <!-- Informações da Unidade -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0"><i class="bi bi-building me-2"></i> Informações da Unidade</h5>
-                <a href="{{ url_for('diretor.perfil') }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-pencil"></i>
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <h5>{{ unidade.nome }}</h5>
-                        <span class="badge bg-secondary">{{ unidade.cidade }}</span>
+                    {% endif %}
+                    
+                    <div class="col-md-6">
+                        <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Apoio', unidade_id=unidade.id) }}" class="text-decoration-none">
+                            <div class="card text-center p-3 h-100">
+                                <div class="mx-auto mb-3 rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-briefcase-fill"></i>
+                                </div>
+                                <h6 class="mb-0">Apoio</h6>
+                            </div>
+                        </a>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <p class="mb-1 text-muted">Telefone</p>
-                        <p class="mb-0 fw-bold">{{ unidade.telefone }}</p>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <p class="mb-1 text-muted">Email Institucional</p>
-                        <p class="mb-0 fw-bold">{{ unidade.email_institucional }}</p>
-                    </div>
-                    <div class="col-md-12">
-                        <p class="mb-1 text-muted">Diretor</p>
-                        <p class="mb-0 fw-bold">{{ unidade.nome_diretor }}</p>
-                        <p class="mb-0 small text-muted">{{ unidade.email_diretor }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Relatórios Disponíveis -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="card-title mb-0"><i class="bi bi-file-earmark-text me-2"></i> Relatórios Disponíveis</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group">
-                    <a href="{{ url_for('diretor.relatorio_envolvidos') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1">Relatório de Envolvidos</h6>
-                            <p class="mb-0 small text-muted">Lista completa de orientadores e facilitadores</p>
-                        </div>
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                    <a href="{{ url_for('diretor.relatorio_cursos') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1">Relatório de Cursos</h6>
-                            <p class="mb-0 small text-muted">Cursos e seus orientadores associados</p>
-                        </div>
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
                 </div>
             </div>
         </div>
@@ -355,35 +247,52 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Gráfico de Orientadores por Curso
-        const orientadoresCursoCtx = document.getElementById('orientadoresCursoChart').getContext('2d');
-        const orientadoresCursoChart = new Chart(orientadoresCursoCtx, {
-            type: 'bar',
+        // Gráfico de Distribuição de Envolvidos
+        const envolvidosDistribuicaoCtx = document.getElementById('envolvidosDistribuicaoChart').getContext('2d');
+
+        // Preparar dados específicos por tipo de unidade
+        {% if unidade.tipo == 'Fatec' %}
+        const labels = ['Orientadores', 'Coordenadores', 'Apoio'];
+        const data = [
+            {{ stats.total_orientadores }}, 
+            {{ stats.total_coordenadores or 0 }}, 
+            {{ stats.total_apoio_fatec or 0 }}
+        ];
+        const backgroundColor = [
+            'rgba(13, 202, 240, 0.8)',  // Azul claro para Orientadores
+            'rgba(25, 135, 84, 0.8)',   // Verde para Coordenadores
+            'rgba(255, 193, 7, 0.8)'    // Amarelo para Apoio
+        ];
+        {% else %}
+        const labels = ['Facilitadores', 'ATAs', 'Apoio'];
+        const data = [
+            {{ stats.total_facilitadores }}, 
+            {{ stats.total_ata or 0 }}, 
+            {{ stats.total_apoio_etec or 0 }}
+        ];
+        const backgroundColor = [
+            'rgba(13, 110, 253, 0.8)',  // Azul para Facilitadores
+            'rgba(255, 193, 7, 0.8)',   // Amarelo para ATAs
+            'rgba(25, 135, 84, 0.8)'    // Verde para Apoio
+        ];
+        {% endif %}
+
+        const envolvidosDistribuicaoChart = new Chart(envolvidosDistribuicaoCtx, {
+            type: 'doughnut',
             data: {
-                labels: [{% for curso, count in stats.cursos_orientadores %}'{{ curso }}',{% endfor %}],
+                labels: labels,
                 datasets: [{
-                    label: 'Total de Orientadores',
-                    data: [{% for curso, count in stats.cursos_orientadores %}{{ count }},{% endfor %}],
-                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                    borderColor: 'rgb(13, 110, 253)',
+                    data: data,
+                    backgroundColor: backgroundColor,
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
+                plugins: {
+                    legend: {
+                        position: 'bottom'
                     }
                 }
             }
