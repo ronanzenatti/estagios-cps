@@ -1,6 +1,6 @@
 # app/routes/envolvidos_routes.py
 """
-Rotas para gerenciamento de envolvidos (orientadores e facilitadores).
+Rotas para gerenciamento de envolvidos (orientadores, coordenadores, ATAs, facilitadores e apoio).
 """
 
 from flask import render_template, redirect, url_for, flash, request, abort
@@ -57,6 +57,7 @@ def listar():
 def novo():
     """Cria um novo envolvido"""
     unidade_id = request.args.get('unidade_id', type=int)
+    tipo_inicial = request.args.get('tipo')
     
     # Para diretores, força a unidade atual
     if current_user.is_diretor():
@@ -71,13 +72,16 @@ def novo():
             flash('Você não tem permissão para adicionar envolvidos a esta unidade.', 'danger')
             return redirect(url_for('main.dashboard'))
         
-        # Busca os cursos da unidade para associar a orientadores
+        # Busca os cursos da unidade para associar a envolvidos
         cursos = Curso.query.filter_by(unidade_id=unidade_id, ativo=True).all()
+        
+        # Obtém os tipos permitidos para a unidade
+        tipos_permitidos = envolvidos_controller.get_allowed_tipos_for_unidade(unidade_id)
     else:
         # Se não foi especificada uma unidade e o usuário é admin, mostra formulário com seleção
         if current_user.is_admin():
             unidades = Unidade.query.order_by(Unidade.tipo, Unidade.numero).all()
-            return render_template('envolvidos/novo.html', unidades=unidades)
+            return render_template('envolvidos/novo.html', unidades=unidades, tipo_inicial=tipo_inicial)
         else:
             flash('Unidade não especificada.', 'danger')
             return redirect(url_for('main.dashboard'))
@@ -96,22 +100,28 @@ def novo():
             if not unidade_id:
                 flash('Selecione uma unidade.', 'danger')
                 unidades = Unidade.query.order_by(Unidade.tipo, Unidade.numero).all()
-                return render_template('envolvidos/novo.html', unidades=unidades)
+                return render_template('envolvidos/novo.html', unidades=unidades, tipo_inicial=tipo_inicial)
             
             # Recarrega a unidade e os cursos
             unidade = Unidade.query.get_or_404(unidade_id)
             cursos = Curso.query.filter_by(unidade_id=unidade_id, ativo=True).all()
+            tipos_permitidos = envolvidos_controller.get_allowed_tipos_for_unidade(unidade_id)
         
         # Validações básicas
         if not all([nome, cpf, cargo, tipo, email_institucional, celular]):
             flash('Nome, CPF, Cargo, Tipo, Email Institucional e Celular são obrigatórios.', 'danger')
-            return render_template('envolvidos/novo.html', unidade=unidade, cursos=cursos)
+            return render_template('envolvidos/novo.html', unidade=unidade, cursos=cursos, tipos_permitidos=tipos_permitidos, tipo_inicial=tipo_inicial)
         
-        # Para orientadores, deve selecionar ao menos um curso
+        # Verifica se o tipo está entre os permitidos
+        if tipo not in tipos_permitidos:
+            flash(f'O tipo selecionado não é válido para esta unidade.', 'danger')
+            return render_template('envolvidos/novo.html', unidade=unidade, cursos=cursos, tipos_permitidos=tipos_permitidos, tipo_inicial=tipo_inicial)
+        
+        # Para tipos que exigem cursos (Orientador, Coordenador), deve selecionar ao menos um curso
         cursos_ids = request.form.getlist('cursos_ids', type=int)
         if tipo in ['Orientador', 'Coordenador'] and not cursos_ids:
             flash(f'{tipo}es devem estar associados a pelo menos um curso.', 'danger')
-            return render_template('envolvidos/novo.html', unidade=unidade, cursos=cursos)
+            return render_template('envolvidos/novo.html', unidade=unidade, cursos=cursos, tipos_permitidos=tipos_permitidos, tipo_inicial=tipo_inicial)
         
         # Cria o envolvido
         envolvido = envolvidos_controller.create_envolvido(
@@ -131,7 +141,11 @@ def novo():
         else:
             flash('Erro ao criar envolvido. Verifique se o CPF já está cadastrado ou se é válido.', 'danger')
     
-    return render_template('envolvidos/novo.html', unidade=unidade, cursos=cursos)
+    return render_template('envolvidos/novo.html', 
+                          unidade=unidade, 
+                          cursos=cursos, 
+                          tipos_permitidos=tipos_permitidos,
+                          tipo_inicial=tipo_inicial)
 
 @envolvidos_bp.route('/<int:id>')
 @login_required
@@ -157,8 +171,11 @@ def editar(id):
         flash('Você não tem permissão para editar este envolvido.', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    # Busca os cursos da unidade para associar a orientadores
+    # Busca os cursos da unidade para associar
     cursos = Curso.query.filter_by(unidade_id=envolvido.unidade_id).all()
+    
+    # Obtém os tipos permitidos para a unidade
+    tipos_permitidos = envolvidos_controller.get_allowed_tipos_for_unidade(envolvido.unidade_id)
     
     if request.method == 'POST':
         nome = request.form.get('nome')
@@ -172,13 +189,18 @@ def editar(id):
         # Validações básicas
         if not all([nome, cpf, cargo, tipo, email_institucional, celular]):
             flash('Nome, CPF, Cargo, Tipo, Email Institucional e Celular são obrigatórios.', 'danger')
-            return render_template('envolvidos/editar.html', envolvido=envolvido, cursos=cursos)
+            return render_template('envolvidos/editar.html', envolvido=envolvido, cursos=cursos, tipos_permitidos=tipos_permitidos)
         
-        # Para orientadores, deve selecionar ao menos um curso
+        # Verifica se o tipo está entre os permitidos
+        if tipo not in tipos_permitidos:
+            flash(f'O tipo selecionado não é válido para esta unidade.', 'danger')
+            return render_template('envolvidos/editar.html', envolvido=envolvido, cursos=cursos, tipos_permitidos=tipos_permitidos)
+        
+        # Para tipos que exigem cursos, deve selecionar ao menos um curso
         cursos_ids = request.form.getlist('cursos_ids', type=int)
         if tipo in ['Orientador', 'Coordenador'] and not cursos_ids:
             flash(f'{tipo}es devem estar associados a pelo menos um curso.', 'danger')
-            return render_template('envolvidos/editar.html', envolvido=envolvido, cursos=cursos)
+            return render_template('envolvidos/editar.html', envolvido=envolvido, cursos=cursos, tipos_permitidos=tipos_permitidos)
         
         # Atualiza o envolvido
         success = envolvidos_controller.update_envolvido(
@@ -199,7 +221,10 @@ def editar(id):
         else:
             flash('Erro ao atualizar envolvido. Verifique se o CPF já está cadastrado ou se é válido.', 'danger')
     
-    return render_template('envolvidos/editar.html', envolvido=envolvido, cursos=cursos)
+    return render_template('envolvidos/editar.html', 
+                          envolvido=envolvido, 
+                          cursos=cursos,
+                          tipos_permitidos=tipos_permitidos)
 
 @envolvidos_bp.route('/<int:id>/excluir', methods=['POST'])
 @login_required
@@ -250,7 +275,7 @@ def toggle_status(id):
 @envolvidos_bp.route('/por-tipo/<tipo>')
 @login_required
 def listar_por_tipo(tipo):
-    """Lista envolvidos por tipo (Orientador ou Facilitador)"""
+    """Lista envolvidos por tipo específico"""
     allowed_tipos = ['Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio']
     if tipo not in allowed_tipos:
         abort(404)
@@ -263,6 +288,12 @@ def listar_por_tipo(tipo):
         
         # Obtém a unidade
         unidade = Unidade.query.get_or_404(unidade_id)
+        
+        # Verifica se o tipo é permitido para a unidade
+        tipos_permitidos = envolvidos_controller.get_allowed_tipos_for_unidade(unidade_id)
+        if tipo not in tipos_permitidos:
+            flash(f'O tipo {tipo} não é aplicável a unidades {unidade.tipo}.', 'warning')
+            return redirect(url_for('envolvidos.listar', unidade_id=unidade_id))
         
         # Obtém os envolvidos do tipo especificado na unidade
         envolvidos = envolvidos_controller.get_envolvidos_by_unidade(unidade_id, tipo)
@@ -285,6 +316,12 @@ def listar_por_tipo(tipo):
     if current_user.is_admin() and unidade_id:
         # Verifica se a unidade existe
         unidade = Unidade.query.get_or_404(unidade_id)
+        
+        # Verifica se o tipo é permitido para a unidade
+        tipos_permitidos = envolvidos_controller.get_allowed_tipos_for_unidade(unidade_id)
+        if tipo not in tipos_permitidos:
+            flash(f'O tipo {tipo} não é aplicável a unidades {unidade.tipo}.', 'warning')
+            return redirect(url_for('envolvidos.listar', unidade_id=unidade_id))
         
         # Obtém os envolvidos do tipo especificado na unidade
         envolvidos = envolvidos_controller.get_envolvidos_by_unidade(unidade_id, tipo)
