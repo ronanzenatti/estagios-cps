@@ -87,8 +87,8 @@ def novo():
         cpf = request.form.get('cpf')
         cargo = request.form.get('cargo')
         tipo = request.form.get('tipo')
-        telefone = request.form.get('telefone')
-        email = request.form.get('email')
+        email_institucional = request.form.get('email_institucional')
+        celular = request.form.get('celular')
         
         # Se o usuário é admin, pode mudar a unidade
         if current_user.is_admin():
@@ -103,14 +103,14 @@ def novo():
             cursos = Curso.query.filter_by(unidade_id=unidade_id, ativo=True).all()
         
         # Validações básicas
-        if not all([nome, cpf, cargo, tipo]):
-            flash('Nome, CPF, Cargo e Tipo são obrigatórios.', 'danger')
+        if not all([nome, cpf, cargo, tipo, email_institucional, celular]):
+            flash('Nome, CPF, Cargo, Tipo, Email Institucional e Celular são obrigatórios.', 'danger')
             return render_template('envolvidos/novo.html', unidade=unidade, cursos=cursos)
         
         # Para orientadores, deve selecionar ao menos um curso
         cursos_ids = request.form.getlist('cursos_ids', type=int)
-        if tipo == 'Orientador' and not cursos_ids:
-            flash('Orientadores devem estar associados a pelo menos um curso.', 'danger')
+        if tipo in ['Orientador', 'Coordenador'] and not cursos_ids:
+            flash(f'{tipo}es devem estar associados a pelo menos um curso.', 'danger')
             return render_template('envolvidos/novo.html', unidade=unidade, cursos=cursos)
         
         # Cria o envolvido
@@ -120,9 +120,9 @@ def novo():
             cargo=cargo,
             tipo=tipo,
             unidade_id=unidade_id,
-            cursos_ids=cursos_ids if tipo == 'Orientador' else None,
-            telefone=telefone,
-            email=email
+            email_institucional=email_institucional,
+            celular=celular,
+            cursos_ids=cursos_ids if tipo in ['Orientador', 'Coordenador', 'ATA', 'Facilitador'] else None
         )
         
         if envolvido:
@@ -165,19 +165,19 @@ def editar(id):
         cpf = request.form.get('cpf')
         cargo = request.form.get('cargo')
         tipo = request.form.get('tipo')
-        telefone = request.form.get('telefone')
-        email = request.form.get('email')
+        email_institucional = request.form.get('email_institucional')
+        celular = request.form.get('celular')
         ativo = 'ativo' in request.form
         
         # Validações básicas
-        if not all([nome, cpf, cargo, tipo]):
-            flash('Nome, CPF, Cargo e Tipo são obrigatórios.', 'danger')
+        if not all([nome, cpf, cargo, tipo, email_institucional, celular]):
+            flash('Nome, CPF, Cargo, Tipo, Email Institucional e Celular são obrigatórios.', 'danger')
             return render_template('envolvidos/editar.html', envolvido=envolvido, cursos=cursos)
         
         # Para orientadores, deve selecionar ao menos um curso
         cursos_ids = request.form.getlist('cursos_ids', type=int)
-        if tipo == 'Orientador' and not cursos_ids:
-            flash('Orientadores devem estar associados a pelo menos um curso.', 'danger')
+        if tipo in ['Orientador', 'Coordenador'] and not cursos_ids:
+            flash(f'{tipo}es devem estar associados a pelo menos um curso.', 'danger')
             return render_template('envolvidos/editar.html', envolvido=envolvido, cursos=cursos)
         
         # Atualiza o envolvido
@@ -187,9 +187,9 @@ def editar(id):
             cpf=cpf,
             cargo=cargo,
             tipo=tipo,
-            cursos_ids=cursos_ids if tipo == 'Orientador' else None,
-            telefone=telefone,
-            email=email,
+            email_institucional=email_institucional,
+            celular=celular,
+            cursos_ids=cursos_ids if tipo in ['Orientador', 'Coordenador', 'ATA', 'Facilitador'] else None,
             ativo=ativo
         )
         
@@ -251,7 +251,8 @@ def toggle_status(id):
 @login_required
 def listar_por_tipo(tipo):
     """Lista envolvidos por tipo (Orientador ou Facilitador)"""
-    if tipo not in ['Orientador', 'Facilitador']:
+    allowed_tipos = ['Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio']
+    if tipo not in allowed_tipos:
         abort(404)
     
     unidade_id = request.args.get('unidade_id', type=int)

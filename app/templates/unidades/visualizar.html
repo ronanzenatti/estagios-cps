@@ -356,10 +356,10 @@
                                     <td><strong>{{ facilitador.nome }}</strong></td>
                                     <td>{{ facilitador.cargo }}</td>
                                     <td>
-                                        {% if facilitador.email %}
-                                        <small>{{ facilitador.email }}</small>
-                                        {% elif facilitador.telefone %}
-                                        <small>{{ facilitador.telefone }}</small>
+                                        {% if facilitador.email_institucional %}
+                                        <small>{{ facilitador.email_institucional }}</small>
+                                        {% elif facilitador.celular %}
+                                        <small>{{ facilitador.celular }}</small>
                                         {% else %}
                                         <span class="text-muted">—</span>
                                         {% endif %}
@@ -415,7 +415,7 @@
                 </div>
                 <div class="progress mb-3" style="height: 6px;">
                     <div class="progress-bar bg-primary" role="progressbar" 
-                    style="width: {{ (cursos|selectattr('ativo')|list|length / cursos|length * 100) if cursos else 0 }}%"></div>
+                    style="width: {{ (cursos|selectattr('ativo', 'equalto', True)|list|length / cursos|length * 100) if cursos and cursos|length > 0 else 0 }}%"></div>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -424,7 +424,7 @@
                 </div>
                 <div class="progress mb-3" style="height: 6px;">
                     <div class="progress-bar bg-success" role="progressbar" 
-                         style="width: {{ (orientadores|select('ativo')|list|length / orientadores|length * 100) if orientadores else 0 }}%"></div>
+                         style="width: {{ (orientadores|selectattr('ativo', 'equalto', True)|list|length / orientadores|length * 100) if orientadores and orientadores|length > 0 else 0 }}%"></div>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -433,7 +433,7 @@
                 </div>
                 <div class="progress mb-3" style="height: 6px;">
                     <div class="progress-bar bg-info" role="progressbar" 
-                         style="width: {{ (facilitadores|select('ativo')|list|length / facilitadores|length * 100) if facilitadores else 0 }}%"></div>
+                         style="width: {{ (facilitadores|selectattr('ativo', 'equalto', True)|list|length / facilitadores|length * 100) if facilitadores and facilitadores|length > 0 else 0 }}%"></div>
                 </div>
                 
                 <div class="mt-4 text-center">

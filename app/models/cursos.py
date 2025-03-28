@@ -26,6 +26,14 @@ class Curso(db.Model):
     unidade_id = db.Column(db.Integer, db.ForeignKey('unidades.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    orientadores = db.relationship(
+        'Envolvido',
+        secondary=orientador_curso,
+        lazy='subquery',
+        primaryjoin="and_(Curso.id==orientador_curso.c.curso_id, Envolvido.tipo=='Orientador')",
+        overlaps="cursos"  # Indicando explicitamente que há sobreposição
+    )
     
     # Relacionamento com orientadores através da tabela associativa
     # É definido na classe Envolvido para evitar referência circular
