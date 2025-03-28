@@ -50,7 +50,7 @@
                     </p>
                     
                     <form method="POST" action="{{ url_for('auth.nova_senha', token=token) }}" id="password-form">
-                        {{ csrf_token() }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         
                         <div class="mb-3">
                             <label for="password" class="form-label">Nova Senha</label>

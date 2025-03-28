@@ -44,7 +44,7 @@
                     </p>
                     
                     <form method="POST" action="{{ url_for('auth.recuperar_senha') }}">
-                        {{ csrf_token() }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         
                         <div class="mb-4">
                             <label for="email" class="form-label">Email Institucional</label>
