@@ -33,9 +33,21 @@
         background-color: rgba(13, 110, 253, 0.1);
         color: #0d6efd;
     }
+    .type-coordenador {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #495057;
+    }
+    .type-ata {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
     .type-facilitador {
         background-color: rgba(25, 135, 84, 0.1);
         color: #198754;
+    }
+    .type-apoio {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
     }
     .envolvido-cpf {
         font-family: monospace;
@@ -98,6 +110,35 @@
             padding-top: 0 !important;
         }
     }
+    .tipo-select {
+        padding: 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .tipo-select:hover {
+        background-color: #f8f9fa;
+    }
+    .tipo-select.active {
+        background-color: #e9ecef;
+        font-weight: 500;
+    }
+    .tipo-badge {
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        display: inline-block;
+    }
+    .nav-pills .nav-link {
+        color: #495057;
+    }
+    .nav-pills .nav-link.active {
+        color: #fff;
+        background-color: #0d6efd;
+    }
+    .tab-content {
+        padding-top: 1.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -135,27 +176,56 @@
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-md-4 mb-3 mb-md-0">
+            <div class="col-md-6 mb-3 mb-md-0">
                 <div class="card bg-light h-100">
                     <div class="card-body text-center">
-                        <h1 class="display-4 fw-bold text-primary">{{ orientadores|length + facilitadores|length }}</h1>
+                        <h1 class="display-4 fw-bold text-primary">{{ envolvidos|length }}</h1>
                         <p class="mb-0">Total de Envolvidos</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-3 mb-md-0">
+            
+            <div class="col-md-6">
                 <div class="card bg-light h-100">
-                    <div class="card-body text-center">
-                        <h1 class="display-4 fw-bold text-info">{{ orientadores|length }}</h1>
-                        <p class="mb-0">Orientadores</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card bg-light h-100">
-                    <div class="card-body text-center">
-                        <h1 class="display-4 fw-bold text-success">{{ facilitadores|length }}</h1>
-                        <p class="mb-0">Facilitadores</p>
+                    <div class="card-body p-3">
+                        <h6 class="card-title">Distribuição por Tipo</h6>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            {% set orientadores_count = envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list|length %}
+                            {% set coordenadores_count = envolvidos|selectattr('tipo', 'equalto', 'Coordenador')|list|length %}
+                            {% set atas_count = envolvidos|selectattr('tipo', 'equalto', 'ATA')|list|length %}
+                            {% set facilitadores_count = envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list|length %}
+                            {% set apoios_count = envolvidos|selectattr('tipo', 'equalto', 'Apoio')|list|length %}
+                            
+                            {% if orientadores_count > 0 %}
+                            <div class="tipo-badge type-orientador">
+                                Orientadores: {{ orientadores_count }}
+                            </div>
+                            {% endif %}
+                            
+                            {% if coordenadores_count > 0 %}
+                            <div class="tipo-badge type-coordenador">
+                                Coordenadores: {{ coordenadores_count }}
+                            </div>
+                            {% endif %}
+                            
+                            {% if atas_count > 0 %}
+                            <div class="tipo-badge type-ata">
+                                ATAs: {{ atas_count }}
+                            </div>
+                            {% endif %}
+                            
+                            {% if facilitadores_count > 0 %}
+                            <div class="tipo-badge type-facilitador">
+                                Facilitadores: {{ facilitadores_count }}
+                            </div>
+                            {% endif %}
+                            
+                            {% if apoios_count > 0 %}
+                            <div class="tipo-badge type-apoio">
+                                Apoio: {{ apoios_count }}
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -163,122 +233,445 @@
     </div>
 </div>
 
-<!-- Seção dos Orientadores -->
-<div class="report-section">
-    <h3 class="report-section-title">
-        <i class="bi bi-person-workspace me-2"></i>Orientadores
-    </h3>
+<!-- Navegação em abas para os diferentes tipos -->
+<ul class="nav nav-pills mb-4" id="envolvidosTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="todos-tab" data-bs-toggle="tab" data-bs-target="#todos" type="button" role="tab">
+            Todos os Envolvidos
+        </button>
+    </li>
     
-    {% if orientadores %}
-    <div class="table-responsive">
-        <table class="table table-hover table-striped align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Nome</th>
-                    <th>CPF</th>
-                    <th>Cargo</th>
-                    <th>Contato</th>
-                    <th>Cursos</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for orientador in orientadores %}
-                <tr>
-                    <td>{{ orientador.nome }}</td>
-                    <td><span class="envolvido-cpf">{{ orientador.cpf }}</span></td>
-                    <td>{{ orientador.cargo }}</td>
-                    <td>
-                        {% if orientador.email %}
-                        <small><i class="bi bi-envelope me-1"></i> {{ orientador.email }}</small><br>
-                        {% endif %}
-                        {% if orientador.telefone %}
-                        <small><i class="bi bi-telephone me-1"></i> {{ orientador.telefone }}</small>
-                        {% endif %}
-                        {% if not orientador.email and not orientador.telefone %}
-                        <small class="text-muted">Não informado</small>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% for curso in orientador.cursos %}
-                        <span class="badge bg-light text-dark">{{ curso.nome }}</span>
-                        {% else %}
-                        <small class="text-muted">Nenhum curso associado</small>
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% if orientador.ativo %}
-                        <span class="status-badge status-active"></span> Ativo
-                        {% else %}
-                        <span class="status-badge status-inactive"></span> Inativo
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    {% if unidade.tipo == 'Fatec' %}
+        {% if envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list|length > 0 %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="orientadores-tab" data-bs-toggle="tab" data-bs-target="#orientadores" type="button" role="tab">
+                Orientadores
+            </button>
+        </li>
+        {% endif %}
+        
+        {% if envolvidos|selectattr('tipo', 'equalto', 'Coordenador')|list|length > 0 %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="coordenadores-tab" data-bs-toggle="tab" data-bs-target="#coordenadores" type="button" role="tab">
+                Coordenadores
+            </button>
+        </li>
+        {% endif %}
     {% else %}
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle-fill me-2"></i>
-        Não há orientadores cadastrados nesta unidade.
-    </div>
+        {% if envolvidos|selectattr('tipo', 'equalto', 'ATA')|list|length > 0 %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="atas-tab" data-bs-toggle="tab" data-bs-target="#atas" type="button" role="tab">
+                ATAs
+            </button>
+        </li>
+        {% endif %}
+        
+        {% if envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list|length > 0 %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="facilitadores-tab" data-bs-toggle="tab" data-bs-target="#facilitadores" type="button" role="tab">
+                Facilitadores
+            </button>
+        </li>
+        {% endif %}
     {% endif %}
-</div>
+    
+    {% if envolvidos|selectattr('tipo', 'equalto', 'Apoio')|list|length > 0 %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="apoios-tab" data-bs-toggle="tab" data-bs-target="#apoios" type="button" role="tab">
+            Apoio
+        </button>
+    </li>
+    {% endif %}
+</ul>
 
-<!-- Seção dos Facilitadores -->
-<div class="report-section">
-    <h3 class="report-section-title">
-        <i class="bi bi-person-badge me-2"></i>Facilitadores
-    </h3>
-    
-    {% if facilitadores %}
-    <div class="table-responsive">
-        <table class="table table-hover table-striped align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Nome</th>
-                    <th>CPF</th>
-                    <th>Cargo</th>
-                    <th>Contato</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for facilitador in facilitadores %}
-                <tr>
-                    <td>{{ facilitador.nome }}</td>
-                    <td><span class="envolvido-cpf">{{ facilitador.cpf }}</span></td>
-                    <td>{{ facilitador.cargo }}</td>
-                    <td>
-                        {% if facilitador.email %}
-                        <small><i class="bi bi-envelope me-1"></i> {{ facilitador.email }}</small><br>
-                        {% endif %}
-                        {% if facilitador.telefone %}
-                        <small><i class="bi bi-telephone me-1"></i> {{ facilitador.telefone }}</small>
-                        {% endif %}
-                        {% if not facilitador.email and not facilitador.telefone %}
-                        <small class="text-muted">Não informado</small>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if facilitador.ativo %}
-                        <span class="status-badge status-active"></span> Ativo
-                        {% else %}
-                        <span class="status-badge status-inactive"></span> Inativo
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<!-- Conteúdo das abas -->
+<div class="tab-content" id="envolvidosTabsContent">
+    <!-- Aba: Todos os Envolvidos -->
+    <div class="tab-pane fade show active" id="todos" role="tabpanel" aria-labelledby="todos-tab">
+        <div class="report-section">
+            <h3 class="report-section-title">
+                <i class="bi bi-people-fill me-2"></i>Todos os Envolvidos
+            </h3>
+            
+            {% if envolvidos %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="todosTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Tipo</th>
+                            <th>Cargo</th>
+                            <th>Contato</th>
+                            <th>Cursos</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for envolvido in envolvidos %}
+                        <tr>
+                            <td>{{ envolvido.nome }}</td>
+                            <td><span class="envolvido-cpf">{{ envolvido.cpf }}</span></td>
+                            <td>
+                                {% if envolvido.tipo == 'Orientador' %}
+                                <span class="envolvido-type type-orientador">Orientador</span>
+                                {% elif envolvido.tipo == 'Coordenador' %}
+                                <span class="envolvido-type type-coordenador">Coordenador</span>
+                                {% elif envolvido.tipo == 'ATA' %}
+                                <span class="envolvido-type type-ata">ATA</span>
+                                {% elif envolvido.tipo == 'Facilitador' %}
+                                <span class="envolvido-type type-facilitador">Facilitador</span>
+                                {% elif envolvido.tipo == 'Apoio' %}
+                                <span class="envolvido-type type-apoio">Apoio</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ envolvido.cargo }}</td>
+                            <td>
+                                {% if envolvido.email_institucional %}
+                                <small><i class="bi bi-envelope me-1"></i> {{ envolvido.email_institucional }}</small><br>
+                                {% endif %}
+                                {% if envolvido.celular %}
+                                <small><i class="bi bi-telephone me-1"></i> {{ envolvido.celular }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if envolvido.allows_cursos %}
+                                {{ envolvido.cursos|length }} curso(s)
+                                {% else %}
+                                <small class="text-muted">N/A</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if envolvido.ativo %}
+                                <span class="status-badge status-active"></span> Ativo
+                                {% else %}
+                                <span class="status-badge status-inactive"></span> Inativo
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Não há envolvidos cadastrados nesta unidade.
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% else %}
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle-fill me-2"></i>
-        Não há facilitadores cadastrados nesta unidade.
+
+    <!-- Aba: Orientadores (Fatec) -->
+    {% if unidade.tipo == 'Fatec' %}
+    <div class="tab-pane fade" id="orientadores" role="tabpanel" aria-labelledby="orientadores-tab">
+        <div class="report-section">
+            <h3 class="report-section-title">
+                <i class="bi bi-person-workspace me-2"></i>Orientadores
+            </h3>
+            
+            {% set orientadores = envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list %}
+            {% if orientadores %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="orientadoresTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Cargo</th>
+                            <th>Contato</th>
+                            <th>Cursos</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orientador in orientadores %}
+                        <tr>
+                            <td>{{ orientador.nome }}</td>
+                            <td><span class="envolvido-cpf">{{ orientador.cpf }}</span></td>
+                            <td>{{ orientador.cargo }}</td>
+                            <td>
+                                {% if orientador.email_institucional %}
+                                <small><i class="bi bi-envelope me-1"></i> {{ orientador.email_institucional }}</small><br>
+                                {% endif %}
+                                {% if orientador.celular %}
+                                <small><i class="bi bi-telephone me-1"></i> {{ orientador.celular }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for curso in orientador.cursos %}
+                                <span class="badge bg-light text-dark">{{ curso.nome }}</span>
+                                {% else %}
+                                <small class="text-muted">Nenhum curso associado</small>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if orientador.ativo %}
+                                <span class="status-badge status-active"></span> Ativo
+                                {% else %}
+                                <span class="status-badge status-inactive"></span> Inativo
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Não há orientadores cadastrados nesta unidade.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Aba: Coordenadores (Fatec) -->
+    <div class="tab-pane fade" id="coordenadores" role="tabpanel" aria-labelledby="coordenadores-tab">
+        <div class="report-section">
+            <h3 class="report-section-title">
+                <i class="bi bi-person-badge me-2"></i>Coordenadores
+            </h3>
+            
+            {% set coordenadores = envolvidos|selectattr('tipo', 'equalto', 'Coordenador')|list %}
+            {% if coordenadores %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="coordenadoresTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Cargo</th>
+                            <th>Contato</th>
+                            <th>Cursos Coordenados</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for coordenador in coordenadores %}
+                        <tr>
+                            <td>{{ coordenador.nome }}</td>
+                            <td><span class="envolvido-cpf">{{ coordenador.cpf }}</span></td>
+                            <td>{{ coordenador.cargo }}</td>
+                            <td>
+                                {% if coordenador.email_institucional %}
+                                <small><i class="bi bi-envelope me-1"></i> {{ coordenador.email_institucional }}</small><br>
+                                {% endif %}
+                                {% if coordenador.celular %}
+                                <small><i class="bi bi-telephone me-1"></i> {{ coordenador.celular }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for curso in coordenador.cursos %}
+                                <span class="badge bg-light text-dark">{{ curso.nome }}</span>
+                                {% else %}
+                                <small class="text-muted">Nenhum curso associado</small>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if coordenador.ativo %}
+                                <span class="status-badge status-active"></span> Ativo
+                                {% else %}
+                                <span class="status-badge status-inactive"></span> Inativo
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Não há coordenadores cadastrados nesta unidade.
+            </div>
+            {% endif %}
+        </div>
     </div>
     {% endif %}
+    
+    <!-- Aba: ATAs (Etec) -->
+    {% if unidade.tipo == 'Etec' %}
+    <div class="tab-pane fade" id="atas" role="tabpanel" aria-labelledby="atas-tab">
+        <div class="report-section">
+            <h3 class="report-section-title">
+                <i class="bi bi-person-lines-fill me-2"></i>Assistentes Técnico-Administrativos (ATAs)
+            </h3>
+            
+            {% set atas = envolvidos|selectattr('tipo', 'equalto', 'ATA')|list %}
+            {% if atas %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="atasTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Cargo</th>
+                            <th>Contato</th>
+                            <th>Cursos</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ata in atas %}
+                        <tr>
+                            <td>{{ ata.nome }}</td>
+                            <td><span class="envolvido-cpf">{{ ata.cpf }}</span></td>
+                            <td>{{ ata.cargo }}</td>
+                            <td>
+                                {% if ata.email_institucional %}
+                                <small><i class="bi bi-envelope me-1"></i> {{ ata.email_institucional }}</small><br>
+                                {% endif %}
+                                {% if ata.celular %}
+                                <small><i class="bi bi-telephone me-1"></i> {{ ata.celular }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for curso in ata.cursos %}
+                                <span class="badge bg-light text-dark">{{ curso.nome }}</span>
+                                {% else %}
+                                <small class="text-muted">Nenhum curso associado</small>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if ata.ativo %}
+                                <span class="status-badge status-active"></span> Ativo
+                                {% else %}
+                                <span class="status-badge status-inactive"></span> Inativo
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Não há ATAs cadastrados nesta unidade.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Aba: Facilitadores (Etec) -->
+    <div class="tab-pane fade" id="facilitadores" role="tabpanel" aria-labelledby="facilitadores-tab">
+        <div class="report-section">
+            <h3 class="report-section-title">
+                <i class="bi bi-person-badge me-2"></i>Facilitadores
+            </h3>
+            
+            {% set facilitadores = envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list %}
+            {% if facilitadores %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="facilitadoresTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Cargo</th>
+                            <th>Contato</th>
+                            <th>Cursos</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for facilitador in facilitadores %}
+                        <tr>
+                            <td>{{ facilitador.nome }}</td>
+                            <td><span class="envolvido-cpf">{{ facilitador.cpf }}</span></td>
+                            <td>{{ facilitador.cargo }}</td>
+                            <td>
+                                {% if facilitador.email_institucional %}
+                                <small><i class="bi bi-envelope me-1"></i> {{ facilitador.email_institucional }}</small><br>
+                                {% endif %}
+                                {% if facilitador.celular %}
+                                <small><i class="bi bi-telephone me-1"></i> {{ facilitador.celular }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for curso in facilitador.cursos %}
+                                <span class="badge bg-light text-dark">{{ curso.nome }}</span>
+                                {% else %}
+                                <small class="text-muted">Nenhum curso associado</small>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if facilitador.ativo %}
+                                <span class="status-badge status-active"></span> Ativo
+                                {% else %}
+                                <span class="status-badge status-inactive"></span> Inativo
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Não há facilitadores cadastrados nesta unidade.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Aba: Apoio (Comum para Fatec e Etec) -->
+    <div class="tab-pane fade" id="apoios" role="tabpanel" aria-labelledby="apoios-tab">
+        <div class="report-section">
+            <h3 class="report-section-title">
+                <i class="bi bi-person-gear me-2"></i>Equipe de Apoio
+            </h3>
+            
+            {% set apoios = envolvidos|selectattr('tipo', 'equalto', 'Apoio')|list %}
+            {% if apoios %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="apoiosTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Cargo</th>
+                            <th>Contato</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for apoio in apoios %}
+                        <tr>
+                            <td>{{ apoio.nome }}</td>
+                            <td><span class="envolvido-cpf">{{ apoio.cpf }}</span></td>
+                            <td>{{ apoio.cargo }}</td>
+                            <td>
+                                {% if apoio.email_institucional %}
+                                <small><i class="bi bi-envelope me-1"></i> {{ apoio.email_institucional }}</small><br>
+                                {% endif %}
+                                {% if apoio.celular %}
+                                <small><i class="bi bi-telephone me-1"></i> {{ apoio.celular }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if apoio.ativo %}
+                                <span class="status-badge status-active"></span> Ativo
+                                {% else %}
+                                <span class="status-badge status-inactive"></span> Inativo
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Não há funcionários de apoio cadastrados nesta unidade.
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
 <!-- Rodapé do Relatório -->
@@ -295,6 +688,14 @@
 
 {% block scripts %}
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Código para ativar as abas do Bootstrap
+        const triggerTabList = [].slice.call(document.querySelectorAll('#envolvidosTabs button'));
+        triggerTabList.forEach(function (triggerEl) {
+            new bootstrap.Tab(triggerEl);
+        });
+    });
+
     function exportToCSV() {
         // Função para exportar os dados das tabelas para CSV
         function downloadCSV(filename, csv) {
@@ -324,7 +725,6 @@
                     // Remove HTML e limpa o texto
                     let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""');
                     row.push('"' + data + '"');
-                }
                 
                 csv += row.join(',') + '\n';
             }
@@ -332,17 +732,47 @@
             return csv;
         }
         
-        // Gerar CSV para orientadores e facilitadores
-        const orientadoresCSV = tableToCSV('table:nth-of-type(1)', 'ORIENTADORES');
-        const facilitadoresCSV = tableToCSV('table:nth-of-type(2)', 'FACILITADORES');
+        // Determinar qual aba está ativa atualmente
+        const activeTab = document.querySelector('#envolvidosTabs button.active');
+        const activeTabId = activeTab.getAttribute('id');
         
-        // Combinar os dois CSVs
-        const csv = 'RELATÓRIO DE ENVOLVIDOS - {{ unidade.nome }}\n' +
-                   'Data: {{ today }}\n\n' +
-                   orientadoresCSV + '\n' + facilitadoresCSV;
+        let csv = '';
+        let filename = 'Relatorio_Envolvidos_{{ unidade.numero }}.csv';
+        
+        // Gerar CSV para a aba ativa
+        if (activeTabId === 'todos-tab') {
+            csv = tableToCSV('#todosTable', 'TODOS OS ENVOLVIDOS');
+        } 
+        {% if unidade.tipo == 'Fatec' %}
+        else if (activeTabId === 'orientadores-tab') {
+            csv = tableToCSV('#orientadoresTable', 'ORIENTADORES');
+            filename = 'Relatorio_Orientadores_{{ unidade.numero }}.csv';
+        } 
+        else if (activeTabId === 'coordenadores-tab') {
+            csv = tableToCSV('#coordenadoresTable', 'COORDENADORES');
+            filename = 'Relatorio_Coordenadores_{{ unidade.numero }}.csv';
+        }
+        {% else %}
+        else if (activeTabId === 'atas-tab') {
+            csv = tableToCSV('#atasTable', 'ASSISTENTES TÉCNICO-ADMINISTRATIVOS');
+            filename = 'Relatorio_ATAs_{{ unidade.numero }}.csv';
+        }
+        else if (activeTabId === 'facilitadores-tab') {
+            csv = tableToCSV('#facilitadoresTable', 'FACILITADORES');
+            filename = 'Relatorio_Facilitadores_{{ unidade.numero }}.csv';
+        }
+        {% endif %}
+        else if (activeTabId === 'apoios-tab') {
+            csv = tableToCSV('#apoiosTable', 'EQUIPE DE APOIO');
+            filename = 'Relatorio_Apoio_{{ unidade.numero }}.csv';
+        }
+        
+        // Cabeçalho do CSV
+        const header = 'RELATÓRIO DE ENVOLVIDOS - {{ unidade.nome }}\n' +
+                      'Data: {{ today }}\n\n';
         
         // Download do arquivo
-        downloadCSV('Relatorio_Envolvidos_{{ unidade.numero }}.csv', csv);
+        downloadCSV(filename, header + csv);
     }
 </script>
 {% endblock %}

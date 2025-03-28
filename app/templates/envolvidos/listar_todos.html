@@ -22,9 +22,21 @@
         background-color: rgba(13, 110, 253, 0.1);
         color: #0d6efd;
     }
+    .type-coordenador {
+        background-color: rgba(100, 110, 253, 0.1);
+        color: #646efd;
+    }
+    .type-ata {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
     .type-facilitador {
         background-color: rgba(25, 135, 84, 0.1);
         color: #198754;
+    }
+    .type-apoio {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
     }
     .unidade-badge {
         background-color: rgba(108, 117, 125, 0.1);
@@ -110,18 +122,18 @@
 <!-- Contador e estatísticas -->
 <div class="alert bg-light mb-4">
     <div class="row align-items-center">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="d-flex align-items-center">
                 <div class="flex-shrink-0 me-3">
                     <i class="bi bi-people fs-1 text-primary"></i>
                 </div>
                 <div>
-                    <span class="d-block text-muted">Total de Envolvidos</span>
+                    <span class="d-block text-muted">Total</span>
                     <span class="fs-4 fw-bold">{{ envolvidos|length }}</span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="d-flex align-items-center">
                 <div class="flex-shrink-0 me-3">
                     <i class="bi bi-person-workspace fs-1 text-primary"></i>
@@ -132,7 +144,29 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                    <i class="bi bi-mortarboard-fill fs-1 text-primary"></i>
+                </div>
+                <div>
+                    <span class="d-block text-muted">Coordenadores</span>
+                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'Coordenador')|list|length }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 me-3">
+                    <i class="bi bi-clipboard2-check fs-1 text-success"></i>
+                </div>
+                <div>
+                    <span class="d-block text-muted">ATAs</span>
+                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'ATA')|list|length }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
             <div class="d-flex align-items-center">
                 <div class="flex-shrink-0 me-3">
                     <i class="bi bi-person-badge fs-1 text-success"></i>
@@ -143,14 +177,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="d-flex align-items-center">
                 <div class="flex-shrink-0 me-3">
-                    <i class="bi bi-building fs-1 text-info"></i>
+                    <i class="bi bi-person-gear fs-1 text-secondary"></i>
                 </div>
                 <div>
-                    <span class="d-block text-muted">Unidades</span>
-                    <span class="fs-4 fw-bold">{{ unidades|length }}</span>
+                    <span class="d-block text-muted">Apoio</span>
+                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'Apoio')|list|length }}</span>
                 </div>
             </div>
         </div>
@@ -173,6 +207,7 @@
                         Todos
                     </label>
                 </div>
+                <div class="filter-title mt-2">Fatec</div>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="tipoFilter" id="tipoOrientador" value="Orientador">
                     <label class="form-check-label" for="tipoOrientador">
@@ -180,9 +215,29 @@
                     </label>
                 </div>
                 <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoCoordenador" value="Coordenador">
+                    <label class="form-check-label" for="tipoCoordenador">
+                        Coordenadores
+                    </label>
+                </div>
+                <div class="filter-title mt-2">Etec</div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoATA" value="ATA">
+                    <label class="form-check-label" for="tipoATA">
+                        ATAs
+                    </label>
+                </div>
+                <div class="form-check">
                     <input class="form-check-input" type="radio" name="tipoFilter" id="tipoFacilitador" value="Facilitador">
                     <label class="form-check-label" for="tipoFacilitador">
                         Facilitadores
+                    </label>
+                </div>
+                <div class="filter-title mt-2">Comum</div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoApoio" value="Apoio">
+                    <label class="form-check-label" for="tipoApoio">
+                        Apoio
                     </label>
                 </div>
             </div>
@@ -210,6 +265,28 @@
             </div>
             
             <div class="filter-group">
+                <div class="filter-title">Tipo de Unidade</div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeTodas" value="todas" checked>
+                    <label class="form-check-label" for="tipoUnidadeTodas">
+                        Todas
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeFatec" value="Fatec">
+                    <label class="form-check-label" for="tipoUnidadeFatec">
+                        Fatecs
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeEtec" value="Etec">
+                    <label class="form-check-label" for="tipoUnidadeEtec">
+                        Etecs
+                    </label>
+                </div>
+            </div>
+            
+            <div class="filter-group">
                 <div class="filter-title">Unidades</div>
                 <input type="text" class="form-control form-control-sm mb-2" id="unidadeSearch" placeholder="Buscar unidade...">
                 <div class="unidade-list">
@@ -224,225 +301,7 @@
                 </div>
             </div>
             
-            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-                <div>
-                    <span id="resultCount" class="text-muted small">Exibindo {{ envolvidos|length }} envolvidos</span>
-                </div>
-                <div>
-                    <a href="{{ url_for('envolvidos.novo') }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-person-plus-fill me-1"></i> Novo Envolvido
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Variáveis para os elementos DOM
-        const viewGrid = document.getElementById('viewGrid');
-        const viewList = document.getElementById('viewList');
-        const gridView = document.getElementById('gridView');
-        const listView = document.getElementById('listView');
-        const emptyState = document.getElementById('emptyState');
-        const emptyStateMessage = document.getElementById('emptyStateMessage');
-        const resultCount = document.getElementById('resultCount');
-        const searchInput = document.getElementById('searchInput');
-        const searchButton = document.getElementById('searchButton');
-        const resetFilters = document.getElementById('resetFilters');
-        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-        const unidadeSearch = document.getElementById('unidadeSearch');
-        const unidadeListItems = document.querySelectorAll('.unidade-list-item');
-        const radioTipos = document.querySelectorAll('input[name="tipoFilter"]');
-        const radioStatus = document.querySelectorAll('input[name="statusFilter"]');
-        const envolvidoItems = document.querySelectorAll('.envolvido-item');
-        
-        // Alternar entre visualização em grade e lista
-        viewGrid.addEventListener('click', function() {
-            gridView.style.display = 'block';
-            listView.style.display = 'none';
-            viewGrid.classList.add('active');
-            viewList.classList.remove('active');
-        });
-        
-        viewList.addEventListener('click', function() {
-            gridView.style.display = 'none';
-            listView.style.display = 'block';
-            viewGrid.classList.remove('active');
-            viewList.classList.add('active');
-        });
-        
-        // Filtragem de envolvidos
-        function filterEnvolvidos() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const selectedUnidade = document.querySelector('.unidade-list-item.active').getAttribute('data-unidade');
-            const selectedTipo = document.querySelector('input[name="tipoFilter"]:checked').value;
-            const selectedStatus = document.querySelector('input[name="statusFilter"]:checked').value;
-            
-            let visibleCount = 0;
-            
-            envolvidoItems.forEach(item => {
-                const tipo = item.getAttribute('data-tipo');
-                const status = item.getAttribute('data-status');
-                const unidade = item.getAttribute('data-unidade');
-                const nome = item.getAttribute('data-nome');
-                const cpf = item.getAttribute('data-cpf');
-                
-                const matchesTipo = selectedTipo === 'todos' || tipo === selectedTipo;
-                const matchesStatus = selectedStatus === 'todos' || status === selectedStatus;
-                const matchesUnidade = selectedUnidade === 'todas' || unidade === selectedUnidade;
-                const matchesSearch = nome.toLowerCase().includes(searchTerm) || 
-                                    cpf.toLowerCase().includes(searchTerm);
-                
-                if (matchesTipo && matchesStatus && matchesUnidade && matchesSearch) {
-                    item.style.display = '';
-                    visibleCount++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            
-            // Atualiza o contador de resultados
-            resultCount.textContent = `Exibindo ${visibleCount} de ${envolvidoItems.length} envolvidos`;
-            
-            // Exibe ou oculta o estado vazio
-            if (visibleCount === 0) {
-                emptyState.style.display = 'block';
-                gridView.style.display = 'none';
-                listView.style.display = 'none';
-                
-                // Personaliza a mensagem de estado vazio
-                let message = 'Não foram encontrados envolvidos com os filtros selecionados.';
-                
-                if (searchTerm) {
-                    message = `Não foram encontrados envolvidos correspondentes à busca "${searchTerm}".`;
-                } else {
-                    const filters = [];
-                    
-                    if (selectedTipo !== 'todos') {
-                        filters.push(`tipo ${selectedTipo}`);
-                    }
-                    
-                    if (selectedStatus !== 'todos') {
-                        filters.push(`status ${selectedStatus}`);
-                    }
-                    
-                    if (selectedUnidade !== 'todas') {
-                        const unidadeText = document.querySelector(`.unidade-list-item[data-unidade="${selectedUnidade}"]`).textContent.trim();
-                        filters.push(`unidade ${unidadeText}`);
-                    }
-                    
-                    if (filters.length > 0) {
-                        message = `Não foram encontrados envolvidos com ${filters.join(' e ')}.`;
-                    }
-                }
-                
-                emptyStateMessage.textContent = message;
-            } else {
-                emptyState.style.display = 'none';
-                if (viewGrid.classList.contains('active')) {
-                    gridView.style.display = 'block';
-                } else {
-                    listView.style.display = 'block';
-                }
-            }
-        }
-        
-        // Eventos para filtragem
-        searchButton.addEventListener('click', filterEnvolvidos);
-        searchInput.addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') {
-                filterEnvolvidos();
-            }
-        });
-        
-        // Filtro por tipo
-        radioTipos.forEach(radio => {
-            radio.addEventListener('change', filterEnvolvidos);
-        });
-        
-        // Filtro por status
-        radioStatus.forEach(radio => {
-            radio.addEventListener('change', filterEnvolvidos);
-        });
-        
-        // Filtro por unidade
-        unidadeListItems.forEach(item => {
-            item.addEventListener('click', function() {
-                // Remove a classe 'active' de todos os itens
-                unidadeListItems.forEach(i => i.classList.remove('active'));
-                
-                // Adiciona a classe 'active' ao item clicado
-                this.classList.add('active');
-                
-                // Filtra os envolvidos
-                filterEnvolvidos();
-            });
-        });
-        
-        // Busca de unidades
-        unidadeSearch.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            
-            unidadeListItems.forEach(item => {
-                const unidadeText = item.textContent.trim().toLowerCase();
-                
-                if (unidadeText === 'todas as unidades' || unidadeText.includes(searchTerm)) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
-        
-        // Limpar filtros
-        function clearFilters() {
-            // Limpa a busca
-            searchInput.value = '';
-            
-            // Reseta o filtro de tipo
-            document.getElementById('tipoTodos').checked = true;
-            
-            // Reseta o filtro de status
-            document.getElementById('statusTodos').checked = true;
-            
-            // Reseta o filtro de unidade
-            unidadeListItems.forEach(i => i.classList.remove('active'));
-            document.querySelector('[data-unidade="todas"]').classList.add('active');
-            
-            // Limpa a busca de unidades
-            unidadeSearch.value = '';
-            unidadeListItems.forEach(item => {
-                item.style.display = '';
-            });
-            
-            // Atualiza a visualização
-            filterEnvolvidos();
-        }
-        
-        resetFilters.addEventListener('click', clearFilters);
-        clearFiltersBtn.addEventListener('click', clearFilters);
-        
-        // Adiciona funcionalidade de ordenação à tabela
-        const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
-        
-        const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
-            v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
-        )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
-        
-        document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
-            const table = th.closest('table');
-            const tbody = table.querySelector('tbody');
-            Array.from(tbody.querySelectorAll('tr'))
-                .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
-                .forEach(tr => tbody.appendChild(tr) );
-        })));
-    });
-</script>
-{% endblock %}text-center">
+            <div class="card-footer bg-white text-center">
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="resetFilters">
                     <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Filtros
                 </button>
@@ -482,6 +341,7 @@
                              data-tipo="{{ envolvido.tipo }}" 
                              data-status="{{ 'ativo' if envolvido.ativo else 'inativo' }}"
                              data-unidade="{{ envolvido.unidade_id }}"
+                             data-tipo-unidade="{{ envolvido.unidade.tipo }}"
                              data-nome="{{ envolvido.nome }}"
                              data-cpf="{{ envolvido.cpf }}">
                             <div class="card envolvido-card h-100">
@@ -498,8 +358,14 @@
                                     <div class="mb-2">
                                         {% if envolvido.tipo == 'Orientador' %}
                                         <span class="envolvido-type type-orientador">Orientador</span>
-                                        {% else %}
+                                        {% elif envolvido.tipo == 'Coordenador' %}
+                                        <span class="envolvido-type type-coordenador">Coordenador</span>
+                                        {% elif envolvido.tipo == 'ATA' %}
+                                        <span class="envolvido-type type-ata">ATA</span>
+                                        {% elif envolvido.tipo == 'Facilitador' %}
                                         <span class="envolvido-type type-facilitador">Facilitador</span>
+                                        {% elif envolvido.tipo == 'Apoio' %}
+                                        <span class="envolvido-type type-apoio">Apoio</span>
                                         {% endif %}
                                         <span class="unidade-badge ms-1">{{ envolvido.unidade.tipo }} {{ envolvido.unidade.numero }}</span>
                                     </div>
@@ -511,17 +377,13 @@
                                         <i class="bi bi-building me-1 text-muted"></i> {{ envolvido.unidade.nome }}
                                     </p>
                                     
-                                    {% if envolvido.email %}
                                     <p class="card-text mb-1">
-                                        <i class="bi bi-envelope me-1 text-muted"></i> {{ envolvido.email }}
+                                        <i class="bi bi-envelope me-1 text-muted"></i> {{ envolvido.email_institucional }}
                                     </p>
-                                    {% endif %}
                                     
-                                    {% if envolvido.telefone %}
                                     <p class="card-text mb-3">
-                                        <i class="bi bi-telephone me-1 text-muted"></i> {{ envolvido.telefone }}
+                                        <i class="bi bi-telephone me-1 text-muted"></i> {{ envolvido.celular }}
                                     </p>
-                                    {% endif %}
                                 </div>
                                 <div class="card-footer bg-white border-top">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -554,10 +416,10 @@
                                             <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
                                             <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
                                             
-                                            {% if envolvido.is_orientador and envolvido.cursos %}
+                                            {% if envolvido.allows_cursos and envolvido.cursos %}
                                             <div class="alert alert-warning">
                                                 <i class="bi bi-info-circle-fill me-2"></i> 
-                                                <strong>Atenção:</strong> Este orientador está associado a {{ envolvido.cursos|length }} curso(s). 
+                                                <strong>Atenção:</strong> Este {{ envolvido.tipo | lower }} está associado a {{ envolvido.cursos|length }} curso(s). 
                                                 A exclusão removerá estas associações.
                                             </div>
                                             {% endif %}
@@ -566,7 +428,7 @@
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                             <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
+                                                <button type="submit" class="btn btn-danger">Excluir</button>
                                             </form>
                                         </div>
                                     </div>
@@ -598,6 +460,7 @@
                                     data-tipo="{{ envolvido.tipo }}" 
                                     data-status="{{ 'ativo' if envolvido.ativo else 'inativo' }}"
                                     data-unidade="{{ envolvido.unidade_id }}"
+                                    data-tipo-unidade="{{ envolvido.unidade.tipo }}"
                                     data-nome="{{ envolvido.nome }}"
                                     data-cpf="{{ envolvido.cpf }}">
                                     <td><strong>{{ envolvido.nome }}</strong></td>
@@ -605,8 +468,14 @@
                                     <td>
                                         {% if envolvido.tipo == 'Orientador' %}
                                         <span class="envolvido-type type-orientador">Orientador</span>
-                                        {% else %}
+                                        {% elif envolvido.tipo == 'Coordenador' %}
+                                        <span class="envolvido-type type-coordenador">Coordenador</span>
+                                        {% elif envolvido.tipo == 'ATA' %}
+                                        <span class="envolvido-type type-ata">ATA</span>
+                                        {% elif envolvido.tipo == 'Facilitador' %}
                                         <span class="envolvido-type type-facilitador">Facilitador</span>
+                                        {% elif envolvido.tipo == 'Apoio' %}
+                                        <span class="envolvido-type type-apoio">Apoio</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -649,7 +518,7 @@
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                                         <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
                                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
+                                                            <button type="submit" class="btn btn-danger">Excluir</button>
                                                         </form>
                                                     </div>
                                                 </div>
@@ -678,4 +547,39 @@
                 </div>
             </div>
             
-            <div class="card-footer bg-white 
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                <div>
+                    <span id="resultCount" class="text-muted small">Exibindo {{ envolvidos|length }} envolvidos</span>
+                </div>
+                <div>
+                    <a href="{{ url_for('envolvidos.novo') }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-person-plus-fill me-1"></i> Novo Envolvido
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Variáveis para os elementos DOM
+        const viewGrid = document.getElementById('viewGrid');
+        const viewList = document.getElementById('viewList');
+        const gridView = document.getElementById('gridView');
+        const listView = document.getElementById('listView');
+        const emptyState = document.getElementById('emptyState');
+        const emptyStateMessage = document.getElementById('emptyStateMessage');
+        const resultCount = document.getElementById('resultCount');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const resetFilters = document.getElementById('resetFilters');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        const unidadeSearch = document.getElementById('unidadeSearch');
+        const unidadeListItems = document.querySelectorAll('.unidade-list-item');
+        const radioTipos = document.querySelectorAll('input[name="tipoFilter"]');
+        const radioStatus = document.querySelectorAll('input[name="statusFilter"]');
+        const radioTipoUnidade = document.querySelectorAll('input[name="tipoUnidadeFilter"]');
+        const envolvidoItems =

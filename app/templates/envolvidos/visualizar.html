@@ -29,11 +29,19 @@
         font-size: 0.75rem;
         font-weight: 600;
     }
-    .type-orientador, .type-coordenador {
+    .type-orientador {
         background-color: rgba(13, 110, 253, 0.1);
         color: #0d6efd;
     }
-    .type-ata, .type-facilitador {
+    .type-coordenador {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-ata {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .type-facilitador {
         background-color: rgba(25, 135, 84, 0.1);
         color: #198754;
     }
@@ -200,17 +208,6 @@
                                 <a href="mailto:{{ envolvido.email_institucional }}">{{ envolvido.email_institucional }}</a>
                             </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <div class="info-label">Email Pessoal</div>
-                            <div>
-                                {% if envolvido.email_pessoal %}
-                                <a href="mailto:{{ envolvido.email_pessoal }}">{{ envolvido.email_pessoal }}</a>
-                                {% else %}
-                                <span class="text-muted">Não informado</span>
-                                {% endif %}
-                            </div>
-                        </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -218,17 +215,6 @@
                             <div>
                                 {% if envolvido.celular %}
                                 <a href="tel:{{ envolvido.celular }}">{{ envolvido.celular }}</a>
-                                {% else %}
-                                <span class="text-muted">Não informado</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <div class="info-label">Telefone Fixo</div>
-                            <div>
-                                {% if envolvido.telefone %}
-                                <a href="tel:{{ envolvido.telefone }}">{{ envolvido.telefone }}</a>
                                 {% else %}
                                 <span class="text-muted">Não informado</span>
                                 {% endif %}

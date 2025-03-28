@@ -22,9 +22,21 @@
         background-color: rgba(13, 110, 253, 0.1);
         color: #0d6efd;
     }
-    .type-facilitador {
+    .type-coordenador {
         background-color: rgba(25, 135, 84, 0.1);
         color: #198754;
+    }
+    .type-ata {
+        background-color: rgba(13, 202, 240, 0.1);
+        color: #0dcaf0;
+    }
+    .type-facilitador {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+    .type-apoio {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
     }
     .envolvido-actions {
         white-space: nowrap;
@@ -58,6 +70,22 @@
     .status-inactive {
         background-color: #dc3545;
     }
+    .filter-badge {
+        cursor: pointer;
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+    .filter-badge:hover {
+        opacity: 0.8;
+    }
+    .filter-badge.active {
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    .tipo-info {
+        display: none;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -83,14 +111,76 @@
 <!-- Filtros e busca -->
 <div class="row mb-4">
     <div class="col-md-8">
-        <div class="btn-group me-2" role="group" aria-label="Filtrar por tipo">
-            <a href="{{ url_for('envolvidos.listar', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-secondary{% if not tipo_filtro %} active{% endif %}">Todos</a>
-            <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Orientador', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-primary{% if tipo_filtro == 'Orientador' %} active{% endif %}">Orientadores</a>
-            <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Facilitador', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-success{% if tipo_filtro == 'Facilitador' %} active{% endif %}">Facilitadores</a>
+        <div class="mb-2">
+            <strong>Filtrar por tipo:</strong>
+        </div>
+        
+        <!-- Botão "Todos os tipos" -->
+        <a href="{{ url_for('envolvidos.listar', unidade_id=unidade.id if unidade else None) }}" 
+           class="badge rounded-pill bg-secondary text-decoration-none filter-badge{% if not tipo_filtro %} active{% endif %}">
+            Todos os tipos
+        </a>
+        
+        {% if not unidade or unidade.tipo == 'Fatec' %}
+        <!-- Tipos para Fatec -->
+        <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Orientador', unidade_id=unidade.id if unidade else None) }}" 
+           class="badge rounded-pill bg-primary text-decoration-none filter-badge{% if tipo_filtro == 'Orientador' %} active{% endif %}"
+           onmouseover="showTipoInfo('orientador-info')" onmouseout="hideTipoInfo('orientador-info')">
+            Orientadores
+        </a>
+        <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Coordenador', unidade_id=unidade.id if unidade else None) }}" 
+           class="badge rounded-pill bg-success text-decoration-none filter-badge{% if tipo_filtro == 'Coordenador' %} active{% endif %}"
+           onmouseover="showTipoInfo('coordenador-info')" onmouseout="hideTipoInfo('coordenador-info')">
+            Coordenadores
+        </a>
+        {% endif %}
+        
+        {% if not unidade or unidade.tipo == 'Etec' %}
+        <!-- Tipos para Etec -->
+        <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='ATA', unidade_id=unidade.id if unidade else None) }}" 
+           class="badge rounded-pill bg-info text-decoration-none filter-badge{% if tipo_filtro == 'ATA' %} active{% endif %}"
+           onmouseover="showTipoInfo('ata-info')" onmouseout="hideTipoInfo('ata-info')">
+            ATAs
+        </a>
+        <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Facilitador', unidade_id=unidade.id if unidade else None) }}" 
+           class="badge rounded-pill bg-warning text-decoration-none filter-badge{% if tipo_filtro == 'Facilitador' %} active{% endif %}"
+           onmouseover="showTipoInfo('facilitador-info')" onmouseout="hideTipoInfo('facilitador-info')">
+            Facilitadores
+        </a>
+        {% endif %}
+        
+        <!-- Tipo comum para ambos -->
+        <a href="{{ url_for('envolvidos.listar_por_tipo', tipo='Apoio', unidade_id=unidade.id if unidade else None) }}" 
+           class="badge rounded-pill bg-dark text-decoration-none filter-badge{% if tipo_filtro == 'Apoio' %} active{% endif %}"
+           onmouseover="showTipoInfo('apoio-info')" onmouseout="hideTipoInfo('apoio-info')">
+            Apoio
+        </a>
+        
+        <!-- Informações sobre os tipos -->
+        <div id="orientador-info" class="tipo-info alert alert-primary">
+            <strong>Orientador:</strong> Professor orientador de estágio vinculado a curso(s) da FATEC.
+        </div>
+        <div id="coordenador-info" class="tipo-info alert alert-success">
+            <strong>Coordenador:</strong> Coordenador de curso vinculado a curso(s) da FATEC.
+        </div>
+        <div id="ata-info" class="tipo-info alert alert-info">
+            <strong>ATA:</strong> Assistente Técnico-Administrativo da ETEC, que pode ser vinculado a curso(s).
+        </div>
+        <div id="facilitador-info" class="tipo-info alert alert-warning">
+            <strong>Facilitador:</strong> Facilitador de estágio da ETEC, que pode ser vinculado a curso(s).
+        </div>
+        <div id="apoio-info" class="tipo-info alert alert-dark">
+            <strong>Apoio:</strong> Funcionário de apoio ao estágio, sem vínculo com cursos específicos.
         </div>
     </div>
     <div class="col-md-4">
         <form method="GET" action="{{ url_for('envolvidos.listar', unidade_id=unidade.id if unidade else None) }}">
+            {% if tipo_filtro %}
+            <input type="hidden" name="tipo" value="{{ tipo_filtro }}">
+            {% endif %}
+            {% if unidade %}
+            <input type="hidden" name="unidade_id" value="{{ unidade.id }}">
+            {% endif %}
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Buscar por nome ou CPF" 
                        name="q" value="{{ request.args.get('q', '') }}">
@@ -125,21 +215,20 @@
                 <td>
                     {% if envolvido.tipo == 'Orientador' %}
                     <span class="envolvido-type type-orientador">Orientador</span>
-                    {% else %}
+                    {% elif envolvido.tipo == 'Coordenador' %}
+                    <span class="envolvido-type type-coordenador">Coordenador</span>
+                    {% elif envolvido.tipo == 'ATA' %}
+                    <span class="envolvido-type type-ata">ATA</span>
+                    {% elif envolvido.tipo == 'Facilitador' %}
                     <span class="envolvido-type type-facilitador">Facilitador</span>
+                    {% elif envolvido.tipo == 'Apoio' %}
+                    <span class="envolvido-type type-apoio">Apoio</span>
                     {% endif %}
                 </td>
                 <td>{{ envolvido.cargo }}</td>
                 <td>
-                    {% if envolvido.email %}
-                    <small><i class="bi bi-envelope me-1"></i> {{ envolvido.email }}</small><br>
-                    {% endif %}
-                    {% if envolvido.telefone %}
-                    <small><i class="bi bi-telephone me-1"></i> {{ envolvido.telefone }}</small>
-                    {% endif %}
-                    {% if not envolvido.email and not envolvido.telefone %}
-                    <small class="text-muted">Não informado</small>
-                    {% endif %}
+                    <small><i class="bi bi-envelope me-1"></i> {{ envolvido.email_institucional }}</small><br>
+                    <small><i class="bi bi-telephone me-1"></i> {{ envolvido.celular }}</small>
                 </td>
                 <td>
                     {% if envolvido.ativo %}
@@ -171,6 +260,14 @@
                                 <div class="modal-body">
                                     <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
                                     <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                    
+                                    {% if envolvido.is_orientador or envolvido.is_coordenador %}
+                                    <div class="alert alert-warning">
+                                        <i class="bi bi-info-circle-fill me-2"></i> 
+                                        <strong>Atenção:</strong> Este {{ envolvido.tipo|lower }} está associado a cursos.
+                                        A exclusão removerá estas associações.
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -208,8 +305,14 @@
                     <div class="mb-2">
                         {% if envolvido.tipo == 'Orientador' %}
                         <span class="envolvido-type type-orientador">Orientador</span>
-                        {% else %}
+                        {% elif envolvido.tipo == 'Coordenador' %}
+                        <span class="envolvido-type type-coordenador">Coordenador</span>
+                        {% elif envolvido.tipo == 'ATA' %}
+                        <span class="envolvido-type type-ata">ATA</span>
+                        {% elif envolvido.tipo == 'Facilitador' %}
                         <span class="envolvido-type type-facilitador">Facilitador</span>
+                        {% elif envolvido.tipo == 'Apoio' %}
+                        <span class="envolvido-type type-apoio">Apoio</span>
                         {% endif %}
                         <span class="ms-2">{{ envolvido.cargo }}</span>
                     </div>
@@ -218,17 +321,13 @@
                         <i class="bi bi-person-badge me-1 text-muted"></i> CPF: <span class="envolvido-cpf">{{ envolvido.cpf }}</span>
                     </p>
                     
-                    {% if envolvido.email %}
                     <p class="card-text mb-1">
-                        <i class="bi bi-envelope me-1 text-muted"></i> {{ envolvido.email }}
+                        <i class="bi bi-envelope me-1 text-muted"></i> {{ envolvido.email_institucional }}
                     </p>
-                    {% endif %}
                     
-                    {% if envolvido.telefone %}
                     <p class="card-text mb-3">
-                        <i class="bi bi-telephone me-1 text-muted"></i> {{ envolvido.telefone }}
+                        <i class="bi bi-telephone me-1 text-muted"></i> {{ envolvido.celular }}
                     </p>
-                    {% endif %}
                     
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-sm btn-primary">
@@ -256,6 +355,14 @@
                                     <div class="modal-body">
                                         <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
                                         <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                        
+                                        {% if envolvido.is_orientador or envolvido.is_coordenador %}
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-info-circle-fill me-2"></i> 
+                                            <strong>Atenção:</strong> Este {{ envolvido.tipo|lower }} está associado a cursos.
+                                            A exclusão removerá estas associações.
+                                        </div>
+                                        {% endif %}
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -316,6 +423,9 @@
                     </div>
                 </div>
             </div>
+            
+            {% if not unidade or unidade.tipo == 'Fatec' %}
+            <!-- Estatísticas para Fatec -->
             <div class="col-md-4">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 p-3 rounded-circle bg-success bg-opacity-10">
@@ -330,7 +440,31 @@
             <div class="col-md-4">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 p-3 rounded-circle bg-info bg-opacity-10">
-                        <i class="bi bi-person-badge fs-4 text-info"></i>
+                        <i class="bi bi-briefcase fs-4 text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Coordenadores</h6>
+                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'Coordenador')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            {% elif not unidade or unidade.tipo == 'Etec' %}
+            <!-- Estatísticas para Etec -->
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-info bg-opacity-10">
+                        <i class="bi bi-file-earmark-person fs-4 text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">ATAs</h6>
+                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'ATA')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-warning bg-opacity-10">
+                        <i class="bi bi-person-badge fs-4 text-warning"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-0">Facilitadores</h6>
@@ -338,11 +472,24 @@
                     </div>
                 </div>
             </div>
+            {% else %}
+            <!-- Estatísticas para qualquer tipo -->
+            <div class="col-md-4">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-dark bg-opacity-10">
+                        <i class="bi bi-person-gear fs-4 text-dark"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Apoio</h6>
+                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'Apoio')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 {% endif %}
-
 {% endblock %}
 
 {% block scripts %}
@@ -363,5 +510,14 @@
                 .forEach(tr => tbody.appendChild(tr) );
         })));
     });
+    
+    // Funções para mostrar/ocultar informações sobre os tipos
+    function showTipoInfo(id) {
+        document.getElementById(id).style.display = 'block';
+    }
+    
+    function hideTipoInfo(id) {
+        document.getElementById(id).style.display = 'none';
+    }
 </script>
 {% endblock %}
