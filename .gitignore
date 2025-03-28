@@ -27,6 +27,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+migrations/
 
 # Arquivos de cache
 .cache

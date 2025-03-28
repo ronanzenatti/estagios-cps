@@ -415,7 +415,7 @@
                 </div>
                 <div class="progress mb-3" style="height: 6px;">
                     <div class="progress-bar bg-primary" role="progressbar" 
-                         style="width: {{ (cursos|select('ativo')|list|length / cursos|length * 100) if cursos else 0 }}%"></div>
+                    style="width: {{ (cursos|selectattr('ativo')|list|length / cursos|length * 100) if cursos else 0 }}%"></div>
                 </div>
                 
                 <div class="d-flex justify-content-between align-items-center mb-3">

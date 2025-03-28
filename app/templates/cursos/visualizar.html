@@ -320,7 +320,7 @@
                         <strong>{{ orientadores|length }}</strong> orientador(es) associado(s)
                         <div class="progress mt-1" style="height: 6px;">
                             <div class="progress-bar bg-primary" role="progressbar" 
-                                 style="width: {{ (orientadores|selectattr('ativo')|list|length / orientadores|length * 100) if orientadores else 0 }}%"></div>
+                            style="width: {{ (orientadores|selectattr('ativo')|list|length / orientadores|length * 100) if orientadores else 0 }}%"></div>
                         </div>
                         <small class="text-muted">
                             {{ orientadores|selectattr('ativo')|list|length }} ativo(s) / 
