@@ -215,22 +215,6 @@
                 </div>
             </div>
             
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="email_pessoal" class="form-label">Email Pessoal</label>
-                    <input type="email" class="form-control" id="email_pessoal" name="email_pessoal" 
-                           placeholder="email@exemplo.com">
-                    <div class="form-text">Email pessoal ou alternativo (opcional).</div>
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label for="telefone" class="form-label">Telefone Fixo</label>
-                    <input type="tel" class="form-control" id="telefone" name="telefone" 
-                           placeholder="(00) 0000-0000">
-                    <div class="form-text">Telefone fixo (opcional).</div>
-                </div>
-            </div>
-            
             <!-- Seção de Cursos (mostrada apenas para tipos apropriados) -->
             <div id="cursos-section" class="mt-4" style="display: none;">
                 <h5 class="mb-3">Cursos Associados</h5>
@@ -314,7 +298,7 @@
             e.target.value = value;
         });
         
-        // Formata o campo de telefone e celular enquanto o usuário digita
+        // Formata o campo de celular enquanto o usuário digita
         const formatPhoneNumber = function(input) {
             input.addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\D/g, '');
@@ -342,8 +326,7 @@
         };
         
         formatPhoneNumber(document.getElementById('celular'));
-        formatPhoneNumber(document.getElementById('telefone'));
-        
+
         // Mostra/esconde a seção de cursos dependendo do tipo selecionado
         const tipoSelect = document.getElementById('tipo');
         const cursosSection = document.getElementById('cursos-section');

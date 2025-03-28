@@ -20,8 +20,8 @@ class Envolvido(db.Model):
     tipo = db.Column(db.String(12), nullable=False)  # 'Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio'
     email_institucional = db.Column(db.String(100), nullable=False)  # Novo campo obrigatório
     celular = db.Column(db.String(20), nullable=False)  # Novo campo obrigatório
-    email_pessoal = db.Column(db.String(100), nullable=True)  # Antigo campo 'email' renomeado
-    telefone = db.Column(db.String(20), nullable=True)  # Mantido como opcional (telefone fixo)
+    # email_pessoal = db.Column(db.String(100), nullable=True)  # Antigo campo 'email' renomeado
+    # telefone = db.Column(db.String(20), nullable=True)  # Mantido como opcional (telefone fixo)
     ativo = db.Column(db.Boolean, default=True)
     unidade_id = db.Column(db.Integer, db.ForeignKey('unidades.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -45,8 +45,8 @@ class Envolvido(db.Model):
         self.unidade_id = unidade_id
         self.email_institucional = email_institucional
         self.celular = celular
-        self.email_pessoal = email_pessoal
-        self.telefone = telefone
+        # self.email_pessoal = email_pessoal
+        # self.telefone = telefone
     
     # Propriedades para verificar tipo
     @property
@@ -107,8 +107,8 @@ class Envolvido(db.Model):
         self.tipo = tipo
         self.email_institucional = email_institucional
         self.celular = celular
-        self.email_pessoal = email_pessoal
-        self.telefone = telefone
+        # self.email_pessoal = email_pessoal
+        # self.telefone = telefone
         self.ativo = ativo
         self.updated_at = datetime.utcnow()
     

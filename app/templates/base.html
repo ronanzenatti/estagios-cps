@@ -92,9 +92,7 @@
                                 {% endif %}
                                 
                                 {% if current_user.is_diretor() %}
-                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.listar', unidade_id=current_user.unidade_id) }}">Listar Todos</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.listar_por_tipo', tipo='Orientador', unidade_id=current_user.unidade_id) }}">Listar Orientadores</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.listar_por_tipo', tipo='Facilitador', unidade_id=current_user.unidade_id) }}">Listar Facilitadores</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('envolvidos.listar', unidade_id=current_user.unidade_id) }}">Listar Todos</a></li>                                   
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{{ url_for('envolvidos.novo', unidade_id=current_user.unidade_id) }}">Novo Envolvido</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('envolvidos.buscar_por_cpf') }}">Buscar por CPF</a></li>

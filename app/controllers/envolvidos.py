@@ -59,7 +59,7 @@ def get_envolvido_by_cpf(cpf):
 
 def create_envolvido(nome, cpf, cargo, tipo, unidade_id, 
                     email_institucional, celular,
-                    cursos_ids=None, email_pessoal=None, telefone=None):
+                    cursos_ids=None ):
     """
     Cria um novo envolvido.
     
@@ -71,9 +71,7 @@ def create_envolvido(nome, cpf, cargo, tipo, unidade_id,
         unidade_id (int): ID da unidade
         email_institucional (str): Email institucional do envolvido
         celular (str): Número do celular do envolvido
-        cursos_ids (list, optional): Lista de IDs de cursos
-        email_pessoal (str, optional): Email pessoal do envolvido
-        telefone (str, optional): Telefone fixo do envolvido
+        cursos_ids (list, optional): Lista de IDs de cursos        
         
     Returns:
         Envolvido: Objeto do envolvido criado ou None em caso de erro
@@ -110,9 +108,7 @@ def create_envolvido(nome, cpf, cargo, tipo, unidade_id,
         tipo=tipo,
         unidade_id=unidade_id,
         email_institucional=email_institucional,
-        celular=celular,
-        email_pessoal=email_pessoal,
-        telefone=telefone
+        celular=celular
     )
     
     # Verificações específicas para tipos que exigem cursos
@@ -147,7 +143,7 @@ def create_envolvido(nome, cpf, cargo, tipo, unidade_id,
 
 def update_envolvido(envolvido_id, nome, cpf, cargo, tipo, 
                     email_institucional, celular,
-                    cursos_ids=None, email_pessoal=None, telefone=None, ativo=True):
+                    cursos_ids=None, ativo=True):
     """
     Atualiza um envolvido existente.
     
@@ -160,8 +156,6 @@ def update_envolvido(envolvido_id, nome, cpf, cargo, tipo,
         email_institucional (str): Email institucional do envolvido
         celular (str): Número do celular do envolvido
         cursos_ids (list, optional): Lista de IDs de cursos
-        email_pessoal (str, optional): Email pessoal do envolvido
-        telefone (str, optional): Telefone fixo do envolvido
         ativo (bool, optional): Status do envolvido
         
     Returns:
@@ -220,8 +214,6 @@ def update_envolvido(envolvido_id, nome, cpf, cargo, tipo,
             tipo=tipo,
             email_institucional=email_institucional,
             celular=celular,
-            email_pessoal=email_pessoal,
-            telefone=telefone,
             ativo=ativo
         )
         

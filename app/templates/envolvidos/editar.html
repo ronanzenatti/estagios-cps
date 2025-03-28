@@ -197,7 +197,7 @@
                            placeholder="(00) 00000-0000" required>
                 </div>
             </div>
-            
+            <!--
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="email_pessoal" class="form-label">Email Pessoal</label>
@@ -214,7 +214,7 @@
                            placeholder="(00) 0000-0000">
                     <div class="form-text">Telefone fixo (opcional).</div>
                 </div>
-            </div>
+            </div> -->
             
             <!-- Seção de Cursos (mostrada apenas para tipos apropriados) -->
             <div id="cursos-section" class="mt-4" {% if not envolvido.allows_cursos %}style="display: none;"{% endif %}>
@@ -349,7 +349,7 @@
         };
         
         formatPhoneNumber(document.getElementById('celular'));
-        formatPhoneNumber(document.getElementById('telefone'));
+        // formatPhoneNumber(document.getElementById('telefone'));
         
         // Mostra/esconde a seção de cursos dependendo do tipo selecionado
         const tipoSelect = document.getElementById('tipo');
