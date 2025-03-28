@@ -380,19 +380,26 @@
         {% if current_user.is_admin() and not unidade %}
         const unidadeSelect = document.getElementById('unidade_id');
         const hiddenUnidadeInput = document.getElementById('hidden_unidade_id');
-        const tipoSelect = document.getElementById('tipo');
         
         unidadeSelect.addEventListener('change', function() {
             hiddenUnidadeInput.value = this.value;
             
             // Limpa as opções atuais do select de tipo
-            while (tipoSelect.options.length > 1) {
-                tipoSelect.remove(1);
-            }
+            tipoSelect.innerHTML = '';
+            
+            // Adiciona a opção padrão
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Selecione o tipo';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            tipoSelect.appendChild(defaultOption);
+            
+            // Verifica o tipo de unidade selecionada
+            const selectedOption = this.options[this.selectedIndex];
+            const unidadeTipo = selectedOption.text.includes('Fatec') ? 'Fatec' : 'Etec';
             
             // Adiciona as opções de tipo corretas com base no tipo da unidade selecionada
-            const unidadeTipo = this.options[this.selectedIndex].text.includes('Fatec') ? 'Fatec' : 'Etec';
-            
             if (unidadeTipo === 'Fatec') {
                 const options = ['Orientador', 'Coordenador', 'Apoio'];
                 options.forEach(option => {
@@ -411,8 +418,6 @@
                 });
             }
             
-            // Após alterar a unidade, limpa a seleção de tipo
-            tipoSelect.selectedIndex = 0;
             // Esconde a seção de cursos
             cursosSection.style.display = 'none';
             

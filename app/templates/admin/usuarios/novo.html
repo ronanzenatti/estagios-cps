@@ -126,3 +126,104 @@
                     <i class="bi bi-person-plus-fill me-1"></i> Adicionar Administrador
                 </button>
             </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Foca no campo de email quando a página carrega
+        document.getElementById('email').focus();
+        
+        // Toggle para exibir/ocultar a senha
+        const togglePassword = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Alterna o ícone do botão
+            const icon = this.querySelector('i');
+            icon.classList.toggle('bi-eye');
+            icon.classList.toggle('bi-eye-slash');
+        });
+        
+        // Indicador de força da senha
+        const strengthBar = document.getElementById('password-strength-bar');
+        const feedbackElement = document.getElementById('password-feedback');
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const strength = calculatePasswordStrength(password);
+            
+            // Atualiza a barra de força
+            strengthBar.style.width = strength.score + '%';
+            
+            // Atualiza a cor da barra baseado na força
+            if (strength.score < 30) {
+                strengthBar.className = 'bg-danger';
+            } else if (strength.score < 70) {
+                strengthBar.className = 'bg-warning';
+            } else {
+                strengthBar.className = 'bg-success';
+            }
+            
+            // Exibe feedback
+            feedbackElement.textContent = strength.feedback;
+        });
+        
+        // Função para calcular a força da senha
+        function calculatePasswordStrength(password) {
+            let score = 0;
+            let feedback = '';
+            
+            if (password.length === 0) {
+                return { score: 0, feedback: '' };
+            }
+            
+            // Comprimento básico
+            score += Math.min(password.length * 4, 25);
+            
+            // Letras maiúsculas e minúsculas
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) {
+                score += 10;
+            }
+            
+            // Números
+            if (/\d/.test(password)) {
+                score += 10;
+            }
+            
+            // Caracteres especiais
+            if (/[^a-zA-Z0-9]/.test(password)) {
+                score += 15;
+            }
+            
+            // Combinações
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password)) {
+                score += 10;
+            }
+            
+            if (/[a-zA-Z]/.test(password) && /\d/.test(password) && /[^a-zA-Z0-9]/.test(password)) {
+                score += 15;
+            }
+            
+            // Fornecer feedback baseado no score
+            if (score < 30) {
+                feedback = 'Senha fraca';
+            } else if (score < 60) {
+                feedback = 'Senha razoável';
+            } else if (score < 80) {
+                feedback = 'Senha forte';
+            } else {
+                feedback = 'Senha muito forte';
+            }
+            
+            return { score, feedback };
+        }
+    });
+</script>
+{% endblock %}

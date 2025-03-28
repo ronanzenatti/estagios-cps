@@ -46,7 +46,7 @@ def perfil():
         return redirect(url_for('diretor.perfil'))
     
     # Para administradores, exibe informações básicas de perfil
-    return render_template('perfil.html', user=current_user)
+    return render_template('admin/usuarios/perfil.html', user=current_user)
 
 @main_bp.route('/sobre')
 def sobre():

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil - Sistema de Gestão de Estágio - CPS{% endblock %}
+
+{% block styles %}
+<style>
+    .profile-card {
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .profile-header {
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .profile-image {
+        width: 120px;
+        height: 120px;
+        background-color: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #6c757d;
+        margin: 0 auto 1.5rem;
+    }
+    .profile-info {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .required-field:after {
+        content: " *";
+        color: #dc3545;
+    }
+    .card-footer {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Meu Perfil</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Voltar para Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="profile-card mb-4">
+    <div class="profile-header text-center">
+        <div class="profile-image">
+            <i class="bi bi-person"></i>
+        </div>
+        <h4 class="mb-0">{{ user.nome or user.email }}</h4>
+        <p class="text-muted mb-0">{{ user.role|title }}</p>
+        {% if user.unidade %}
+        <div class="mt-2">
+            <span class="badge bg-primary">{{ user.unidade.tipo }} {{ user.unidade.numero }}</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="profile-info">
+        <h5 class="section-header mb-3"><i class="bi bi-person-badge me-2"></i> Informações Pessoais</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Nome Completo</div>
+                    <div>{{ user.nome or 'Não informado' }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Email Institucional</div>
+                    <div>{{ user.email }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if user.unidade %}
+    <div class="profile-info">
+        <h5 class="section-header mb-3"><i class="bi bi-building me-2"></i> Informações da Unidade</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="mb-3">
+                    <div class="info-label">Nome da Unidade</div>
+                    <div>{{ user.unidade.nome }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Cidade</div>
+                    <div>{{ user.unidade.cidade }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <div class="info-label">Telefone</div>
+                    <div>{{ user.unidade.telefone }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="card-body p-4">
+        <h5 class="mb-3">Informações da Conta</h5>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="info-label">Papel no Sistema</div>
+                <div>
+                    <span class="badge {% if user.is_admin() %}bg-primary{% else %}bg-success{% endif %}">
+                        {{ user.role|title }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="info-label">Último Acesso</div>
+                <div>
+                    {% if user.last_login %}
+                    {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
+                    {% else %}
+                    <span class="text-muted">Primeiro acesso</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Para alterar sua senha, use a opção <a href="{{ url_for('auth.alterar_senha') }}" class="alert-link">Alterar Senha</a>.
+        </div>
+    </div>
+</div>
+
+<!-- Ações Adicionais -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0"><i class="bi bi-gear me-2"></i> Ações Adicionais</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="d-grid">
+                    <a href="{{ url_for('auth.alterar_senha') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-key me-2"></i> Alterar Senha
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-grid">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">
+                        <i class="bi bi-box-arrow-right me-2"></i> Sair do Sistema
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
