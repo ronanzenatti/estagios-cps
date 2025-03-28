@@ -77,22 +77,34 @@ def get_diretor_statistics(unidade_id):
     """
     from ..models import Curso, Envolvido
     
-    stats = {
-        'total_cursos': Curso.query.filter_by(unidade_id=unidade_id).count(),
-        'total_envolvidos': Envolvido.query.filter_by(unidade_id=unidade_id).count(),
-        'total_orientadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Orientador').count(),
-        'total_facilitadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Facilitador').count()
-    }
+    # Estatísticas gerais de envolvidos
+    total_envolvidos = Envolvido.query.filter_by(unidade_id=unidade_id).count()
     
-    # Envolvidos por curso (apenas para orientadores)
-    stats['cursos_orientadores'] = db.session.query(
-        Curso.nome, db.func.count(Envolvido.id)
-    ).join(
-        Envolvido.cursos
-    ).filter(
-        Curso.unidade_id == unidade_id,
-        Envolvido.unidade_id == unidade_id,
-        Envolvido.tipo == 'Orientador'
-    ).group_by(Curso.id).all()
+    # Estatísticas específicas por tipo de unidade
+    if Unidade.query.get(unidade_id).tipo == 'Fatec':
+        stats = {
+            'total_envolvidos': total_envolvidos,
+            'total_orientadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Orientador').count(),
+            'total_coordenadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Coordenador').count(),
+            'total_apoio_fatec': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Apoio').count(),
+            'total_apoio': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Apoio').count(),
+            'cursos_orientadores': db.session.query(
+                Curso.nome, db.func.count(Envolvido.id)
+            ).join(
+                Envolvido.cursos
+            ).filter(
+                Curso.unidade_id == unidade_id,
+                Envolvido.unidade_id == unidade_id,
+                Envolvido.tipo == 'Orientador'
+            ).group_by(Curso.id).all()
+        }
+    else:  # ETEC
+        stats = {
+            'total_envolvidos': total_envolvidos,
+            'total_ata': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='ATA').count(),
+            'total_facilitadores': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Facilitador').count(),
+            'total_apoio_etec': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Apoio').count(),
+            'total_apoio': Envolvido.query.filter_by(unidade_id=unidade_id, tipo='Apoio').count(),
+        }
     
     return stats

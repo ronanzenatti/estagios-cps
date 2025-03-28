@@ -147,13 +147,9 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <div class="progress bg-warning-light">
-                        <div class="progress-bar bg-white" role="progressbar" 
-                             style="width: {{ stats.total_apoio / stats.total_envolvidos * 100 if stats.total_envolvidos > 0 else 0 }}%" 
-                             aria-valuenow="{{ stats.total_apoio }}" 
-                             aria-valuemin="0" 
-                             aria-valuemax="{{ stats.total_envolvidos }}">
-                        </div>
+                    <div class="progress mb-3" style="height: 6px;">
+                        <div class="progress-bar bg-warning" role="progressbar" 
+                             style="width: {{ (stats.total_apoio / stats.total_envolvidos * 100) if stats.total_envolvidos > 0 else 0 }}%"></div>
                     </div>
                 </div>
             </div>
