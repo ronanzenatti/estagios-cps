@@ -29,13 +29,17 @@
         font-size: 0.75rem;
         font-weight: 600;
     }
-    .type-orientador {
+    .type-orientador, .type-coordenador {
         background-color: rgba(13, 110, 253, 0.1);
         color: #0d6efd;
     }
-    .type-facilitador {
+    .type-ata, .type-facilitador {
         background-color: rgba(25, 135, 84, 0.1);
         color: #198754;
+    }
+    .type-apoio {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
     }
     .info-section {
         padding: 1rem;
@@ -84,6 +88,15 @@
     .status-inactive {
         background-color: #dc3545;
     }
+    .tipo-badge {
+        font-weight: 600;
+        color: #495057;
+    }
+    .tipo-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
 </style>
 {% endblock %}
 
@@ -92,11 +105,7 @@
     <h1 class="h2">
         {{ envolvido.nome }}
         <span class="text-muted h5">
-            {% if envolvido.is_orientador %}
-            Orientador
-            {% else %}
-            Facilitador
-            {% endif %}
+            {{ envolvido.tipo }}
         </span>
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
@@ -124,8 +133,14 @@
                 <div>
                     {% if envolvido.tipo == 'Orientador' %}
                     <span class="envolvido-type type-orientador">Orientador</span>
-                    {% else %}
+                    {% elif envolvido.tipo == 'Coordenador' %}
+                    <span class="envolvido-type type-coordenador">Coordenador</span>
+                    {% elif envolvido.tipo == 'ATA' %}
+                    <span class="envolvido-type type-ata">ATA</span>
+                    {% elif envolvido.tipo == 'Facilitador' %}
                     <span class="envolvido-type type-facilitador">Facilitador</span>
+                    {% elif envolvido.tipo == 'Apoio' %}
+                    <span class="envolvido-type type-apoio">Apoio</span>
                     {% endif %}
                 </div>
             </div>
@@ -144,7 +159,7 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <div class="info-label">Cargo</div>
+                            <div class="info-label">Cargo/Função</div>
                             <div>{{ envolvido.cargo }}</div>
                         </div>
                         <div class="mb-3">
@@ -180,10 +195,17 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <div class="info-label">Email</div>
+                            <div class="info-label">Email Institucional</div>
                             <div>
-                                {% if envolvido.email %}
-                                <a href="mailto:{{ envolvido.email }}">{{ envolvido.email }}</a>
+                                <a href="mailto:{{ envolvido.email_institucional }}">{{ envolvido.email_institucional }}</a>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="info-label">Email Pessoal</div>
+                            <div>
+                                {% if envolvido.email_pessoal %}
+                                <a href="mailto:{{ envolvido.email_pessoal }}">{{ envolvido.email_pessoal }}</a>
                                 {% else %}
                                 <span class="text-muted">Não informado</span>
                                 {% endif %}
@@ -192,7 +214,18 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <div class="info-label">Telefone</div>
+                            <div class="info-label">Celular</div>
+                            <div>
+                                {% if envolvido.celular %}
+                                <a href="tel:{{ envolvido.celular }}">{{ envolvido.celular }}</a>
+                                {% else %}
+                                <span class="text-muted">Não informado</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="info-label">Telefone Fixo</div>
                             <div>
                                 {% if envolvido.telefone %}
                                 <a href="tel:{{ envolvido.telefone }}">{{ envolvido.telefone }}</a>
@@ -215,8 +248,67 @@
             </div>
         </div>
         
-        {% if envolvido.is_orientador %}
-        <!-- Cursos associados (apenas para orientadores) -->
+        {% if envolvido.allows_cursos %}
+        <!-- Cursos associados (apenas para tipos que permitem cursos) -->
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-mortarboard-fill me-2"></i> 
+                    Cursos Associados
+                    {% if envolvido.requires_cursos %}
+                    <span class="badge bg-primary ms-2">Obrigatório</span>
+                    {% else %}
+                    <span class="badge bg-secondary ms-2">Opcional</span>
+                    {% endif %}
+                </h5>
+                <span class="badge bg-primary">{{ envolvido.cursos|length }} curso(s)</span>
+            </div>
+            <div class="card-body">
+                {% if envolvido.cursos %}
+                <div class="cursos-list">
+                    {% for curso in envolvido.cursos %}
+                    <div class="curso-item{% if not curso.ativo %} curso-item-inactive{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ curso.nome }}</h6>
+                                <small class="text-muted">
+                                    {% if curso.codigo %}
+                                    Código: {{ curso.codigo }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                {% if curso.ativo %}
+                                <span class="badge bg-success curso-badge">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-secondary curso-badge">Inativo</span>
+                                {% endif %}
+                                <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% if envolvido.requires_cursos %}
+                    Este {{ envolvido.tipo | lower }} não possui cursos associados. Por favor, edite o cadastro e adicione pelo menos um curso.
+                    {% else %}
+                    Este {{ envolvido.tipo | lower }} não possui cursos associados. Você pode editar o cadastro e adicionar cursos se desejar.
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Coluna lateral com ações e informações adicionais -->
+    <div class="col-lg-4">
+        <!-- Ações rápidas -->
         <div class="card mb-4">
             <div class="card-header bg-white">
                 <h5 class="card-title mb-0"><i class="bi bi-lightning-charge me-2"></i> Ações Rápidas</h5>
@@ -240,6 +332,12 @@
                         {% endif %}
                     </form>
                     
+                    {% if envolvido.allows_cursos %}
+                    <a href="{{ url_for('cursos.listar', unidade_id=envolvido.unidade_id) }}" class="btn btn-outline-info">
+                        <i class="bi bi-mortarboard me-2"></i> Ver Cursos da Unidade
+                    </a>
+                    {% endif %}
+                    
                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                         <i class="bi bi-trash me-2"></i> Excluir
                     </button>
@@ -255,19 +353,32 @@
             <div class="card-body">
                 <div class="mb-3">
                     <div class="info-label">Tipo</div>
-                    <div>
-                        {% if envolvido.is_orientador %}
-                        <span class="envolvido-type type-orientador">Orientador</span>
-                        {% else %}
-                        <span class="envolvido-type type-facilitador">Facilitador</span>
+                    <div class="tipo-badge">{{ envolvido.tipo }}</div>
+                    <div class="tipo-description">
+                        {% if envolvido.tipo == 'Orientador' %}
+                        Professor orientador de estágio vinculado a curso(s) da FATEC.
+                        {% elif envolvido.tipo == 'Coordenador' %}
+                        Coordenador de curso vinculado a curso(s) da FATEC.
+                        {% elif envolvido.tipo == 'ATA' %}
+                        Assistente Técnico-Administrativo da ETEC, que pode ser vinculado a curso(s).
+                        {% elif envolvido.tipo == 'Facilitador' %}
+                        Facilitador de estágio da ETEC, que pode ser vinculado a curso(s).
+                        {% elif envolvido.tipo == 'Apoio' %}
+                        Funcionário de apoio ao estágio, sem vínculo com cursos específicos.
                         {% endif %}
                     </div>
                 </div>
                 
-                {% if envolvido.is_orientador %}
+                {% if envolvido.allows_cursos %}
                 <div class="mb-3">
                     <div class="info-label">Cursos Associados</div>
                     <div><strong>{{ envolvido.cursos|length }}</strong> curso(s)</div>
+                    {% if envolvido.requires_cursos and not envolvido.cursos %}
+                    <div class="alert alert-danger mt-2 mb-0 py-2">
+                        <small><i class="bi bi-exclamation-triangle-fill me-1"></i> 
+                        Este tipo de envolvido requer associação com pelo menos um curso.</small>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endif %}
                 
@@ -309,10 +420,10 @@
                 <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
                 <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
                 
-                {% if envolvido.is_orientador and envolvido.cursos %}
+                {% if envolvido.allows_cursos and envolvido.cursos %}
                 <div class="alert alert-warning">
                     <i class="bi bi-info-circle-fill me-2"></i> 
-                    <strong>Atenção:</strong> Este orientador está associado a {{ envolvido.cursos|length }} curso(s). 
+                    <strong>Atenção:</strong> Este {{ envolvido.tipo | lower }} está associado a {{ envolvido.cursos|length }} curso(s). 
                     A exclusão removerá estas associações.
                 </div>
                 {% endif %}
@@ -349,50 +460,3 @@
     });
 </script>
 {% endblock %}
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0"><i class="bi bi-mortarboard-fill me-2"></i> Cursos Associados</h5>
-                <span class="badge bg-primary">{{ envolvido.cursos|length }} curso(s)</span>
-            </div>
-            <div class="card-body">
-                {% if envolvido.cursos %}
-                <div class="cursos-list">
-                    {% for curso in envolvido.cursos %}
-                    <div class="curso-item{% if not curso.ativo %} curso-item-inactive{% endif %}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0">{{ curso.nome }}</h6>
-                                <small class="text-muted">
-                                    {% if curso.codigo %}
-                                    Código: {{ curso.codigo }}
-                                    {% endif %}
-                                </small>
-                            </div>
-                            <div>
-                                {% if curso.ativo %}
-                                <span class="badge bg-success curso-badge">Ativo</span>
-                                {% else %}
-                                <span class="badge bg-secondary curso-badge">Inativo</span>
-                                {% endif %}
-                                <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-outline-primary ms-2">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="alert alert-warning mb-0">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    Este orientador não possui cursos associados. Por favor, edite o cadastro e adicione pelo menos um curso.
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    
-    <!-- Coluna lateral com ações e estatísticas -->
-    <div class="col-lg-4">
-        <!-- Ações rápidas -->
-        <div class="card mb-4">

@@ -19,14 +19,14 @@ def get_envolvidos_by_unidade(unidade_id, tipo=None):
     
     Args:
         unidade_id (int): ID da unidade
-        tipo (str, optional): Tipo de envolvido ('Facilitador' ou 'Orientador')
+        tipo (str, optional): Tipo de envolvido ('Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio')
         
     Returns:
         list: Lista de objetos Envolvido
     """
     query = Envolvido.query.filter_by(unidade_id=unidade_id)
     
-    if tipo in ['Facilitador', 'Orientador']:
+    if tipo:
         query = query.filter_by(tipo=tipo)
     
     return query.order_by(Envolvido.nome).all()
@@ -57,7 +57,9 @@ def get_envolvido_by_cpf(cpf):
     cpf_formatado = Envolvido.formatar_cpf(cpf)
     return Envolvido.query.filter_by(cpf=cpf_formatado).first()
 
-def create_envolvido(nome, cpf, cargo, tipo, unidade_id, cursos_ids=None, telefone=None, email=None):
+def create_envolvido(nome, cpf, cargo, tipo, unidade_id, 
+                    email_institucional, celular,
+                    cursos_ids=None, email_pessoal=None, telefone=None):
     """
     Cria um novo envolvido.
     
@@ -65,11 +67,13 @@ def create_envolvido(nome, cpf, cargo, tipo, unidade_id, cursos_ids=None, telefo
         nome (str): Nome do envolvido
         cpf (str): CPF do envolvido
         cargo (str): Cargo do envolvido
-        tipo (str): Tipo de envolvido ('Facilitador' ou 'Orientador')
+        tipo (str): Tipo de envolvido ('Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio')
         unidade_id (int): ID da unidade
-        cursos_ids (list, optional): Lista de IDs de cursos (apenas para orientadores)
-        telefone (str, optional): Telefone do envolvido
-        email (str, optional): Email do envolvido
+        email_institucional (str): Email institucional do envolvido
+        celular (str): Número do celular do envolvido
+        cursos_ids (list, optional): Lista de IDs de cursos
+        email_pessoal (str, optional): Email pessoal do envolvido
+        telefone (str, optional): Telefone fixo do envolvido
         
     Returns:
         Envolvido: Objeto do envolvido criado ou None em caso de erro
@@ -79,8 +83,13 @@ def create_envolvido(nome, cpf, cargo, tipo, unidade_id, cursos_ids=None, telefo
     if not unidade:
         return None
     
-    # Valida o tipo
-    if tipo not in ['Facilitador', 'Orientador']:
+    # Valida o tipo conforme o tipo da unidade
+    tipos_validos = {
+        'Fatec': ['Orientador', 'Coordenador', 'Apoio'],
+        'Etec': ['ATA', 'Facilitador', 'Apoio']
+    }
+    
+    if tipo not in tipos_validos.get(unidade.tipo, []):
         return None
     
     # Formata e valida o CPF
@@ -94,26 +103,29 @@ def create_envolvido(nome, cpf, cargo, tipo, unidade_id, cursos_ids=None, telefo
         return None
     
     # Verificações específicas por tipo
-    if tipo == 'Orientador' and not cursos_ids:
-        return None  # Orientadores devem ter pelo menos um curso
+    envolvido_obj = Envolvido(
+        nome=nome,
+        cpf=cpf_formatado,
+        cargo=cargo,
+        tipo=tipo,
+        unidade_id=unidade_id,
+        email_institucional=email_institucional,
+        celular=celular,
+        email_pessoal=email_pessoal,
+        telefone=telefone
+    )
+    
+    # Verificações específicas para tipos que exigem cursos
+    if envolvido_obj.requires_cursos and not cursos_ids:
+        return None
     
     try:
         # Cria o novo envolvido
-        envolvido = Envolvido(
-            nome=nome,
-            cpf=cpf_formatado,
-            cargo=cargo,
-            tipo=tipo,
-            unidade_id=unidade_id,
-            telefone=telefone,
-            email=email
-        )
-        
-        db.session.add(envolvido)
+        db.session.add(envolvido_obj)
         db.session.flush()  # Para obter o ID do envolvido
         
-        # Para orientadores, associa aos cursos
-        if tipo == 'Orientador' and cursos_ids:
+        # Associa aos cursos, se aplicável e fornecidos
+        if envolvido_obj.allows_cursos and cursos_ids:
             cursos = Curso.query.filter(
                 Curso.id.in_(cursos_ids),
                 Curso.unidade_id == unidade_id
@@ -124,16 +136,18 @@ def create_envolvido(nome, cpf, cargo, tipo, unidade_id, cursos_ids=None, telefo
                 db.session.rollback()
                 return None
             
-            envolvido.cursos = cursos
+            envolvido_obj.cursos = cursos
         
         db.session.commit()
-        return envolvido
+        return envolvido_obj
     except Exception as e:
         current_app.logger.error(f"Erro ao criar envolvido: {str(e)}")
         db.session.rollback()
         return None
 
-def update_envolvido(envolvido_id, nome, cpf, cargo, tipo, cursos_ids=None, telefone=None, email=None, ativo=True):
+def update_envolvido(envolvido_id, nome, cpf, cargo, tipo, 
+                    email_institucional, celular,
+                    cursos_ids=None, email_pessoal=None, telefone=None, ativo=True):
     """
     Atualiza um envolvido existente.
     
@@ -142,10 +156,12 @@ def update_envolvido(envolvido_id, nome, cpf, cargo, tipo, cursos_ids=None, tele
         nome (str): Nome do envolvido
         cpf (str): CPF do envolvido
         cargo (str): Cargo do envolvido
-        tipo (str): Tipo de envolvido ('Facilitador' ou 'Orientador')
-        cursos_ids (list, optional): Lista de IDs de cursos (apenas para orientadores)
-        telefone (str, optional): Telefone do envolvido
-        email (str, optional): Email do envolvido
+        tipo (str): Tipo de envolvido
+        email_institucional (str): Email institucional do envolvido
+        celular (str): Número do celular do envolvido
+        cursos_ids (list, optional): Lista de IDs de cursos
+        email_pessoal (str, optional): Email pessoal do envolvido
+        telefone (str, optional): Telefone fixo do envolvido
         ativo (bool, optional): Status do envolvido
         
     Returns:
@@ -156,8 +172,18 @@ def update_envolvido(envolvido_id, nome, cpf, cargo, tipo, cursos_ids=None, tele
     if not envolvido:
         return False
     
-    # Valida o tipo
-    if tipo not in ['Facilitador', 'Orientador']:
+    # Busca a unidade relacionada ao envolvido
+    unidade = Unidade.query.get(envolvido.unidade_id)
+    if not unidade:
+        return False
+    
+    # Valida o tipo conforme o tipo da unidade
+    tipos_validos = {
+        'Fatec': ['Orientador', 'Coordenador', 'Apoio'],
+        'Etec': ['ATA', 'Facilitador', 'Apoio']
+    }
+    
+    if tipo not in tipos_validos.get(unidade.tipo, []):
         return False
     
     # Formata e valida o CPF
@@ -170,10 +196,21 @@ def update_envolvido(envolvido_id, nome, cpf, cargo, tipo, cursos_ids=None, tele
     if existing and existing.id != envolvido_id:
         return False
     
-    # Verificações específicas por tipo
-    if tipo == 'Orientador' and not cursos_ids:
-        return False  # Orientadores devem ter pelo menos um curso
+    # Trata a alteração de tipo
+    novo_obj = Envolvido(
+        nome=nome,
+        cpf=cpf_formatado,
+        cargo=cargo,
+        tipo=tipo,
+        unidade_id=envolvido.unidade_id,
+        email_institucional=email_institucional,
+        celular=celular
+    )
     
+    # Verificações específicas para tipos que exigem cursos
+    if novo_obj.requires_cursos and not cursos_ids:
+        return False
+        
     try:
         # Atualiza o envolvido
         envolvido.update(
@@ -181,13 +218,15 @@ def update_envolvido(envolvido_id, nome, cpf, cargo, tipo, cursos_ids=None, tele
             cpf=cpf_formatado,
             cargo=cargo,
             tipo=tipo,
+            email_institucional=email_institucional,
+            celular=celular,
+            email_pessoal=email_pessoal,
             telefone=telefone,
-            email=email,
             ativo=ativo
         )
         
         # Atualiza os cursos conforme o tipo
-        if tipo == 'Orientador' and cursos_ids:
+        if envolvido.allows_cursos and cursos_ids:
             cursos = Curso.query.filter(
                 Curso.id.in_(cursos_ids),
                 Curso.unidade_id == envolvido.unidade_id
@@ -199,8 +238,8 @@ def update_envolvido(envolvido_id, nome, cpf, cargo, tipo, cursos_ids=None, tele
                 return False
             
             envolvido.cursos = cursos
-        elif tipo == 'Facilitador':
-            # Remove associações com cursos para facilitadores
+        elif not envolvido.allows_cursos:
+            # Remove associações com cursos para tipos que não permitem
             envolvido.cursos = []
         
         db.session.commit()
@@ -264,3 +303,24 @@ def toggle_envolvido_status(envolvido_id):
         current_app.logger.error(f"Erro ao alterar status do envolvido: {str(e)}")
         db.session.rollback()
         return False
+
+def get_allowed_tipos_for_unidade(unidade_id):
+    """
+    Retorna os tipos de envolvidos permitidos para a unidade especificada.
+    
+    Args:
+        unidade_id (int): ID da unidade
+        
+    Returns:
+        list: Lista de tipos permitidos ou lista vazia em caso de erro
+    """
+    unidade = Unidade.query.get(unidade_id)
+    if not unidade:
+        return []
+        
+    tipos_validos = {
+        'Fatec': ['Orientador', 'Coordenador', 'Apoio'],
+        'Etec': ['ATA', 'Facilitador', 'Apoio']
+    }
+    
+    return tipos_validos.get(unidade.tipo, [])

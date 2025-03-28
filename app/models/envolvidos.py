@@ -6,77 +6,128 @@ from .cursos import orientador_curso
 
 class Envolvido(db.Model):
     """
-    Modelo que representa uma pessoa envolvida com o estágio (Facilitador ou Orientador).
-    Pode ser cadastrado por administradores ou diretores da unidade.
+    Modelo que representa uma pessoa envolvida com o estágio.
+    Tipos possíveis:
+    - FATEC: Orientador, Coordenador, Apoio
+    - ETEC: ATA, Facilitador, Apoio
     """
     __tablename__ = 'envolvidos'
     
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     cpf = db.Column(db.String(14), nullable=False, unique=True)
-    cargo = db.Column(db.String(100), nullable=True)
-    tipo = db.Column(db.String(12), nullable=True)  # 'Facilitador' ou 'Orientador'
-    telefone = db.Column(db.String(20), nullable=True)
-    email = db.Column(db.String(100), nullable=True)
+    cargo = db.Column(db.String(100), nullable=False)
+    tipo = db.Column(db.String(12), nullable=False)  # 'Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio'
+    email_institucional = db.Column(db.String(100), nullable=False)  # Novo campo obrigatório
+    celular = db.Column(db.String(20), nullable=False)  # Novo campo obrigatório
+    email_pessoal = db.Column(db.String(100), nullable=True)  # Antigo campo 'email' renomeado
+    telefone = db.Column(db.String(20), nullable=True)  # Mantido como opcional (telefone fixo)
     ativo = db.Column(db.Boolean, default=True)
     unidade_id = db.Column(db.Integer, db.ForeignKey('unidades.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relacionamento com cursos (somente para orientadores)
+    # Relacionamento com cursos (pode ser obrigatório ou opcional dependendo do tipo)
     cursos = db.relationship(
         'Curso', 
         secondary=orientador_curso, 
         lazy='subquery',
-        backref=db.backref('orientadores', lazy=True)
+        backref=db.backref('envolvidos', lazy=True)
     )
     
-    def __init__(self, nome, cpf, cargo, tipo, unidade_id, telefone=None, email=None):
+    def __init__(self, nome, cpf, cargo, tipo, unidade_id, 
+                 email_institucional, celular, 
+                 email_pessoal=None, telefone=None):
         self.nome = nome
         self.cpf = cpf
         self.cargo = cargo
         self.tipo = tipo
         self.unidade_id = unidade_id
+        self.email_institucional = email_institucional
+        self.celular = celular
+        self.email_pessoal = email_pessoal
         self.telefone = telefone
-        self.email = email
     
+    # Propriedades para verificar tipo
     @property
     def is_orientador(self):
         """Verifica se o envolvido é um orientador"""
         return self.tipo == 'Orientador'
     
     @property
+    def is_coordenador(self):
+        """Verifica se o envolvido é um coordenador de curso"""
+        return self.tipo == 'Coordenador'
+    
+    @property
+    def is_ata(self):
+        """Verifica se o envolvido é um ATA"""
+        return self.tipo == 'ATA'
+    
+    @property
     def is_facilitador(self):
         """Verifica se o envolvido é um facilitador"""
         return self.tipo == 'Facilitador'
     
-    def update(self, nome, cpf, cargo, tipo, telefone=None, email=None, ativo=True):
+    @property
+    def is_apoio(self):
+        """Verifica se o envolvido é apoio de estágio"""
+        return self.tipo == 'Apoio'
+    
+    @property
+    def requires_cursos(self):
+        """Verifica se o tipo de envolvido requer associação com cursos"""
+        # Orientadores e Coordenadores (FATEC) DEVEM estar associados a cursos
+        return self.tipo in ['Orientador', 'Coordenador']
+    
+    @property
+    def allows_cursos(self):
+        """Verifica se o tipo de envolvido permite associação com cursos"""
+        # ATAs e Facilitadores (ETEC) PODEM estar associados a cursos,
+        # além dos que obrigatoriamente precisam estar associados
+        return self.tipo in ['Orientador', 'Coordenador', 'ATA', 'Facilitador']
+    
+    @property
+    def is_fatec_tipo(self):
+        """Verifica se o envolvido é de um tipo associado à FATEC"""
+        return self.tipo in ['Orientador', 'Coordenador']
+    
+    @property
+    def is_etec_tipo(self):
+        """Verifica se o envolvido é de um tipo associado à ETEC"""
+        return self.tipo in ['ATA', 'Facilitador']
+    
+    def update(self, nome, cpf, cargo, tipo, 
+               email_institucional, celular, 
+               email_pessoal=None, telefone=None, ativo=True):
         """Atualiza os dados do envolvido"""
         self.nome = nome
         self.cpf = cpf
         self.cargo = cargo
         self.tipo = tipo
+        self.email_institucional = email_institucional
+        self.celular = celular
+        self.email_pessoal = email_pessoal
         self.telefone = telefone
-        self.email = email
         self.ativo = ativo
         self.updated_at = datetime.utcnow()
     
     def add_curso(self, curso):
-        """Adiciona um curso para o orientador (se aplicável)"""
-        if self.is_orientador and curso not in self.cursos:
+        """Adiciona um curso para o envolvido (se aplicável)"""
+        if self.allows_cursos and curso not in self.cursos:
             self.cursos.append(curso)
     
     def remove_curso(self, curso):
-        """Remove um curso do orientador"""
+        """Remove um curso do envolvido"""
         if curso in self.cursos:
             self.cursos.remove(curso)
     
     def set_cursos(self, cursos_list):
-        """Define a lista completa de cursos para o orientador"""
-        if self.is_orientador:
+        """Define a lista completa de cursos para o envolvido"""
+        if self.allows_cursos:
             self.cursos = cursos_list
         else:
-            # Se for facilitador, não deve ter cursos associados
+            # Se for um tipo que não permite cursos (Apoio), não deve ter cursos associados
             self.cursos = []
     
     def inativar(self):
@@ -93,13 +144,20 @@ class Envolvido(db.Model):
         """
         Valida se os dados do envolvido estão corretos de acordo com seu tipo
         """
-        # Verificação específica para orientadores
-        if self.is_orientador and not self.cursos:
-            return False, "Orientadores devem estar associados a pelo menos um curso."
+        # Verificação para tipos que exigem cursos (Orientador, Coordenador)
+        if self.requires_cursos and not self.cursos:
+            return False, f"{self.tipo}es devem estar associados a pelo menos um curso."
         
-        # Verificação específica para facilitadores
-        if self.is_facilitador and self.cursos:
-            return False, "Facilitadores não devem estar associados a cursos."
+        # Verificação para tipos que não permitem cursos (Apoio)
+        if not self.allows_cursos and self.cursos:
+            return False, f"{self.tipo}s não devem estar associados a cursos."
+        
+        # Verificação de consistência de unidade-tipo
+        if self.unidade and self.unidade.tipo == 'Fatec' and self.is_etec_tipo:
+            return False, f"{self.tipo}s só podem ser vinculados a unidades ETEC."
+        
+        if self.unidade and self.unidade.tipo == 'Etec' and self.is_fatec_tipo:
+            return False, f"{self.tipo}s só podem ser vinculados a unidades FATEC."
         
         return True, "Dados válidos."
     
@@ -157,5 +215,4 @@ class Envolvido(db.Model):
         return digito2 == int(cpf[10])
     
     def __repr__(self):
-        tipo_str = "Orientador" if self.is_orientador else "Facilitador"
-        return f'<Envolvido {self.nome}, {tipo_str}, Unidade: {self.unidade_id}>'
+        return f'<Envolvido {self.nome}, {self.tipo}, Unidade: {self.unidade_id}>'
