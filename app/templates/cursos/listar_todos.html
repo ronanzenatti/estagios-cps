@@ -1,19 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Todos os Cursos - Sistema de Gestão de Estágio - CPS{% endblock %}
+{% block title %}Todos os Cursos - Sistema de Envolvidos nos Estágios - CPS{% endblock %}
 
 {% block styles %}
 <style>
     .curso-card {
         transition: all 0.2s;
     }
+
     .curso-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
+
     .curso-actions {
         white-space: nowrap;
     }
+
     .curso-codigo {
         font-family: monospace;
         background-color: #f8f9fa;
@@ -21,44 +24,54 @@
         border-radius: 0.25rem;
         font-size: 0.85rem;
     }
+
     .empty-state {
         padding: 3rem 1.5rem;
         text-align: center;
     }
+
     .empty-state-icon {
         font-size: 3rem;
         color: #dee2e6;
         margin-bottom: 1.5rem;
     }
+
     .filter-title {
         font-size: 0.9rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
     }
+
     .filter-group {
         padding: 1rem;
         border-bottom: 1px solid #dee2e6;
     }
+
     .filter-group:last-child {
         border-bottom: none;
     }
+
     .unidade-list {
         max-height: 200px;
         overflow-y: auto;
     }
+
     .unidade-list-item {
         padding: 0.5rem 0.75rem;
         border-radius: 0.25rem;
         cursor: pointer;
         transition: all 0.2s;
     }
+
     .unidade-list-item:hover {
         background-color: #f8f9fa;
     }
+
     .unidade-list-item.active {
         background-color: #e9ecef;
         font-weight: 500;
     }
+
     .status-badge {
         width: 10px;
         height: 10px;
@@ -66,12 +79,15 @@
         border-radius: 50%;
         margin-right: 0.5rem;
     }
+
     .status-active {
         background-color: #28a745;
     }
+
     .status-inactive {
         background-color: #dc3545;
     }
+
     .unidade-badge {
         background-color: rgba(108, 117, 125, 0.1);
         color: #6c757d;
@@ -79,10 +95,12 @@
         border-radius: 0.25rem;
         font-size: 0.75rem;
     }
+
     .type-fatec {
         background-color: rgba(13, 110, 253, 0.1);
         color: #0d6efd;
     }
+
     .type-etec {
         background-color: rgba(25, 135, 84, 0.1);
         color: #198754;
@@ -131,8 +149,8 @@
                     <i class="bi bi-people-fill fs-1 text-info"></i>
                 </div>
                 <div>
-                    <span class="d-block text-muted">Orientadores Associados</span>
-                    <span class="fs-4 fw-bold">{{ total_orientadores }}</span>
+                    <span class="d-block text-muted">Envolvidos</span>
+                    <span class="fs-4 fw-bold">{{ cursos.envolvidos|length }}</span>
                 </div>
             </div>
         </div>
@@ -150,18 +168,19 @@
     </div>
 </div>
 
-<div class="row g-4">
+<div class="row g-1">
     <!-- Coluna de filtros -->
     <div class="col-lg-3">
         <div class="card mb-4">
             <div class="card-header bg-white">
                 <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i> Filtros</h5>
             </div>
-            
+
             <div class="filter-group">
                 <div class="filter-title">Status</div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="statusFilter" id="statusTodos" value="todos" checked>
+                    <input class="form-check-input" type="radio" name="statusFilter" id="statusTodos" value="todos"
+                        checked>
                     <label class="form-check-label" for="statusTodos">
                         Todos
                     </label>
@@ -179,32 +198,36 @@
                     </label>
                 </div>
             </div>
-            
+
             <div class="filter-group">
                 <div class="filter-title">Tipo de Unidade</div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeTodas" value="todas" checked>
+                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeTodas"
+                        value="todas" checked>
                     <label class="form-check-label" for="tipoUnidadeTodas">
                         Todas
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeFatec" value="Fatec">
+                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeFatec"
+                        value="Fatec">
                     <label class="form-check-label" for="tipoUnidadeFatec">
                         Fatecs
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeEtec" value="Etec">
+                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeEtec"
+                        value="Etec">
                     <label class="form-check-label" for="tipoUnidadeEtec">
                         Etecs
                     </label>
                 </div>
             </div>
-            
+
             <div class="filter-group">
                 <div class="filter-title">Unidades</div>
-                <input type="text" class="form-control form-control-sm mb-2" id="unidadeSearch" placeholder="Buscar unidade...">
+                <input type="text" class="form-control form-control-sm mb-2" id="unidadeSearch"
+                    placeholder="Buscar unidade...">
                 <div class="unidade-list">
                     <div class="unidade-list-item active" data-unidade="todas">
                         Todas as unidades
@@ -216,7 +239,7 @@
                     {% endfor %}
                 </div>
             </div>
-            
+
             <div class="card-footer bg-white d-flex justify-content-between align-items-center">
                 <div>
                     <span id="resultCount" class="text-muted small">Exibindo {{ cursos|length }} cursos</span>
@@ -229,7 +252,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Coluna principal com a lista de cursos -->
     <div class="col-lg-9">
         <div class="card">
@@ -252,18 +275,16 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="card-body">
                 <!-- Visualização em Grade (padrão) -->
                 <div id="gridView">
                     <div class="row g-3" id="cursosGrid">
                         {% for curso in cursos %}
-                        <div class="col-md-6 col-lg-4 curso-item" 
-                             data-status="{{ 'ativo' if curso.ativo else 'inativo' }}"
-                             data-unidade="{{ curso.unidade_id }}"
-                             data-tipo-unidade="{{ curso.unidade.tipo }}"
-                             data-nome="{{ curso.nome }}"
-                             data-codigo="{{ curso.codigo or '' }}">
+                        <div class="col-md-6 col-lg-4 curso-item"
+                            data-status="{{ 'ativo' if curso.ativo else 'inativo' }}"
+                            data-unidade="{{ curso.unidade_id }}" data-tipo-unidade="{{ curso.unidade.tipo }}"
+                            data-nome="{{ curso.nome }}" data-codigo="{{ curso.codigo or '' }}">
                             <div class="card curso-card h-100">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -274,7 +295,7 @@
                                         <span class="badge bg-secondary">Inativo</span>
                                         {% endif %}
                                     </div>
-                                    
+
                                     <div class="mb-2">
                                         {% if curso.unidade.tipo == 'Fatec' %}
                                         <span class="unidade-badge type-fatec">Fatec</span>
@@ -283,68 +304,78 @@
                                         {% endif %}
                                         <span class="unidade-badge ms-1">{{ curso.unidade.numero }}</span>
                                     </div>
-                                    
+
                                     {% if curso.codigo %}
                                     <p class="card-text mb-1">
-                                        <i class="bi bi-upc me-1 text-muted"></i> <span class="curso-codigo">{{ curso.codigo }}</span>
+                                        <i class="bi bi-upc me-1 text-muted"></i> <span class="curso-codigo">{{
+                                            curso.codigo }}</span>
                                     </p>
                                     {% endif %}
-                                    
+
                                     <p class="card-text mb-1">
                                         <i class="bi bi-building me-1 text-muted"></i> {{ curso.unidade.nome }}
                                     </p>
-                                    
+
                                     <p class="card-text mb-1">
-                                        <i class="bi bi-people me-1 text-muted"></i> Orientadores: {{ curso.orientadores|length }}
+                                        <i class="bi bi-people me-1 text-muted"></i> Orientadores: {{
+                                        curso.orientadores|length }}
                                     </p>
-                                    
+
                                     {% if curso.descricao %}
                                     <p class="card-text mb-3">
-                                        <i class="bi bi-info-circle me-1 text-muted"></i> {{ curso.descricao|truncate(80) }}
+                                        <i class="bi bi-info-circle me-1 text-muted"></i> {{
+                                        curso.descricao|truncate(80) }}
                                     </p>
                                     {% endif %}
                                 </div>
                                 <div class="card-footer bg-white border-top">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ url_for('cursos.visualizar', id=curso.id) }}"
+                                            class="btn btn-sm btn-primary">
                                             <i class="bi bi-eye me-1"></i> Visualizar
                                         </a>
-                                        
+
                                         <div>
-                                            <a href="{{ url_for('cursos.editar', id=curso.id) }}" class="btn btn-sm btn-outline-secondary">
+                                            <a href="{{ url_for('cursos.editar', id=curso.id) }}"
+                                                class="btn btn-sm btn-outline-secondary">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ curso.id }}">
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal" data-bs-target="#deleteModal{{ curso.id }}">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Modal de Confirmação de Exclusão -->
                             <div class="modal fade" id="deleteModal{{ curso.id }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title">Confirmar Exclusão</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Fechar"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <p>Você tem certeza que deseja excluir o curso <strong>{{ curso.nome }}</strong>?</p>
-                                            <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
-                                            
+                                            <p>Você tem certeza que deseja excluir o curso <strong>{{ curso.nome
+                                                    }}</strong>?</p>
+                                            <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                Esta ação não pode ser desfeita.</p>
+
                                             {% if curso.orientadores %}
                                             <div class="alert alert-warning">
-                                                <i class="bi bi-info-circle-fill me-2"></i> 
-                                                <strong>Atenção:</strong> Este curso possui {{ curso.orientadores|length }} orientador(es) associado(s).
+                                                <i class="bi bi-info-circle-fill me-2"></i>
+                                                <strong>Atenção:</strong> Este curso possui {{ curso.orientadores|length
+                                                }} orientador(es) associado(s).
                                                 A exclusão removerá estas associações.
                                             </div>
                                             {% endif %}
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Cancelar</button>
                                             <form method="POST" action="{{ url_for('cursos.excluir', id=curso.id) }}">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn btn-danger">Excluir Curso</button>
@@ -357,7 +388,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                
+
                 <!-- Visualização em Lista (alternativa) -->
                 <div id="listView" style="display: none;">
                     <div class="table-responsive">
@@ -374,12 +405,9 @@
                             </thead>
                             <tbody id="cursosTable">
                                 {% for curso in cursos %}
-                                <tr class="curso-item"
-                                    data-status="{{ 'ativo' if curso.ativo else 'inativo' }}"
-                                    data-unidade="{{ curso.unidade_id }}"
-                                    data-tipo-unidade="{{ curso.unidade.tipo }}"
-                                    data-nome="{{ curso.nome }}"
-                                    data-codigo="{{ curso.codigo or '' }}">
+                                <tr class="curso-item" data-status="{{ 'ativo' if curso.ativo else 'inativo' }}"
+                                    data-unidade="{{ curso.unidade_id }}" data-tipo-unidade="{{ curso.unidade.tipo }}"
+                                    data-nome="{{ curso.nome }}" data-codigo="{{ curso.codigo or '' }}">
                                     <td><strong>{{ curso.nome }}</strong></td>
                                     <td>
                                         {% if curso.codigo %}
@@ -389,7 +417,8 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <span class="unidade-badge {% if curso.unidade.tipo == 'Fatec' %}type-fatec{% else %}type-etec{% endif %}">
+                                        <span
+                                            class="unidade-badge {% if curso.unidade.tipo == 'Fatec' %}type-fatec{% else %}type-etec{% endif %}">
                                             {{ curso.unidade.tipo }} {{ curso.unidade.numero }}
                                         </span>
                                         <small class="d-block">{{ curso.unidade.nome }}</small>
@@ -403,34 +432,45 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
-                                        <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                        <a href="{{ url_for('cursos.visualizar', id=curso.id) }}"
+                                            class="btn btn-sm btn-outline-primary" title="Visualizar">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{{ url_for('cursos.editar', id=curso.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                        <a href="{{ url_for('cursos.editar', id=curso.id) }}"
+                                            class="btn btn-sm btn-outline-secondary" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" 
-                                                data-bs-toggle="modal" data-bs-target="#deleteModalList{{ curso.id }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModalList{{ curso.id }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
-                                        
+
                                         <!-- Modal de Confirmação de Exclusão (Lista) -->
-                                        <div class="modal fade" id="deleteModalList{{ curso.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal fade" id="deleteModalList{{ curso.id }}" tabindex="-1"
+                                            aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
                                                         <h5 class="modal-title">Confirmar Exclusão</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Fechar"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p>Você tem certeza que deseja excluir o curso <strong>{{ curso.nome }}</strong>?</p>
-                                                        <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                                        <p>Você tem certeza que deseja excluir o curso <strong>{{
+                                                                curso.nome }}</strong>?</p>
+                                                        <p class="text-danger"><i
+                                                                class="bi bi-exclamation-triangle-fill me-2"></i> Esta
+                                                            ação não pode ser desfeita.</p>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                                        <form method="POST" action="{{ url_for('cursos.excluir', id=curso.id) }}">
-                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button type="submit" class="btn btn-danger">Excluir Curso</button>
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">Cancelar</button>
+                                                        <form method="POST"
+                                                            action="{{ url_for('cursos.excluir', id=curso.id) }}">
+                                                            <input type="hidden" name="csrf_token"
+                                                                value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-danger">Excluir
+                                                                Curso</button>
                                                         </form>
                                                     </div>
                                                 </div>
@@ -443,7 +483,7 @@
                         </table>
                     </div>
                 </div>
-                
+
                 <!-- Estado vazio (quando filtro não retornar resultados) -->
                 <div id="emptyState" class="empty-state" style="display: none;">
                     <div class="empty-state-icon">
@@ -458,7 +498,7 @@
                     </button>
                 </div>
             </div>
-            
+
             <div class="card-footer bg-white d-flex justify-content-between align-items-center">
                 <div>
                     <span class="text-muted small">Exibindo {{ cursos|length }} cursos</span>
@@ -476,7 +516,7 @@
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Variáveis para os elementos DOM
         const viewGrid = document.getElementById('viewGrid');
         const viewList = document.getElementById('viewList');
@@ -494,44 +534,47 @@
         const radioStatus = document.querySelectorAll('input[name="statusFilter"]');
         const radioTipoUnidade = document.querySelectorAll('input[name="tipoUnidadeFilter"]');
         const cursoItems = document.querySelectorAll('.curso-item');
-        
+        const content = document.getElementById('contentdiv');
+
+        content.classList.replace('container', 'container-fluid');
+
         // Alternar entre visualização em grade e lista
-        viewGrid.addEventListener('click', function() {
+        viewGrid.addEventListener('click', function () {
             gridView.style.display = 'block';
             listView.style.display = 'none';
             viewGrid.classList.add('active');
             viewList.classList.remove('active');
         });
-        
-        viewList.addEventListener('click', function() {
+
+        viewList.addEventListener('click', function () {
             gridView.style.display = 'none';
             listView.style.display = 'block';
             viewGrid.classList.remove('active');
             viewList.classList.add('active');
         });
-        
+
         // Filtragem de cursos
         function filterCursos() {
             const searchTerm = searchInput.value.toLowerCase();
             const selectedUnidade = document.querySelector('.unidade-list-item.active').getAttribute('data-unidade');
             const selectedStatus = document.querySelector('input[name="statusFilter"]:checked').value;
             const selectedTipoUnidade = document.querySelector('input[name="tipoUnidadeFilter"]:checked').value;
-            
+
             let visibleCount = 0;
-            
+
             cursoItems.forEach(item => {
                 const status = item.getAttribute('data-status');
                 const unidade = item.getAttribute('data-unidade');
                 const tipoUnidade = item.getAttribute('data-tipo-unidade');
                 const nome = item.getAttribute('data-nome');
                 const codigo = item.getAttribute('data-codigo');
-                
+
                 const matchesStatus = selectedStatus === 'todos' || status === selectedStatus;
                 const matchesUnidade = selectedUnidade === 'todas' || unidade === selectedUnidade;
                 const matchesTipoUnidade = selectedTipoUnidade === 'todas' || tipoUnidade === selectedTipoUnidade;
-                const matchesSearch = nome.toLowerCase().includes(searchTerm) || 
-                                     codigo.toLowerCase().includes(searchTerm);
-                
+                const matchesSearch = nome.toLowerCase().includes(searchTerm) ||
+                    codigo.toLowerCase().includes(searchTerm);
+
                 if (matchesStatus && matchesUnidade && matchesTipoUnidade && matchesSearch) {
                     item.style.display = '';
                     visibleCount++;
@@ -539,42 +582,42 @@
                     item.style.display = 'none';
                 }
             });
-            
+
             // Atualiza o contador de resultados
             resultCount.textContent = `Exibindo ${visibleCount} de ${cursoItems.length} cursos`;
-            
+
             // Exibe ou oculta o estado vazio
             if (visibleCount === 0) {
                 emptyState.style.display = 'block';
                 gridView.style.display = 'none';
                 listView.style.display = 'none';
-                
+
                 // Personaliza a mensagem de estado vazio
                 let message = 'Não foram encontrados cursos com os filtros selecionados.';
-                
+
                 if (searchTerm) {
                     message = `Não foram encontrados cursos correspondentes à busca "${searchTerm}".`;
                 } else {
                     const filters = [];
-                    
+
                     if (selectedStatus !== 'todos') {
                         filters.push(`status ${selectedStatus}`);
                     }
-                    
+
                     if (selectedTipoUnidade !== 'todas') {
                         filters.push(`tipo de unidade ${selectedTipoUnidade}`);
                     }
-                    
+
                     if (selectedUnidade !== 'todas') {
                         const unidadeText = document.querySelector(`.unidade-list-item[data-unidade="${selectedUnidade}"]`).textContent.trim();
                         filters.push(`unidade ${unidadeText}`);
                     }
-                    
+
                     if (filters.length > 0) {
                         message = `Não foram encontrados cursos com ${filters.join(' e ')}.`;
                     }
                 }
-                
+
                 emptyStateMessage.textContent = message;
             } else {
                 emptyState.style.display = 'none';
@@ -585,46 +628,46 @@
                 }
             }
         }
-        
+
         // Eventos para filtragem
         searchButton.addEventListener('click', filterCursos);
-        searchInput.addEventListener('keyup', function(e) {
+        searchInput.addEventListener('keyup', function (e) {
             if (e.key === 'Enter') {
                 filterCursos();
             }
         });
-        
+
         // Filtro por status
         radioStatus.forEach(radio => {
             radio.addEventListener('change', filterCursos);
         });
-        
+
         // Filtro por tipo de unidade
         radioTipoUnidade.forEach(radio => {
             radio.addEventListener('change', filterCursos);
         });
-        
+
         // Filtro por unidade
         unidadeListItems.forEach(item => {
-            item.addEventListener('click', function() {
+            item.addEventListener('click', function () {
                 // Remove a classe 'active' de todos os itens
                 unidadeListItems.forEach(i => i.classList.remove('active'));
-                
+
                 // Adiciona a classe 'active' ao item clicado
                 this.classList.add('active');
-                
+
                 // Filtra os cursos
                 filterCursos();
             });
         });
-        
+
         // Busca de unidades
-        unidadeSearch.addEventListener('input', function() {
+        unidadeSearch.addEventListener('input', function () {
             const searchTerm = this.value.toLowerCase();
-            
+
             unidadeListItems.forEach(item => {
                 const unidadeText = item.textContent.trim().toLowerCase();
-                
+
                 if (unidadeText === 'todas as unidades' || unidadeText.includes(searchTerm)) {
                     item.style.display = '';
                 } else {
@@ -632,32 +675,32 @@
                 }
             });
         });
-        
+
         // Limpar filtros
         function clearFilters() {
             // Limpa a busca
             searchInput.value = '';
-            
+
             // Reseta o filtro de status
             document.getElementById('statusTodos').checked = true;
-            
+
             // Reseta o filtro de tipo de unidade
             document.getElementById('tipoUnidadeTodas').checked = true;
-            
+
             // Reseta o filtro de unidade
             unidadeListItems.forEach(i => i.classList.remove('active'));
             document.querySelector('[data-unidade="todas"]').classList.add('active');
-            
+
             // Limpa a busca de unidades
             unidadeSearch.value = '';
             unidadeListItems.forEach(item => {
                 item.style.display = '';
             });
-            
+
             // Atualiza a visualização
             filterCursos();
         }
-        
+
         resetFilters.addEventListener('click', clearFilters);
         clearFiltersBtn.addEventListener('click', clearFilters);
     });

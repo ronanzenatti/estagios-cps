@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Todos os Envolvidos - Sistema de Gestão de Estágio - CPS{% endblock %}
+{% block title %}Todos os Envolvidos - Sistema de Envolvidos nos Estágios - CPS{% endblock %}
 
 {% block styles %}
 <style>
@@ -191,7 +191,7 @@
     </div>
 </div>
 
-<div class="row g-4">
+<div class="row g-1">
     <!-- Coluna de filtros -->
     <div class="col-lg-3">
         <div class="card mb-4">
@@ -462,7 +462,7 @@
                                     data-unidade="{{ envolvido.unidade_id }}"
                                     data-tipo-unidade="{{ envolvido.unidade.tipo }}"
                                     data-nome="{{ envolvido.nome }}"
-                                    data-cpf="{{ envolvido.cpf }}">
+                                    data-cpf="{{ envolvido.cpf }}" style="display: table-row;">
                                     <td><strong>{{ envolvido.nome }}</strong></td>
                                     <td><span class="envolvido-cpf">{{ envolvido.cpf }}</span></td>
                                     <td>
@@ -566,6 +566,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Variáveis para os elementos DOM
+        const content = document.getElementById('contentdiv');
         const viewGrid = document.getElementById('viewGrid');
         const viewList = document.getElementById('viewList');
         const gridView = document.getElementById('gridView');
@@ -582,4 +583,129 @@
         const radioTipos = document.querySelectorAll('input[name="tipoFilter"]');
         const radioStatus = document.querySelectorAll('input[name="statusFilter"]');
         const radioTipoUnidade = document.querySelectorAll('input[name="tipoUnidadeFilter"]');
-        const envolvidoItems =
+        const envolvidoItems = document.querySelectorAll('.envolvido-item');
+
+        content.classList.replace('container', 'container-fluid');
+
+        // Função para alternar entre visualização em grade e lista
+        viewGrid.addEventListener('click', function() {
+            gridView.style.display = 'block';
+            listView.style.display = 'none';
+            viewGrid.classList.add('active');
+            viewList.classList.remove('active');
+        });
+
+        viewList.addEventListener('click', function() {
+            gridView.style.display = 'none';
+            listView.style.display = 'block';
+            viewList.classList.add('active');
+            viewGrid.classList.remove('active');
+        });
+
+        // Função para filtrar envolvidos
+        function filterEnvolvidos() {
+            const tipoSelecionado = document.querySelector('input[name="tipoFilter"]:checked').value;
+            const statusSelecionado = document.querySelector('input[name="statusFilter"]:checked').value;
+            const tipoUnidadeSelecionado = document.querySelector('input[name="tipoUnidadeFilter"]:checked').value;
+            const searchTerm = searchInput.value.toLowerCase();
+            const unidadeSelecionada = document.querySelector('.unidade-list-item.active').getAttribute('data-unidade');
+
+            let totalVisibles = 0;
+
+            envolvidoItems.forEach(item => {
+                const tipo = item.getAttribute('data-tipo');
+                const status = item.getAttribute('data-status');
+                const tipoUnidade = item.getAttribute('data-tipo-unidade');
+                const nome = item.getAttribute('data-nome').toLowerCase();
+                const cpf = item.getAttribute('data-cpf');
+                const unidade = item.getAttribute('data-unidade');
+
+                const tipoMatch = tipoSelecionado === 'todos' || tipo === tipoSelecionado;
+                const statusMatch = statusSelecionado === 'todos' || status === statusSelecionado;
+                const tipoUnidadeMatch = tipoUnidadeSelecionado === 'todas' || tipoUnidade === tipoUnidadeSelecionado;
+                const unidadeMatch = unidadeSelecionada === 'todas' || unidade === unidadeSelecionada;
+                const searchMatch = searchTerm === '' || 
+                    nome.includes(searchTerm) || 
+                    cpf.includes(searchTerm);
+
+                const isVisible = tipoMatch && statusMatch && tipoUnidadeMatch && unidadeMatch && searchMatch;
+
+                item.style.display = isVisible ? 'table-row' : 'none';
+
+                if (isVisible) totalVisibles++;
+            });
+
+            // Atualiza a contagem de resultados
+            resultCount.textContent = `Exibindo ${totalVisibles} envolvidos`;
+
+            // Mostra/esconde estado vazio
+            if (totalVisibles === 0) {
+                emptyState.style.display = 'block';
+                emptyStateMessage.textContent = 'Não há envolvidos que correspondam aos critérios de busca selecionados.';
+            } else {
+                emptyState.style.display = 'none';
+            }
+        }
+
+        // Adiciona eventos de filtro
+        radioTipos.forEach(radio => radio.addEventListener('change', filterEnvolvidos));
+        radioStatus.forEach(radio => radio.addEventListener('change', filterEnvolvidos));
+        radioTipoUnidade.forEach(radio => radio.addEventListener('change', filterEnvolvidos));
+
+        // Busca
+        searchButton.addEventListener('click', filterEnvolvidos);
+        searchInput.addEventListener('input', filterEnvolvidos);
+
+        // Filtro por unidade
+        unidadeSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            unidadeListItems.forEach(item => {
+                const unidadeText = item.textContent.toLowerCase();
+                item.style.display = unidadeText.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+
+        unidadeListItems.forEach(item => {
+            item.addEventListener('click', function() {
+                unidadeListItems.forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                filterEnvolvidos();
+            });
+        });
+
+        // Botão de limpar filtros
+        resetFilters.addEventListener('click', function() {
+            // Reseta todos os filtros para o estado padrão
+            document.getElementById('tipoTodos').checked = true;
+            document.getElementById('statusTodos').checked = true;
+            document.getElementById('tipoUnidadeTodas').checked = true;
+            searchInput.value = '';
+            unidadeSearch.value = '';
+            document.querySelector('.unidade-list-item[data-unidade="todas"]').classList.add('active');
+            unidadeListItems.forEach((item, index) => {
+                if (index !== 0) item.classList.remove('active');
+            });
+
+            filterEnvolvidos();
+        });
+
+        clearFiltersBtn.addEventListener('click', function() {
+            // Reseta todos os filtros para o estado padrão
+            document.getElementById('tipoTodos').checked = true;
+            document.getElementById('statusTodos').checked = true;
+            document.getElementById('tipoUnidadeTodas').checked = true;
+            searchInput.value = '';
+            unidadeSearch.value = '';
+            document.querySelector('.unidade-list-item[data-unidade="todas"]').classList.add('active');
+            unidadeListItems.forEach((item, index) => {
+                if (index !== 0) item.classList.remove('active');
+            });
+
+            filterEnvolvidos();
+        });
+
+        // Inicializa os filtros
+        filterEnvolvidos();
+    });
+</script>
+{% endblock %}

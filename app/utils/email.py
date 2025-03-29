@@ -112,7 +112,7 @@ def enviar_email_boas_vindas(user, senha_temporaria=None):
         bool: True se o email foi enviado com sucesso, False caso contrário
     """
     return enviar_email(
-        assunto='[Estágio CPS] Bem-vindo ao Sistema de Gestão de Estágio',
+        assunto='[Estágio CPS] Bem-vindo ao Sistema de Envolvidos nos Estágios',
         destinatarios=[user.email],
         texto_corpo=render_template('email/boas_vindas.txt', 
                                    user=user, 

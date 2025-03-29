@@ -57,3 +57,33 @@ class Curso(db.Model):
     
     def __repr__(self):
         return f'<Curso {self.nome}, Unidade: {self.unidade_id}>'
+    
+    @property
+    def orientadores(self):
+        """Retorna os orientadores associados a este curso"""
+        return [envolvido for envolvido in self.envolvidos if envolvido.tipo == 'Orientador']
+    
+    @property
+    def coordenadores(self):
+        """Retorna os Coordenadores associados a este curso"""
+        return [envolvido for envolvido in self.envolvidos if envolvido.tipo == 'Coordenador']
+    
+    @property
+    def atas(self):
+        """Retorna os ATAs associados a este curso"""
+        return [envolvido for envolvido in self.envolvidos if envolvido.tipo == 'ATA']
+
+    @property
+    def apoios(self):
+        """Retorna os Apoios associados a este curso"""
+        return [envolvido for envolvido in self.envolvidos if envolvido.tipo == 'Apoio']
+
+    @property
+    def facilitadores(self):
+        """Retorna os ATAs associados a este curso"""
+        return [envolvido for envolvido in self.envolvidos if envolvido.tipo == 'Facilitador']
+
+    @property
+    def envolvidos(self):
+        """Retorna os Envolvidos associados a este curso"""
+        return [envolvido for envolvido in self.envolvidos if envolvido.ativo]
