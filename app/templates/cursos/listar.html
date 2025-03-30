@@ -66,14 +66,7 @@
 
 <!-- Filtros e busca -->
 <div class="row mb-4">
-    <div class="col-md-8">
-        <div class="btn-group me-2" role="group" aria-label="Filtrar por status">
-            <a href="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None) }}" class="btn btn-outline-secondary{% if not status_filter %} active{% endif %}">Todos</a>
-            <a href="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None, status='ativo') }}" class="btn btn-outline-success{% if status_filter == 'ativo' %} active{% endif %}">Ativos</a>
-            <a href="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None, status='inativo') }}" class="btn btn-outline-danger{% if status_filter == 'inativo' %} active{% endif %}">Inativos</a>
-        </div>
-    </div>
-    <div class="col-md-4">
+    <div class="offset-8 col-md-4">
         <form method="GET" action="{{ url_for('cursos.listar', unidade_id=unidade.id if unidade else None) }}">
             {% if unidade %}
                 <input type="hidden" name="unidade_id" value="{{ unidade.id }}">
@@ -97,7 +90,7 @@
             <tr>
                 <th>Nome</th>
                 <th>Código</th>
-                <th>Orientadores</th>
+                <th>Envolvidos</th>
                 <th>Descrição</th>
                 <th>Status</th>
                 <th class="text-end">Ações</th>
@@ -114,7 +107,7 @@
                     <span class="text-muted">—</span>
                     {% endif %}
                 </td>
-                <td>{{ curso.orientadores|length }}</td>
+                <td>{{ curso.envolvidos|length }}</td>
                 <td>
                     {% if curso.descricao %}
                     <small class="text-muted">{{ curso.descricao|truncate(50) }}</small>
