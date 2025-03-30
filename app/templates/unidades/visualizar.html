@@ -87,7 +87,6 @@
                 </ul>
             </div>
             <div class="tab-content" id="unidadeTabContent">
-                <!-- Aba de Cursos (mantida como estava) -->
                 <!-- Aba de Cursos -->
                 <div class="tab-pane fade show active" id="cursos" role="tabpanel" aria-labelledby="cursos-tab">
                     <div class="card">
@@ -107,10 +106,7 @@
                                         <tr>
                                             <th>Nome</th>
                                             <th>Sigla</th>
-                                            <th>Orientadores</th>
-                                            <th>Facilitadores</th>
-                                            <th>ATAs</th>
-                                            <th>Total Envolvidos</th>
+                                            <th>Envolvidos</th>
                                             <th>Status</th>
                                             <th>Ações</th>
                                         </tr>
@@ -120,9 +116,6 @@
                                         <tr>
                                             <td>{{ curso.nome }}</td>
                                             <td>{{ curso.codigo or '-' }}</td>
-                                            <td>{{ curso.envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list|length }}</td>
-                                            <td>{{ curso.envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list|length }}</td>
-                                            <td>{{ curso.envolvidos|selectattr('tipo', 'equalto', 'ATA')|list|length }}</td>
                                             <td><strong>{{ curso.envolvidos|length }}</strong></td>
                                             <td>
                                                 {% if curso.ativo %}
@@ -134,18 +127,18 @@
                                             <td>
                                                 <div class="btn-group btn-group-sm">
                                                     <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-info" title="Visualizar">
-                                                        <i class="fas fa-eye"></i>
+                                                        <i class="bi bi-eye"></i>
                                                     </a>
                                                     {% if current_user.is_admin() or (current_user.is_diretor() and current_user.unidade_id == unidade.id) %}
                                                     <a href="{{ url_for('cursos.editar', id=curso.id) }}" class="btn btn-warning" title="Editar">
-                                                        <i class="fas fa-edit"></i>
+                                                        <i class="bi bi-pencil"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-danger" title="Excluir" 
                                                         data-bs-toggle="modal" data-bs-target="#deleteModal" 
                                                         data-id="{{ curso.id }}" 
                                                         data-name="{{ curso.nome }}" 
                                                         data-url="{{ url_for('cursos.excluir', id=curso.id) }}">
-                                                        <i class="fas fa-trash"></i>
+                                                        <i class="bi bi-trash"></i>
                                                     </button>
                                                     {% endif %}
                                                 </div>
