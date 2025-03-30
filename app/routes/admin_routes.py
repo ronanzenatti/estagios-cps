@@ -108,3 +108,35 @@ def resetar_senha_usuario(id):
         flash('Erro ao resetar senha.', 'danger')
     
     return redirect(url_for('admin.listar_usuarios'))
+
+@admin_bp.route('/unidades/resetar-todas-senhas', methods=['POST'])
+@login_required
+@admin_required
+def resetar_todas_senhas_unidades():
+    """Reseta as senhas de todos os diretores para o número de suas respectivas unidades"""
+    
+    # Busca todos os usuários que são diretores e que possuem unidade associada
+    diretores = User.query.filter_by(role='diretor').filter(User.unidade_id.isnot(None)).all()
+    
+    count = 0
+    for diretor in diretores:
+        # Busca a unidade associada ao diretor
+        unidade = Unidade.query.get(diretor.unidade_id)
+        if unidade:
+            # Define a senha como o número da unidade
+            nova_senha = unidade.numero
+            diretor.set_password(nova_senha)
+            count += 1
+    
+    # Commit das alterações se houve alguma mudança
+    if count > 0:
+        try:
+            db.session.commit()
+            flash(f'Senhas de {count} diretores de unidades resetadas com sucesso para o número de suas respectivas unidades.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao resetar senhas: {str(e)}', 'danger')
+    else:
+        flash('Nenhum diretor com unidade associada foi encontrado.', 'info')
+    
+    return redirect(url_for('unidades.listar'))

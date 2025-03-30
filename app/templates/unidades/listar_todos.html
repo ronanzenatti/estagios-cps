@@ -94,6 +94,11 @@
             <i class="bi bi-building-add me-1"></i> Nova Unidade
         </a>
     </div>
+    <form action="{{ url_for('admin.resetar_todas_senhas_unidades') }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha de TODAS as unidades para o número da unidade?');">
+        <button type="submit" class="btn btn-warning">
+            <i class="fas fa-key"></i> Resetar Todas as Senhas
+        </button>
+    </form>
 </div>
 
 <!-- Contador e estatísticas -->

@@ -64,6 +64,12 @@
         <a href="{{ url_for('unidades.novo') }}" class="btn btn-sm btn-primary">
             <i class="bi bi-building-add me-1"></i> Nova Unidade
         </a>
+        <form action="{{ url_for('admin.resetar_todas_senhas_unidades') }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha de TODAS as unidades para o número da unidade?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-warning">
+                <i class="fas fa-key"></i> Resetar Todas as Senhas
+            </button>
+        </form>
         {% endif %}
     </div>
 </div>
