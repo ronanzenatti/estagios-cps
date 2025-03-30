@@ -76,14 +76,22 @@ def visualizar(id):
     
     # Obtém dados relacionados
     cursos = Curso.query.filter_by(unidade_id=id).order_by(Curso.nome).all()
+    
+    # Busca os envolvidos por tipo
     orientadores = Envolvido.query.filter_by(unidade_id=id, tipo='Orientador').all()
+    coordenadores = Envolvido.query.filter_by(unidade_id=id, tipo='Coordenador').all()
+    atas = Envolvido.query.filter_by(unidade_id=id, tipo='ATA').all()
     facilitadores = Envolvido.query.filter_by(unidade_id=id, tipo='Facilitador').all()
+    apoio = Envolvido.query.filter_by(unidade_id=id, tipo='Apoio').all()
     
     return render_template('unidades/visualizar.html', 
                           unidade=unidade, 
                           cursos=cursos, 
-                          orientadores=orientadores, 
-                          facilitadores=facilitadores)
+                          orientadores=orientadores,
+                          coordenadores=coordenadores,
+                          atas=atas,
+                          facilitadores=facilitadores,
+                          apoio=apoio)
 
 @unidades_bp.route('/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
