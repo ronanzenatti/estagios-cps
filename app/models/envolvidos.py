@@ -14,11 +14,11 @@ class Envolvido(db.Model):
     __tablename__ = 'envolvidos'
     
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
+    nome = db.Column(db.String(255), nullable=False)
     cpf = db.Column(db.String(14), nullable=False, unique=True)
-    cargo = db.Column(db.String(100), nullable=False)
-    tipo = db.Column(db.String(12), nullable=False)  # 'Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio'
-    email_institucional = db.Column(db.String(100), nullable=False)  # Novo campo obrigatório
+    cargo = db.Column(db.String(200), nullable=False)
+    tipo = db.Column(db.String(20), nullable=False)  # 'Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio'
+    email_institucional = db.Column(db.String(200), nullable=False)  # Novo campo obrigatório
     celular = db.Column(db.String(20), nullable=False)  # Novo campo obrigatório
     # email_pessoal = db.Column(db.String(100), nullable=True)  # Antigo campo 'email' renomeado
     # telefone = db.Column(db.String(20), nullable=True)  # Mantido como opcional (telefone fixo)

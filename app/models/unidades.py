@@ -11,13 +11,13 @@ class Unidade(db.Model):
     __tablename__ = 'unidades'
     
     id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.String(5), nullable=False)  # 'Fatec' ou 'Etec'
+    tipo = db.Column(db.String(8), nullable=False)  # 'Fatec' ou 'Etec'
     numero = db.Column(db.String(3), nullable=False)
-    nome = db.Column(db.String(100), nullable=False)
-    cidade = db.Column(db.String(100), nullable=True)
+    nome = db.Column(db.String(255), nullable=False)
+    cidade = db.Column(db.String(200), nullable=True)
     telefone = db.Column(db.String(20), nullable=True)
-    nome_diretor = db.Column(db.String(100), nullable=False)
-    email_diretor = db.Column(db.String(100), nullable=False)
+    nome_diretor = db.Column(db.String(255), nullable=False)
+    email_diretor = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
