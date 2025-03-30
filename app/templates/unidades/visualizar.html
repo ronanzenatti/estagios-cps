@@ -119,9 +119,6 @@
                                     <tr>
                                         <th>Nome</th>
                                         <th>Sigla</th>
-                                        <th>Orientadores</th>
-                                        <th>Facilitadores</th>
-                                        <th>ATAs</th>
                                         <th>Total Envolvidos</th>
                                         <th>Status</th>
                                     </tr>
@@ -131,9 +128,6 @@
                                     <tr>
                                         <td>{{ curso.nome }}</td>
                                         <td>{{ curso.codigo or '-' }}</td>
-                                        <td>{{ curso.envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list|length }}</td>
-                                        <td>{{ curso.envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list|length }}</td>
-                                        <td>{{ curso.envolvidos|selectattr('tipo', 'equalto', 'ATA')|list|length }}</td>
                                         <td><strong>{{ curso.envolvidos|length }}</strong></td>
                                         <td>
                                             {% if curso.ativo %}
@@ -491,14 +485,6 @@
                     <h6 class="text-muted">Última Atualização</h6>
                     <p class="text-dark mb-0">{{ unidade.updated_at.strftime('%d/%m/%Y às %H:%M') }}</p>
                 </div>
-                
-                {% if current_user.is_admin() or current_user.unidade_id == unidade.id %}
-                <div class="mt-3">
-                    <a href="{{ url_for('diretor.relatorio_envolvidos', unidade_id=unidade.id) }}" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-file-earmark-text me-2"></i> Gerar Relatório de Envolvidos
-                    </a>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>

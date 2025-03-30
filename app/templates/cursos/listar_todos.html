@@ -317,16 +317,9 @@
                                     </p>
 
                                     <p class="card-text mb-1">
-                                        <i class="bi bi-people me-1 text-muted"></i> Orientadores: {{
-                                        curso.orientadores|length }}
+                                        <i class="bi bi-people me-1 text-muted"></i> Envolvidos: {{
+                                        curso.envolvidos|length }}
                                     </p>
-
-                                    {% if curso.descricao %}
-                                    <p class="card-text mb-3">
-                                        <i class="bi bi-info-circle me-1 text-muted"></i> {{
-                                        curso.descricao|truncate(80) }}
-                                    </p>
-                                    {% endif %}
                                 </div>
                                 <div class="card-footer bg-white border-top">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -398,7 +391,7 @@
                                     <th>Nome</th>
                                     <th>Código</th>
                                     <th>Unidade</th>
-                                    <th>Orientadores</th>
+                                    <th>Envolvidos</th>
                                     <th>Status</th>
                                     <th class="text-end">Ações</th>
                                 </tr>
@@ -423,7 +416,7 @@
                                         </span>
                                         <small class="d-block">{{ curso.unidade.nome }}</small>
                                     </td>
-                                    <td>{{ curso.orientadores|length }}</td>
+                                    <td>{{ curso.envolvidos|length }}</td>
                                     <td>
                                         {% if curso.ativo %}
                                         <span class="status-badge status-active"></span> Ativo

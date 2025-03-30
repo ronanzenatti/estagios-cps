@@ -64,21 +64,21 @@
         background-color: rgba(25, 135, 84, 0.1);
         color: #198754;
     }
-    .orientador-list {
+    .envolvido-list {
         max-height: 400px;
         overflow-y: auto;
     }
-    .orientador-item {
+    .envolvido-item {
         padding: 0.75rem;
         border-radius: 0.5rem;
         margin-bottom: 0.5rem;
         background-color: #f8f9fa;
         transition: all 0.2s;
     }
-    .orientador-item:hover {
+    .envolvido-item:hover {
         background-color: #e9ecef;
     }
-    .orientador-item-inactive {
+    .envolvido-item-inactive {
         opacity: 0.7;
     }
     .empty-list {
@@ -92,6 +92,18 @@
         color: #dee2e6;
         margin-bottom: 1rem;
     }
+    .nav-tabs .nav-link {
+        font-weight: 500;
+        color: #6c757d;
+        border-bottom-width: 2px;
+    }
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom-color: #0d6efd;
+    }
+    .tab-content {
+        padding: 1rem 0;
+    }
 </style>
 {% endblock %}
 
@@ -99,7 +111,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">
         {% if curso.codigo %}
-        <span class="curso-codigo">{{ curso.codigo }}</span> -
+        <span class="">{{ curso.codigo }}</span> -
         {% endif %}
         {{ curso.nome }}
     </h1>
@@ -123,7 +135,7 @@
             <div class="curso-header d-flex justify-content-between align-items-center">
                 <div>
                     <h4 class="mb-0">Informações do Curso</h4>
-                    <p class="text-muted mb-0">Detalhes do curso e orientadores</p>
+                    <p class="text-muted mb-0">Detalhes do curso e envolvidos</p>
                 </div>
                 <div>
                     {% if curso.ativo %}
@@ -143,8 +155,8 @@
                         </div>
                         {% if curso.codigo %}
                         <div class="mb-3">
-                            <div class="info-label">Código</div>
-                            <div class="curso-codigo">{{ curso.codigo }}</div>
+                            <div class="info-label">Abreviação</div>
+                            <div class="">{{ curso.codigo }}</div>
                         </div>
                         {% endif %}
                     </div>
@@ -160,8 +172,14 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <div class="info-label">Orientadores Associados</div>
-                            <div>{{ orientadores|length }}</div>
+                            <div class="info-label">Envolvidos Associados</div>
+                            <div>
+                                {% if curso.unidade.tipo == 'Fatec' %}
+                                {{ curso.orientadores|length + curso.coordenadores|length }}
+                                {% else %}
+                                {{ curso.atas|length + curso.facilitadores|length }}
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -207,47 +225,198 @@
             </div>
         </div>
         
-        <!-- Lista de Orientadores Associados -->
+        <!-- Lista de Envolvidos Associados -->
         <div class="card mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0"><i class="bi bi-people-fill me-2"></i> Orientadores Associados</h5>
-                <span class="badge bg-primary rounded-pill">{{ orientadores|length }}</span>
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0"><i class="bi bi-people-fill me-2"></i> Envolvidos Associados</h5>
             </div>
             <div class="card-body">
-                {% if orientadores %}
-                <div class="orientador-list">
-                    {% for orientador in orientadores %}
-                    <div class="orientador-item{% if not orientador.ativo %} orientador-item-inactive{% endif %}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0">{{ orientador.nome }}</h6>
-                                <small class="text-muted">
-                                    {{ orientador.cargo }}
-                                    {% if not orientador.ativo %}
-                                    <span class="badge bg-secondary ms-2">Inativo</span>
-                                    {% endif %}
-                                </small>
+                {% if curso.unidade.tipo == 'Fatec' %}
+                <!-- Tabs para FATEC -->
+                <ul class="nav nav-tabs" id="envolvidos-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="orientadores-tab" data-bs-toggle="tab" data-bs-target="#orientadores-tab-pane" type="button" role="tab">
+                            Orientadores <span class="badge bg-primary rounded-pill ms-2">{{ curso.orientadores|length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="coordenadores-tab" data-bs-toggle="tab" data-bs-target="#coordenadores-tab-pane" type="button" role="tab">
+                            Coordenadores <span class="badge bg-primary rounded-pill ms-2">{{ curso.coordenadores|length }}</span>
+                        </button>
+                    </li>           
+                </ul>
+                <div class="tab-content" id="envolvidos-tab-content">
+                    <!-- Tab de Orientadores -->
+                    <div class="tab-pane fade show active" id="orientadores-tab-pane" role="tabpanel" tabindex="0">
+                        {% if curso.orientadores %}
+                        <div class="envolvido-list">
+                            {% for orientador in curso.orientadores %}
+                            <div class="envolvido-item{% if not orientador.ativo %} envolvido-item-inactive{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ orientador.nome }}</h6>
+                                        <small class="text-muted">
+                                            {{ orientador.cargo }}
+                                            {% if not orientador.ativo %}
+                                            <span class="badge bg-secondary ms-2">Inativo</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('envolvidos.visualizar', id=orientador.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i> Visualizar
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <a href="{{ url_for('envolvidos.visualizar', id=orientador.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye me-1"></i> Visualizar
-                                </a>
-                            </div>
+                            {% endfor %}
                         </div>
+                        {% else %}
+                        <div class="empty-list">
+                            <div class="empty-list-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <h5>Nenhum orientador associado</h5>
+                            <p class="text-muted">Este curso ainda não possui orientadores associados.</p>
+                            <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id, tipo='Orientador') }}" class="btn btn-primary">
+                                <i class="bi bi-person-plus-fill me-1"></i> Adicionar Orientador
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
+                    
+                    <!-- Tab de Coordenadores -->
+                    <div class="tab-pane fade" id="coordenadores-tab-pane" role="tabpanel" tabindex="0">
+                        {% if curso.coordenadores %}
+                        <div class="envolvido-list">
+                            {% for coordenador in curso.coordenadores %}
+                            <div class="envolvido-item{% if not coordenador.ativo %} envolvido-item-inactive{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ coordenador.nome }}</h6>
+                                        <small class="text-muted">
+                                            {{ coordenador.cargo }}
+                                            {% if not coordenador.ativo %}
+                                            <span class="badge bg-secondary ms-2">Inativo</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('envolvidos.visualizar', id=coordenador.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i> Visualizar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-list">
+                            <div class="empty-list-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <h5>Nenhum coordenador associado</h5>
+                            <p class="text-muted">Este curso ainda não possui coordenadores associados.</p>
+                            <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id, tipo='Coordenador') }}" class="btn btn-primary">
+                                <i class="bi bi-person-plus-fill me-1"></i> Adicionar Coordenador
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
+                
                 {% else %}
-                <div class="empty-list">
-                    <div class="empty-list-icon">
-                        <i class="bi bi-people"></i>
+                <!-- Tabs para ETEC -->
+                <ul class="nav nav-tabs" id="envolvidos-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="atas-tab" data-bs-toggle="tab" data-bs-target="#atas-tab-pane" type="button" role="tab">
+                            ATAs <span class="badge bg-primary rounded-pill ms-2">{{ curso.atas|length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="facilitadores-tab" data-bs-toggle="tab" data-bs-target="#facilitadores-tab-pane" type="button" role="tab">
+                            Facilitadores <span class="badge bg-primary rounded-pill ms-2">{{ curso.facilitadores|length }}</span>
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="envolvidos-tab-content">
+                    <!-- Tab de ATAs -->
+                    <div class="tab-pane fade show active" id="atas-tab-pane" role="tabpanel" tabindex="0">
+                        {% if curso.atas %}
+                        <div class="envolvido-list">
+                            {% for ata in curso.atas %}
+                            <div class="envolvido-item{% if not ata.ativo %} envolvido-item-inactive{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ ata.nome }}</h6>
+                                        <small class="text-muted">
+                                            {{ ata.cargo }}
+                                            {% if not ata.ativo %}
+                                            <span class="badge bg-secondary ms-2">Inativo</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('envolvidos.visualizar', id=ata.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i> Visualizar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-list">
+                            <div class="empty-list-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <h5>Nenhum ATA associado</h5>
+                            <p class="text-muted">Este curso ainda não possui ATAs associados.</p>
+                            <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id, tipo='ATA') }}" class="btn btn-primary">
+                                <i class="bi bi-person-plus-fill me-1"></i> Adicionar ATA
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
-                    <h5>Nenhum orientador associado</h5>
-                    <p class="text-muted">Este curso ainda não possui orientadores associados.</p>
-                    <p class="text-muted small">Orientadores podem ser adicionados na seção de gerenciamento de envolvidos.</p>
-                    <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id, tipo='Orientador') }}" class="btn btn-primary">
-                        <i class="bi bi-person-plus-fill me-1"></i> Adicionar Orientador
-                    </a>
+                    
+                    <!-- Tab de Facilitadores -->
+                    <div class="tab-pane fade" id="facilitadores-tab-pane" role="tabpanel" tabindex="0">
+                        {% if curso.facilitadores %}
+                        <div class="envolvido-list">
+                            {% for facilitador in curso.facilitadores %}
+                            <div class="envolvido-item{% if not facilitador.ativo %} envolvido-item-inactive{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ facilitador.nome }}</h6>
+                                        <small class="text-muted">
+                                            {{ facilitador.cargo }}
+                                            {% if not facilitador.ativo %}
+                                            <span class="badge bg-secondary ms-2">Inativo</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('envolvidos.visualizar', id=facilitador.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i> Visualizar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-list">
+                            <div class="empty-list-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <h5>Nenhum facilitador associado</h5>
+                            <p class="text-muted">Este curso ainda não possui facilitadores associados.</p>
+                            <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id, tipo='Facilitador') }}" class="btn btn-primary">
+                                <i class="bi bi-person-plus-fill me-1"></i> Adicionar Facilitador
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -278,14 +447,14 @@
                             <i class="bi bi-toggle-on me-2"></i> Ativar Curso
                         </button>
                         {% endif %}
-                    </form>
-                    
-                    <a href="{{ url_for('envolvidos.listar', unidade_id=curso.unidade_id, tipo='Orientador') }}" class="btn btn-outline-info">
-                        <i class="bi bi-people me-2"></i> Ver Orientadores da Unidade
+                    </form>                    
+                   
+                    <a href="{{ url_for('envolvidos.listar', unidade_id=curso.unidade_id) }}" class="btn btn-outline-info">
+                        <i class="bi bi-people me-2"></i> Ver Envolvidos
                     </a>
                     
-                    <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id, tipo='Orientador') }}" class="btn btn-outline-success">
-                        <i class="bi bi-person-plus me-2"></i> Adicionar Orientador
+                    <a href="{{ url_for('envolvidos.novo', unidade_id=curso.unidade_id) }}" class="btn btn-outline-success">
+                        <i class="bi bi-person-plus me-2"></i> Adicionar Envolvido
                     </a>
                     
                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
@@ -306,26 +475,62 @@
                     <div>
                         {% if curso.ativo %}
                         <span class="badge bg-success">Ativo</span> 
-                        <small class="text-muted">O curso pode receber novos orientadores</small>
+                        <small class="text-muted">O curso pode receber novos envolvidos</small>
                         {% else %}
                         <span class="badge bg-secondary">Inativo</span>
-                        <small class="text-muted">O curso não pode receber novos orientadores</small>
+                        <small class="text-muted">O curso não pode receber novos envolvidos</small>
                         {% endif %}
                     </div>
                 </div>
                 
                 <div class="mb-3">
-                    <div class="info-label">Orientadores</div>
+                    <div class="info-label">Envolvidos</div>
                     <div>
-                        <strong>{{ orientadores|length }}</strong> orientador(es) associado(s)
+                        {% if curso.unidade.tipo == 'Fatec' %}
+                        <strong>{{ curso.orientadores|length }}</strong> orientador(es)
                         <div class="progress mt-1" style="height: 6px;">
                             <div class="progress-bar bg-primary" role="progressbar" 
-                            style="width: {{ (orientadores|selectattr('ativo')|list|length / orientadores|length * 100) if orientadores else 0 }}%"></div>
+                            style="width: {{ (curso.orientadores|selectattr('ativo')|list|length / curso.orientadores|length * 100) if curso.orientadores else 0 }}%"></div>
                         </div>
                         <small class="text-muted">
-                            {{ orientadores|selectattr('ativo')|list|length }} ativo(s) / 
-                            {{ orientadores|rejectattr('ativo')|list|length }} inativo(s)
+                            {{ curso.orientadores|selectattr('ativo')|list|length }} ativo(s) / 
+                            {{ curso.orientadores|rejectattr('ativo')|list|length }} inativo(s)
                         </small>
+                        
+                        <hr class="my-2">
+                        
+                        <strong>{{ curso.coordenadores|length }}</strong> coordenador(es)
+                        <div class="progress mt-1" style="height: 6px;">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                            style="width: {{ (curso.coordenadores|selectattr('ativo')|list|length / curso.coordenadores|length * 100) if curso.coordenadores else 0 }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {{ curso.coordenadores|selectattr('ativo')|list|length }} ativo(s) / 
+                            {{ curso.coordenadores|rejectattr('ativo')|list|length }} inativo(s)
+                        </small>
+                        {% else %}
+                        <strong>{{ curso.atas|length }}</strong> ATA(s)
+                        <div class="progress mt-1" style="height: 6px;">
+                            <div class="progress-bar bg-primary" role="progressbar" 
+                            style="width: {{ (curso.atas|selectattr('ativo')|list|length / curso.atas|length * 100) if curso.atas else 0 }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {{ curso.atas|selectattr('ativo')|list|length }} ativo(s) / 
+                            {{ curso.atas|rejectattr('ativo')|list|length }} inativo(s)
+                        </small>
+                        
+                        <hr class="my-2">
+                        
+                        <strong>{{ curso.facilitadores|length }}</strong> facilitador(es)
+                        <div class="progress mt-1" style="height: 6px;">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                            style="width: {{ (curso.facilitadores|selectattr('ativo')|list|length / curso.facilitadores|length * 100) if curso.facilitadores else 0 }}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            {{ curso.facilitadores|selectattr('ativo')|list|length }} ativo(s) / 
+                            {{ curso.facilitadores|rejectattr('ativo')|list|length }} inativo(s)
+                        </small>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -354,12 +559,28 @@
                 <p>Você tem certeza que deseja excluir o curso <strong>{{ curso.nome }}</strong>?</p>
                 <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
                 
-                {% if orientadores %}
+                {% if curso.unidade.tipo == 'Fatec' %}
+                {% if curso.orientadores or curso.coordenadores %}
                 <div class="alert alert-warning">
                     <i class="bi bi-info-circle-fill me-2"></i> 
-                    <strong>Atenção!</strong> Este curso possui {{ orientadores|length }} orientador(es) associado(s).
-                    A exclusão removerá estas associações.
+                    <strong>Atenção!</strong> Este curso possui 
+                    {% if curso.orientadores %}{{ curso.orientadores|length }} orientador(es){% endif %}
+                    {% if curso.orientadores and curso.coordenadores %} e {% endif %}
+                    {% if curso.coordenadores %}{{ curso.coordenadores|length }} coordenador(es){% endif %} 
+                    associado(s). A exclusão removerá estas associações.
                 </div>
+                {% endif %}
+                {% else %}
+                {% if curso.atas or curso.facilitadores %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle-fill me-2"></i> 
+                    <strong>Atenção!</strong> Este curso possui 
+                    {% if curso.atas %}{{ curso.atas|length }} ATA(s){% endif %}
+                    {% if curso.atas and curso.facilitadores %} e {% endif %}
+                    {% if curso.facilitadores %}{{ curso.facilitadores|length }} facilitador(es){% endif %} 
+                    associado(s). A exclusão removerá estas associações.
+                </div>
+                {% endif %}
                 {% endif %}
             </div>
             <div class="modal-footer">
