@@ -48,7 +48,6 @@
                     </div>
                     <div class="col-md-6">
                         <p class="mb-1"><strong>Diretor(a):</strong> {{ unidade.nome_diretor }}</p>
-                        <p class="mb-1"><strong>E-mail Diretor:</strong> {{ unidade.email_diretor }}</p>
                         <p class="mb-1"><strong>E-mail Institucional:</strong> {{ unidade.email_institucional }}</p>
                         <p class="mb-1"><strong>Cadastrada em:</strong> {{ unidade.created_at.strftime('%d/%m/%Y') }}</p>
                     </div>
@@ -125,7 +124,6 @@
                                         <th>ATAs</th>
                                         <th>Total Envolvidos</th>
                                         <th>Status</th>
-                                        <th>Detalhes</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -143,11 +141,6 @@
                                             {% else %}
                                             <span class="badge bg-danger">Inativo</span>
                                             {% endif %}
-                                        </td>
-                                        <td>
-                                            <a href="{{ url_for('cursos.visualizar', id=curso.id) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -178,7 +171,6 @@
                                             <th>Email</th>
                                             <th>Cursos</th>
                                             <th>Status</th>
-                                            <th>Detalhes</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -194,11 +186,6 @@
                                                 {% else %}
                                                 <span class="badge bg-secondary">Inativo</span>
                                                 {% endif %}
-                                            </td>
-                                            <td>
-                                                <a href="{{ url_for('envolvidos.visualizar', id=orientador.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -228,7 +215,6 @@
                                             <th>Email</th>
                                             <th>Cursos</th>
                                             <th>Status</th>
-                                            <th>Detalhes</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -244,11 +230,6 @@
                                                 {% else %}
                                                 <span class="badge bg-secondary">Inativo</span>
                                                 {% endif %}
-                                            </td>
-                                            <td>
-                                                <a href="{{ url_for('envolvidos.visualizar', id=coordenador.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -278,7 +259,6 @@
                                             <th>Email</th>
                                             <th>Telefone</th>
                                             <th>Status</th>
-                                            <th>Detalhes</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -294,11 +274,6 @@
                                                 {% else %}
                                                 <span class="badge bg-secondary">Inativo</span>
                                                 {% endif %}
-                                            </td>
-                                            <td>
-                                                <a href="{{ url_for('envolvidos.visualizar', id=ata.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -328,7 +303,6 @@
                                             <th>Email</th>
                                             <th>Telefone</th>
                                             <th>Status</th>
-                                            <th>Detalhes</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -344,11 +318,6 @@
                                                 {% else %}
                                                 <span class="badge bg-secondary">Inativo</span>
                                                 {% endif %}
-                                            </td>
-                                            <td>
-                                                <a href="{{ url_for('envolvidos.visualizar', id=facilitador.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -379,7 +348,7 @@
                                         <th>Email</th>
                                         <th>Telefone</th>
                                         <th>Status</th>
-                                        <th>Detalhes</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -395,11 +364,6 @@
                                             {% else %}
                                             <span class="badge bg-secondary">Inativo</span>
                                             {% endif %}
-                                        </td>
-                                        <td>
-                                            <a href="{{ url_for('envolvidos.visualizar', id=membro_apoio.id) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -530,8 +494,8 @@
                 
                 {% if current_user.is_admin() or current_user.unidade_id == unidade.id %}
                 <div class="mt-3">
-                    <a href="{{ url_for('relatorios.unidade', id=unidade.id) }}" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-file-earmark-text me-2"></i> Gerar Relatório
+                    <a href="{{ url_for('diretor.relatorio_envolvidos', unidade_id=unidade.id) }}" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-file-earmark-text me-2"></i> Gerar Relatório de Envolvidos
                     </a>
                 </div>
                 {% endif %}

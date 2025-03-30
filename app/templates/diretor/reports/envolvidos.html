@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+</script>
+{% endblock %}
 
 {% block title %}Relatório de Envolvidos - Sistema de Envolvidos nos Estágios - CPS{% endblock %}
 
@@ -725,6 +727,7 @@
                     // Remove HTML e limpa o texto
                     let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""');
                     row.push('"' + data + '"');
+                }
                 
                 csv += row.join(',') + '\n';
             }
@@ -774,5 +777,3 @@
         // Download do arquivo
         downloadCSV(filename, header + csv);
     }
-</script>
-{% endblock %}
