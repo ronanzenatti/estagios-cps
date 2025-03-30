@@ -1,8 +1,102 @@
 # app/controllers/cursos.py
+# app/controllers/cursos.py
 from flask import current_app
 from datetime import datetime
+from sqlalchemy import or_
 
 from ..models import db, Curso, Unidade
+
+def get_all_cursos():
+    """
+    Retorna todos os cursos cadastrados, ordenados por nome.
+    
+    Returns:
+        list: Lista de objetos Curso
+    """
+    return Curso.query.order_by(Curso.nome).all()
+
+def get_all_cursos_paginated(page=1, per_page=50, search=None, status=None, tipo_unidade=None):
+    """
+    Retorna todos os cursos cadastrados com paginação.
+    
+    Args:
+        page (int): Número da página atual
+        per_page (int): Quantidade de itens por página
+        search (str, optional): Termo de busca para filtrar cursos
+        status (str, optional): Status para filtrar ('ativo' ou 'inativo')
+        tipo_unidade (str, optional): Tipo de unidade para filtrar ('Fatec' ou 'Etec')
+        
+    Returns:
+        Pagination: Objeto de paginação do SQLAlchemy
+    """
+    query = Curso.query
+    
+    # Aplicar filtros se fornecidos
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                Curso.nome.ilike(search_term),
+                Curso.codigo.ilike(search_term) if Curso.codigo else False
+            )
+        )
+    
+    if status == 'ativo':
+        query = query.filter(Curso.ativo == True)
+    elif status == 'inativo':
+        query = query.filter(Curso.ativo == False)
+        
+    if tipo_unidade:
+        query = query.join(Unidade).filter(Unidade.tipo == tipo_unidade)
+    
+    # Ordenar e paginar
+    return query.order_by(Curso.nome).paginate(page=page, per_page=per_page, error_out=False)
+
+def get_cursos_by_unidade(unidade_id):
+    """
+    Retorna todos os cursos de uma unidade, ordenados por nome.
+    
+    Args:
+        unidade_id (int): ID da unidade
+        
+    Returns:
+        list: Lista de objetos Curso
+    """
+    return Curso.query.filter_by(unidade_id=unidade_id).order_by(Curso.nome).all()
+
+def get_cursos_by_unidade_paginated(unidade_id, page=1, per_page=50, search=None, status=None):
+    """
+    Retorna os cursos de uma unidade com paginação.
+    
+    Args:
+        unidade_id (int): ID da unidade
+        page (int): Número da página atual
+        per_page (int): Quantidade de itens por página
+        search (str, optional): Termo de busca para filtrar cursos
+        status (str, optional): Status para filtrar ('ativo' ou 'inativo')
+        
+    Returns:
+        Pagination: Objeto de paginação do SQLAlchemy
+    """
+    query = Curso.query.filter_by(unidade_id=unidade_id)
+    
+    # Aplicar filtros se fornecidos
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                Curso.nome.ilike(search_term),
+                Curso.codigo.ilike(search_term) if Curso.codigo else False
+            )
+        )
+    
+    if status == 'ativo':
+        query = query.filter(Curso.ativo == True)
+    elif status == 'inativo':
+        query = query.filter(Curso.ativo == False)
+    
+    # Ordenar e paginar
+    return query.order_by(Curso.nome).paginate(page=page, per_page=per_page, error_out=False)
 
 def get_all_cursos():
     """

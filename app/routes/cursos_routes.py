@@ -16,6 +16,70 @@ from ..models import db, Curso, Unidade, Envolvido
 def listar():
     """Lista todos os cursos (admin) ou apenas os cursos da unidade do diretor"""
     unidade_id = request.args.get('unidade_id', type=int)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    search = request.args.get('q', None)
+    status = request.args.get('status', None)
+    
+    # Para diretores, força a visualização apenas da sua unidade
+    if current_user.is_diretor():
+        unidade_id = current_user.unidade_id
+    
+    if unidade_id:
+        # Verifica se a unidade existe
+        unidade = Unidade.query.get_or_404(unidade_id)
+        
+        # Verifica permissão
+        if not current_user.is_admin() and (not current_user.is_diretor() or current_user.unidade_id != unidade_id):
+            flash('Você não tem permissão para visualizar cursos desta unidade.', 'danger')
+            return redirect(url_for('main.dashboard'))
+        
+        # Obtém os cursos da unidade com paginação
+        pagination = cursos_controller.get_cursos_by_unidade_paginated(
+            unidade_id, 
+            page=page, 
+            per_page=per_page,
+            search=search,
+            status=status
+        )
+        
+        return render_template('cursos/listar.html', 
+                              pagination=pagination, 
+                              unidade=unidade,
+                              search=search,
+                              status=status)
+    
+    # Se não especificou unidade e é admin, mostra todos os cursos
+    if current_user.is_admin():
+        tipo_unidade = request.args.get('tipo_unidade', None)
+        
+        # Obtém os cursos com paginação
+        pagination = cursos_controller.get_all_cursos_paginated(
+            page=page, 
+            per_page=per_page,
+            search=search,
+            status=status,
+            tipo_unidade=tipo_unidade
+        )
+        
+        unidades = Unidade.query.order_by(Unidade.tipo, Unidade.numero).all()
+        
+        return render_template('cursos/listar_todos.html', 
+                              pagination=pagination,
+                              unidades=unidades,
+                              search=search,
+                              status=status,
+                              tipo_unidade=tipo_unidade)
+    
+    # Se chegou aqui é porque é diretor mas não tem unidade associada
+    flash('Não foi possível encontrar sua unidade. Entre em contato com o administrador.', 'danger')
+    return redirect(url_for('main.dashboard'))
+
+@cursos_bp.route('/')
+@login_required
+def listar():
+    """Lista todos os cursos (admin) ou apenas os cursos da unidade do diretor"""
+    unidade_id = request.args.get('unidade_id', type=int)
     
     # Para diretores, força a visualização apenas da sua unidade
     if current_user.is_diretor():
