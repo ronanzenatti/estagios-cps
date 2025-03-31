@@ -1,6 +1,7 @@
 # app/controllers/unidades.py
 from flask import current_app
 from datetime import datetime
+from sqlalchemy import or_
 
 from ..models import db, Unidade, User, Curso, Envolvido
 
@@ -12,6 +13,43 @@ def get_all_unidades():
         list: Lista de objetos Unidade
     """
     return Unidade.query.order_by(Unidade.tipo, Unidade.numero).all()
+
+def get_all_unidades_paginated(page=1, per_page=50, search=None, tipo=None, cidade=None):
+    """
+    Retorna todas as unidades cadastradas com paginação.
+    
+    Args:
+        page (int): Número da página atual
+        per_page (int): Quantidade de itens por página
+        search (str, optional): Termo de busca para filtrar unidades
+        tipo (str, optional): Tipo para filtrar ('Fatec' ou 'Etec')
+        cidade (str, optional): Cidade para filtrar
+        
+    Returns:
+        Pagination: Objeto de paginação do SQLAlchemy
+    """
+    query = Unidade.query
+    
+    # Aplicar filtros se fornecidos
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                Unidade.nome.ilike(search_term),
+                Unidade.codigo.ilike(search_term),
+                Unidade.cidade.ilike(search_term),
+                Unidade.nome_diretor.ilike(search_term)
+            )
+        )
+    
+    if tipo and tipo in ['Fatec', 'Etec']:
+        query = query.filter(Unidade.tipo == tipo)
+        
+    if cidade:
+        query = query.filter(Unidade.cidade.ilike(f"%{cidade}%"))
+    
+    # Ordenar e paginar
+    return query.order_by(Unidade.tipo, Unidade.numero).paginate(page=page, per_page=per_page, error_out=False)
 
 def get_unidade_by_id(unidade_id):
     """
@@ -37,6 +75,35 @@ def get_unidades_by_cidade(cidade):
     """
     return Unidade.query.filter_by(cidade=cidade).all()
 
+def get_unidades_by_cidade_paginated(cidade, page=1, per_page=50, search=None):
+    """
+    Busca unidades por cidade com paginação.
+    
+    Args:
+        cidade (str): Nome da cidade
+        page (int): Número da página atual
+        per_page (int): Quantidade de itens por página
+        search (str, optional): Termo de busca para filtrar unidades
+        
+    Returns:
+        Pagination: Objeto de paginação do SQLAlchemy
+    """
+    query = Unidade.query.filter(Unidade.cidade.ilike(f"%{cidade}%"))
+    
+    # Aplicar filtros se fornecidos
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                Unidade.nome.ilike(search_term),
+                Unidade.codigo.ilike(search_term),
+                Unidade.nome_diretor.ilike(search_term)
+            )
+        )
+    
+    # Ordenar e paginar
+    return query.order_by(Unidade.tipo, Unidade.numero).paginate(page=page, per_page=per_page, error_out=False)
+
 def get_unidades_by_tipo(tipo):
     """
     Busca unidades por tipo (Fatec ou Etec).
@@ -51,6 +118,39 @@ def get_unidades_by_tipo(tipo):
         return []
     
     return Unidade.query.filter_by(tipo=tipo).order_by(Unidade.numero).all()
+
+def get_unidades_by_tipo_paginated(tipo, page=1, per_page=50, search=None):
+    """
+    Busca unidades por tipo (Fatec ou Etec) com paginação.
+    
+    Args:
+        tipo (str): Tipo da unidade ('Fatec' ou 'Etec')
+        page (int): Número da página atual
+        per_page (int): Quantidade de itens por página
+        search (str, optional): Termo de busca para filtrar unidades
+        
+    Returns:
+        Pagination: Objeto de paginação do SQLAlchemy
+    """
+    if tipo not in ['Fatec', 'Etec']:
+        return None
+    
+    query = Unidade.query.filter_by(tipo=tipo)
+    
+    # Aplicar filtros se fornecidos
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                Unidade.nome.ilike(search_term),
+                Unidade.codigo.ilike(search_term),
+                Unidade.cidade.ilike(search_term),
+                Unidade.nome_diretor.ilike(search_term)
+            )
+        )
+    
+    # Ordenar e paginar
+    return query.order_by(Unidade.numero).paginate(page=page, per_page=per_page, error_out=False)
 
 def create_unidade(tipo, numero, nome, cidade, telefone, nome_diretor, email_diretor):
     """

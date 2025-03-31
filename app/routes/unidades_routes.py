@@ -16,8 +16,26 @@ from ..models import Unidade, User, Curso, Envolvido, db
 def listar():
     """Lista todas as unidades (admin) ou apenas a unidade do diretor"""
     if current_user.is_admin():
-        unidades = unidades_controller.get_all_unidades()
-        return render_template('unidades/listar.html', unidades=unidades)
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+        search = request.args.get('q', None)
+        tipo = request.args.get('tipo', None)
+        cidade = request.args.get('cidade', None)
+        
+        # Obtém as unidades com paginação
+        pagination = unidades_controller.get_all_unidades_paginated(
+            page=page, 
+            per_page=per_page,
+            search=search,
+            tipo=tipo,
+            cidade=cidade
+        )
+        
+        return render_template('unidades/listar.html', 
+                              pagination=pagination,
+                              search=search,
+                              tipo=tipo,
+                              cidade=cidade)
     
     # Se for diretor, redireciona para a página da sua unidade
     if current_user.is_diretor():
@@ -159,9 +177,25 @@ def listar_por_tipo(tipo):
     if tipo not in ['Fatec', 'Etec']:
         abort(404)
     
-    unidades = unidades_controller.get_unidades_by_tipo(tipo)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    search = request.args.get('q', None)
+    
+    # Obtém as unidades do tipo com paginação
+    pagination = unidades_controller.get_unidades_by_tipo_paginated(
+        tipo=tipo,
+        page=page, 
+        per_page=per_page,
+        search=search
+    )
+    
+    if not pagination:
+        abort(404)
+    
     return render_template('unidades/listar.html', 
-                          unidades=unidades, 
+                          pagination=pagination,
+                          search=search,
+                          tipo=tipo,
                           filtro_tipo=tipo)
 
 @unidades_bp.route('/por-cidade/<cidade>')
@@ -169,12 +203,24 @@ def listar_por_tipo(tipo):
 @admin_required
 def listar_por_cidade(cidade):
     """Lista unidades por cidade"""
-    unidades = unidades_controller.get_unidades_by_cidade(cidade)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    search = request.args.get('q', None)
     
-    if not unidades:
+    # Obtém as unidades da cidade com paginação
+    pagination = unidades_controller.get_unidades_by_cidade_paginated(
+        cidade=cidade,
+        page=page, 
+        per_page=per_page,
+        search=search
+    )
+    
+    if pagination.total == 0:
         flash(f'Nenhuma unidade encontrada na cidade {cidade}.', 'info')
         return redirect(url_for('unidades.listar'))
     
     return render_template('unidades/listar.html', 
-                          unidades=unidades, 
+                          pagination=pagination,
+                          search=search,
+                          cidade=cidade,
                           filtro_cidade=cidade)
