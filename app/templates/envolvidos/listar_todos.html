@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Todos os Envolvidos - Sistema de Envolvidos nos Estágios - CPS
-</script>
-{% endblock %}
+{% block title %}Todos os Envolvidos - Sistema de Envolvidos nos Estágios - CPS{% endblock %}
 
 {% block styles %}
 <style>
@@ -72,7 +70,7 @@
         border-bottom: none;
     }
     .unidade-list {
-        max-height: 200px;
+        max-height: 400px;
         overflow-y: auto;
     }
     .unidade-list-item {
@@ -209,95 +207,7 @@
         <div class="card mb-4">
             <div class="card-header bg-white">
                 <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i> Filtros</h5>
-            </div>
-            
-            <div class="filter-group">
-                <div class="filter-title">Tipo</div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoTodos" value="todos" checked>
-                    <label class="form-check-label" for="tipoTodos">
-                        Todos
-                    </label>
-                </div>
-                <div class="filter-title mt-2">Fatec</div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoOrientador" value="Orientador">
-                    <label class="form-check-label" for="tipoOrientador">
-                        Orientadores
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoCoordenador" value="Coordenador">
-                    <label class="form-check-label" for="tipoCoordenador">
-                        Coordenadores
-                    </label>
-                </div>
-                <div class="filter-title mt-2">Etec</div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoATA" value="ATA">
-                    <label class="form-check-label" for="tipoATA">
-                        ATAs
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoFacilitador" value="Facilitador">
-                    <label class="form-check-label" for="tipoFacilitador">
-                        Facilitadores
-                    </label>
-                </div>
-                <div class="filter-title mt-2">Comum</div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoFilter" id="tipoApoio" value="Apoio">
-                    <label class="form-check-label" for="tipoApoio">
-                        Apoio
-                    </label>
-                </div>
-            </div>
-            
-            <div class="filter-group">
-                <div class="filter-title">Status</div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="statusFilter" id="statusTodos" value="todos" checked>
-                    <label class="form-check-label" for="statusTodos">
-                        Todos
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="statusFilter" id="statusAtivo" value="ativo">
-                    <label class="form-check-label" for="statusAtivo">
-                        Ativos
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="statusFilter" id="statusInativo" value="inativo">
-                    <label class="form-check-label" for="statusInativo">
-                        Inativos
-                    </label>
-                </div>
-            </div>
-            
-            <div class="filter-group">
-                <div class="filter-title">Tipo de Unidade</div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeTodas" value="todas" checked>
-                    <label class="form-check-label" for="tipoUnidadeTodas">
-                        Todas
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeFatec" value="Fatec">
-                    <label class="form-check-label" for="tipoUnidadeFatec">
-                        Fatecs
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="tipoUnidadeFilter" id="tipoUnidadeEtec" value="Etec">
-                    <label class="form-check-label" for="tipoUnidadeEtec">
-                        Etecs
-                    </label>
-                </div>
-            </div>
-            
+            </div>            
             <div class="filter-group">
                 <div class="filter-title">Unidades</div>
                 <input type="text" class="form-control form-control-sm mb-2" id="unidadeSearch" placeholder="Buscar unidade...">
@@ -584,6 +494,16 @@
                 params.push(`unidade_id=${unidadeSelecionada}`);
             }
             
+            // Adicionar filtro de status, se não for 'todos'
+            if (statusSelecionado !== 'todos') {
+                params.push(`status=${statusSelecionado}`);
+            }
+            
+            // Adicionar filtro de tipo de unidade, se não for 'todas'
+            if (tipoUnidadeSelecionado !== 'todas') {
+                params.push(`tipo_unidade=${tipoUnidadeSelecionado}`);
+            }
+            
             // Construir a URL final
             if (params.length > 0) {
                 url += '?' + params.join('&');
@@ -591,6 +511,75 @@
             
             // Redirecionar para a URL construída
             window.location.href = url;
+        }
+
+        // Aplicar filtro client-side quando o status ou tipo de unidade mudar
+        function applyClientSideFilters() {
+            const tipoSelecionado = document.querySelector('input[name="tipoFilter"]:checked').value;
+            const statusSelecionado = document.querySelector('input[name="statusFilter"]:checked').value;
+            const tipoUnidadeSelecionado = document.querySelector('input[name="tipoUnidadeFilter"]:checked').value;
+            const unidadeSelecionada = document.querySelector('.unidade-list-item.active').getAttribute('data-unidade');
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            const rows = document.querySelectorAll('.envolvido-item');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const tipo = row.getAttribute('data-tipo');
+                const status = row.getAttribute('data-status');
+                const unidade = row.getAttribute('data-unidade');
+                const tipoUnidade = row.getAttribute('data-tipo-unidade');
+                const nome = row.getAttribute('data-nome').toLowerCase();
+                const cpf = row.getAttribute('data-cpf').toLowerCase();
+                
+                // Verificar se atende aos critérios de filtro
+                let visible = true;
+                
+                if (tipoSelecionado !== 'todos' && tipo !== tipoSelecionado) {
+                    visible = false;
+                }
+                
+                if (statusSelecionado !== 'todos' && status !== statusSelecionado) {
+                    visible = false;
+                }
+                
+                if (tipoUnidadeSelecionado !== 'todas' && tipoUnidade !== tipoUnidadeSelecionado) {
+                    visible = false;
+                }
+                
+                if (unidadeSelecionada !== 'todas' && unidade !== unidadeSelecionada) {
+                    visible = false;
+                }
+                
+                if (searchTerm && !nome.includes(searchTerm) && !cpf.includes(searchTerm)) {
+                    visible = false;
+                }
+                
+                // Aplicar visibilidade
+                row.style.display = visible ? '' : 'none';
+                
+                if (visible) {
+                    visibleCount++;
+                }
+            });
+            
+            // Atualizar contador de resultados
+            const resultCount = document.getElementById('resultCount');
+            if (resultCount) {
+                resultCount.textContent = `Exibindo ${visibleCount} de {{ envolvidos.total }} envolvidos`;
+            }
+            
+            // Mostrar ou ocultar mensagem de "nenhum resultado"
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) {
+                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+                
+                // Atualizar mensagem de estado vazio
+                const emptyStateMessage = document.getElementById('emptyStateMessage');
+                if (emptyStateMessage && visibleCount === 0) {
+                    emptyStateMessage.textContent = 'Não há envolvidos que correspondam aos critérios de busca selecionados.';
+                }
+            }
         }
 
         // Adiciona eventos de filtro
@@ -650,6 +639,20 @@
                 if (tipoRadio) tipoRadio.checked = true;
             }
             
+            // Inicializa filtro de status
+            const statusParam = urlParams.get('status');
+            if (statusParam) {
+                const statusRadio = document.getElementById(`status${statusParam.charAt(0).toUpperCase() + statusParam.slice(1)}`);
+                if (statusRadio) statusRadio.checked = true;
+            }
+            
+            // Inicializa filtro de tipo de unidade
+            const tipoUnidadeParam = urlParams.get('tipo_unidade');
+            if (tipoUnidadeParam) {
+                const tipoUnidadeRadio = document.getElementById(`tipoUnidade${tipoUnidadeParam}`);
+                if (tipoUnidadeRadio) tipoUnidadeRadio.checked = true;
+            }
+            
             // Inicializa filtro de unidade
             const unidadeParam = urlParams.get('unidade_id');
             if (unidadeParam) {
@@ -664,4 +667,12 @@
         
         // Inicializa os filtros quando a página carrega
         initializeFilters();
+        
+        // Adiciona funcionalidade de busca rápida no campo de busca
+        searchInput.addEventListener('input', function() {
+            // Aplicamos filtro client-side para busca rápida
+            applyClientSideFilters();
+        });
     });
+</script>
+{% endblock %}
