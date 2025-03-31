@@ -162,7 +162,7 @@
                             <div class="col-md-4">
                                 <label for="q" class="form-label">Buscar</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="q" name="q" placeholder="Nome ou código" value="{{ search or '' }}">
+                                    <input type="text" class="form-control" id="q" name="q" placeholder="Nome ou Abreviação" value="{{ search or '' }}">
                                     <button class="btn btn-outline-secondary" type="submit">
                                         <i class="bi bi-search"></i>
                                     </button>
@@ -229,7 +229,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th class="th-sortable" data-sort="nome">Nome <i class="bi bi-arrow-down-up sort-icon"></i></th>
-                                <th class="th-sortable" data-sort="codigo">Código <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                                <th class="th-sortable" data-sort="codigo">Abreviação <i class="bi bi-arrow-down-up sort-icon"></i></th>
                                 <th class="th-sortable" data-sort="unidade.nome">Unidade <i class="bi bi-arrow-down-up sort-icon"></i></th>
                                 <th class="th-sortable" data-sort="unidade.tipo">Tipo <i class="bi bi-arrow-down-up sort-icon"></i></th>
                                 <th class="th-sortable" data-sort="envolvidos">Envolvidos <i class="bi bi-arrow-down-up sort-icon"></i></th>
@@ -504,3 +504,6 @@
         if (!hasActiveFilters) {
             document.getElementById('filtrosCollapse').classList.remove('show');
         }
+    });
+</script>
+{% endblock %}
