@@ -33,10 +33,20 @@ def get_all_unidades_paginated(page=1, per_page=50, search=None, tipo=None, cida
     # Aplicar filtros se fornecidos
     if search:
         search_term = f"%{search}%"
+        # Modificação aqui: remover Unidade.codigo.ilike() pois codigo é uma property
         query = query.filter(
             or_(
                 Unidade.nome.ilike(search_term),
-                Unidade.codigo.ilike(search_term),
+                # Alternativa: Construir o código e pesquisar
+                or_(
+                    # Pesquisa por F000 ou E000
+                    db.func.concat(db.func.substr(Unidade.tipo, 1, 1), Unidade.numero).ilike(search_term),
+                    # Pesquisa por F### ou E###
+                    db.func.concat(
+                        db.func.substr(Unidade.tipo, 1, 1),
+                        db.func.lpad(Unidade.numero, 3, '0')
+                    ).ilike(search_term)
+                ),
                 Unidade.cidade.ilike(search_term),
                 Unidade.nome_diretor.ilike(search_term)
             )
@@ -96,7 +106,14 @@ def get_unidades_by_cidade_paginated(cidade, page=1, per_page=50, search=None):
         query = query.filter(
             or_(
                 Unidade.nome.ilike(search_term),
-                Unidade.codigo.ilike(search_term),
+                # Mesma modificação aqui: removido codigo e adicionado búsca pelo código construído
+                or_(
+                    db.func.concat(db.func.substr(Unidade.tipo, 1, 1), Unidade.numero).ilike(search_term),
+                    db.func.concat(
+                        db.func.substr(Unidade.tipo, 1, 1),
+                        db.func.lpad(Unidade.numero, 3, '0')
+                    ).ilike(search_term)
+                ),
                 Unidade.nome_diretor.ilike(search_term)
             )
         )
@@ -143,7 +160,14 @@ def get_unidades_by_tipo_paginated(tipo, page=1, per_page=50, search=None):
         query = query.filter(
             or_(
                 Unidade.nome.ilike(search_term),
-                Unidade.codigo.ilike(search_term),
+                # Mesma modificação aqui
+                or_(
+                    db.func.concat(db.func.substr(Unidade.tipo, 1, 1), Unidade.numero).ilike(search_term),
+                    db.func.concat(
+                        db.func.substr(Unidade.tipo, 1, 1),
+                        db.func.lpad(Unidade.numero, 3, '0')
+                    ).ilike(search_term)
+                ),
                 Unidade.cidade.ilike(search_term),
                 Unidade.nome_diretor.ilike(search_term)
             )
@@ -152,6 +176,7 @@ def get_unidades_by_tipo_paginated(tipo, page=1, per_page=50, search=None):
     # Ordenar e paginar
     return query.order_by(Unidade.numero).paginate(page=page, per_page=per_page, error_out=False)
 
+# Restante das funções sem alteração
 def create_unidade(tipo, numero, nome, cidade, telefone, nome_diretor, email_diretor):
     """
     Cria uma nova unidade e o usuário diretor associado.
