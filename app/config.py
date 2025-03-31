@@ -40,7 +40,7 @@ class ProductionConfig(Config):
         SQLALCHEMY_ENGINE_OPTIONS = {
             "connect_args": {
                 "ssl": {
-                    "ca": "/path/to/your/certificate.pem"  # Caminho para o certificado no App Service
+                    "ca": "/home/site/wwwroot/DigiCertGlobalRootCA.crt.pem"  # Caminho para o certificado no App Service
                 }
             }
         }
