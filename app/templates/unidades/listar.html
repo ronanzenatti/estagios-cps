@@ -4,28 +4,6 @@
 
 {% block styles %}
 <style>
-    .unit-card {
-        transition: all 0.2s;
-    }
-    .unit-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .unit-type {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-    .type-fatec {
-        background-color: rgba(13, 110, 253, 0.1);
-        color: #0d6efd;
-    }
-    .type-etec {
-        background-color: rgba(25, 135, 84, 0.1);
-        color: #198754;
-    }
     .unit-actions {
         white-space: nowrap;
     }
@@ -45,6 +23,40 @@
         color: #dee2e6;
         margin-bottom: 1.5rem;
     }
+    .unit-type {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .type-fatec {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    .type-etec {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .th-sortable {
+        cursor: pointer;
+    }
+    .th-sortable:hover {
+        background-color: #f8f9fa;
+    }
+    .sort-icon {
+        font-size: 0.75rem;
+        margin-left: 0.25rem;
+    }
 </style>
 {% endblock %}
 
@@ -61,261 +73,304 @@
     </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         {% if current_user.is_admin() %}
-        <a href="{{ url_for('unidades.novo') }}" class="btn btn-sm btn-primary">
+        <a href="{{ url_for('unidades.novo') }}" class="btn btn-sm btn-primary me-2">
             <i class="bi bi-building-add me-1"></i> Nova Unidade
         </a>
-        <form action="{{ url_for('admin.resetar_todas_senhas_unidades') }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha de TODAS as unidades para o número da unidade?');">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-warning">
-                <i class="fas fa-key"></i> Resetar Todas as Senhas
-            </button>
-        </form>
         {% endif %}
     </div>
 </div>
 
-<!-- Filtros e busca -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        {% if current_user.is_admin() %}
-        <div class="btn-group me-2" role="group" aria-label="Filtrar por tipo">
-            <a href="{{ url_for('unidades.listar') }}" class="btn btn-outline-secondary{% if not filtro_tipo %} active{% endif %}">Todas</a>
-            <a href="{{ url_for('unidades.listar_por_tipo', tipo='Fatec') }}" class="btn btn-outline-primary{% if filtro_tipo == 'Fatec' %} active{% endif %}">Fatecs</a>
-            <a href="{{ url_for('unidades.listar_por_tipo', tipo='Etec') }}" class="btn btn-outline-success{% if filtro_tipo == 'Etec' %} active{% endif %}">Etecs</a>
-        </div>
-        {% endif %}
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i> Filtros</h5>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filtrosCollapse">
+            <i class="bi bi-chevron-down"></i>
+        </button>
     </div>
-    <div class="col-md-4">
-        <form method="GET" action="{{ url_for('unidades.listar') }}">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Buscar por nome ou cidade" 
-                       name="q" value="{{ request.args.get('q', '') }}">
-                <button class="btn btn-outline-secondary" type="submit">
-                    <i class="bi bi-search"></i>
-                </button>
-            </div>
-        </form>
+    <div class="collapse show" id="filtrosCollapse">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('unidades.listar') }}" id="filtrosForm">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label for="q" class="form-label">Buscar</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="q" name="q" placeholder="Nome, código ou cidade" value="{{ search or '' }}">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="tipo" class="form-label">Tipo</label>
+                        <select class="form-select" id="tipo" name="tipo">
+                            <option value="" {% if not tipo %}selected{% endif %}>Todos</option>
+                            <option value="Fatec" {% if tipo == 'Fatec' %}selected{% endif %}>Fatecs</option>
+                            <option value="Etec" {% if tipo == 'Etec' %}selected{% endif %}>Etecs</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="cidade" class="form-label">Cidade</label>
+                        <input type="text" class="form-control" id="cidade" name="cidade" placeholder="Filtrar por cidade" value="{{ cidade or '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="per_page" class="form-label">Itens por página</label>
+                        <select class="form-select" id="per_page" name="per_page">
+                            <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25</option>
+                            <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50</option>
+                            <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter me-2"></i> Filtrar
+                        </button>
+                        <a href="{{ url_for('unidades.listar') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Filtros
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <span class="text-muted small">
+                        Exibindo {{ pagination.items|length }} de {{ pagination.total }} unidades
+                    </span>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <!-- Lista de unidades -->
-{% if unidades %}
-<div class="table-responsive d-none d-md-block">
-    <table class="table table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Código</th>
-                <th>Tipo</th>
-                <th>Nome</th>
-                <th>Cidade</th>
-                <th>Diretor</th>
-                <th>Contato</th>
-                <th class="text-end">Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for unidade in unidades %}
-            <tr>
-                <td><span class="unit-code">{{ unidade.codigo }}</span></td>
-                <td>
-                    {% if unidade.tipo == 'Fatec' %}
-                    <span class="unit-type type-fatec">Fatec</span>
-                    {% else %}
-                    <span class="unit-type type-etec">Etec</span>
-                    {% endif %}
-                </td>
-                <td><strong>{{ unidade.nome }}</strong></td>
-                <td>{{ unidade.cidade }}</td>
-                <td>{{ unidade.nome_diretor }}</td>
-                <td>
-                    <small class="text-muted">{{ unidade.telefone }}</small><br>
-                    <small class="text-muted">{{ unidade.email_institucional }}</small>
-                </td>
-                <td class="text-end unit-actions">
-                    <a href="{{ url_for('unidades.visualizar', id=unidade.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    {% if current_user.is_admin() %}
-                    <a href="{{ url_for('unidades.editar', id=unidade.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" 
-                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ unidade.id }}">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                    
-                    <!-- Modal de Confirmação de Exclusão -->
-                    <div class="modal fade" id="deleteModal{{ unidade.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Confirmar Exclusão</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Você tem certeza que deseja excluir a unidade <strong>{{ unidade.nome }}</strong>?</p>
-                                    <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita e também removerá todos os cursos e envolvidos associados a esta unidade.</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <form method="POST" action="{{ url_for('unidades.excluir', id=unidade.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-danger">Excluir Unidade</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<!-- Visão em cards para dispositivos móveis -->
-<div class="d-md-none">
-    <div class="row g-3">
-        {% for unidade in unidades %}
-        <div class="col-12">
-            <div class="card unit-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title mb-0">{{ unidade.nome }}</h5>
-                        <span class="unit-code">{{ unidade.codigo }}</span>
-                    </div>
-                    
-                    <div class="mb-2">
-                        {% if unidade.tipo == 'Fatec' %}
-                        <span class="unit-type type-fatec">Fatec</span>
-                        {% else %}
-                        <span class="unit-type type-etec">Etec</span>
-                        {% endif %}
-                        <span class="ms-2">{{ unidade.cidade }}</span>
-                    </div>
-                    
-                    <p class="card-text mb-1">
-                        <i class="bi bi-person me-1 text-muted"></i> Diretor: {{ unidade.nome_diretor }}
-                    </p>
-                    <p class="card-text mb-1">
-                        <i class="bi bi-telephone me-1 text-muted"></i> {{ unidade.telefone }}
-                    </p>
-                    <p class="card-text mb-3">
-                        <i class="bi bi-envelope me-1 text-muted"></i> {{ unidade.email_institucional }}
-                    </p>
-                    
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('unidades.visualizar', id=unidade.id) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-eye me-1"></i> Visualizar
-                        </a>
-                        
-                        {% if current_user.is_admin() %}
-                        <div>
-                            <a href="{{ url_for('unidades.editar', id=unidade.id) }}" class="btn btn-sm btn-outline-secondary">
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0"><i class="bi bi-table me-2"></i> Lista de Unidades</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if pagination.items %}
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="th-sortable" data-sort="codigo">Código <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="tipo">Tipo <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="nome">Nome <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="cidade">Cidade <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="nome_diretor">Diretor <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th>Contato</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for unidade in pagination.items %}
+                    <tr>
+                        <td><span class="unit-code">{{ unidade.codigo }}</span></td>
+                        <td>
+                            {% if unidade.tipo == 'Fatec' %}
+                            <span class="unit-type type-fatec">Fatec</span>
+                            {% else %}
+                            <span class="unit-type type-etec">Etec</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ unidade.nome }}</strong></td>
+                        <td>{{ unidade.cidade }}</td>
+                        <td>{{ unidade.nome_diretor }}</td>
+                        <td>
+                            <small class="text-muted">{{ unidade.telefone }}</small><br>
+                            <small class="text-muted">{{ unidade.email_institucional }}</small>
+                        </td>
+                        <td class="text-end unit-actions">
+                            <a href="{{ url_for('unidades.visualizar', id=unidade.id) }}" class="btn btn-sm btn-outline-primary" title="Visualizar">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if current_user.is_admin() %}
+                            <a href="{{ url_for('unidades.editar', id=unidade.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    data-bs-toggle="modal" data-bs-target="#deleteModalMobile{{ unidade.id }}">
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ unidade.id }}">
                                 <i class="bi bi-trash"></i>
                             </button>
-                        </div>
-                        
-                        <!-- Modal de Confirmação de Exclusão Mobile -->
-                        <div class="modal fade" id="deleteModalMobile{{ unidade.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Confirmar Exclusão</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Você tem certeza que deseja excluir a unidade <strong>{{ unidade.nome }}</strong>?</p>
-                                        <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita e também removerá todos os cursos e envolvidos associados a esta unidade.</p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                        <form method="POST" action="{{ url_for('unidades.excluir', id=unidade.id) }}">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="btn btn-danger">Excluir Unidade</button>
-                                        </form>
+                            
+                            <!-- Modal de Confirmação de Exclusão -->
+                            <div class="modal fade" id="deleteModal{{ unidade.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirmar Exclusão</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Você tem certeza que deseja excluir a unidade <strong>{{ unidade.nome }}</strong>?</p>
+                                            <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita e também removerá todos os cursos e envolvidos associados a esta unidade.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <form method="POST" action="{{ url_for('unidades.excluir', id=unidade.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-danger">Excluir Unidade</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {% endfor %}
-    </div>
-</div>
-
-{% else %}
-<!-- Estado vazio -->
-<div class="empty-state">
-    <div class="empty-state-icon">
-        <i class="bi bi-building"></i>
-    </div>
-    <h4>Nenhuma unidade encontrada</h4>
-    <p class="text-muted">
-        {% if request.args.get('q') %}
-        Não encontramos unidades correspondentes à sua busca "{{ request.args.get('q') }}".
-        {% elif filtro_tipo %}
-        Não há unidades do tipo {{ filtro_tipo }} cadastradas no sistema.
-        {% elif filtro_cidade %}
-        Não há unidades cadastradas na cidade de {{ filtro_cidade }}.
+        
+        <!-- Paginação -->
+        <div class="pagination-container">
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination">
+                    <!-- Botão para a primeira página -->
+                    <li class="page-item {% if pagination.page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('unidades.listar', page=1, per_page=pagination.per_page, q=search, tipo=tipo, cidade=cidade) }}" aria-label="Primeira">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Botão para a página anterior -->
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('unidades.listar', page=pagination.prev_num, per_page=pagination.per_page, q=search, tipo=tipo, cidade=cidade) }}" aria-label="Anterior">
+                            <span aria-hidden="true">&lsaquo;</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Páginas numeradas -->
+                    {% set start_page = [pagination.page - 2, 1]|max %}
+                    {% set end_page = [start_page + 4, pagination.pages]|min %}
+                    {% set start_page = [end_page - 4, 1]|max %}
+                    
+                    {% for page_num in range(start_page, end_page + 1) %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('unidades.listar', page=page_num, per_page=pagination.per_page, q=search, tipo=tipo, cidade=cidade) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    
+                    <!-- Botão para a próxima página -->
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('unidades.listar', page=pagination.next_num, per_page=pagination.per_page, q=search, tipo=tipo, cidade=cidade) }}" aria-label="Próxima">
+                            <span aria-hidden="true">&rsaquo;</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Botão para a última página -->
+                    <li class="page-item {% if pagination.page == pagination.pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('unidades.listar', page=pagination.pages, per_page=pagination.per_page, q=search, tipo=tipo, cidade=cidade) }}" aria-label="Última">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
         {% else %}
-        Não há unidades cadastradas no sistema.
+        <!-- Estado vazio -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <h4>Nenhuma unidade encontrada</h4>
+            <p class="text-muted">
+                {% if search %}
+                Não encontramos unidades correspondentes à sua busca "{{ search }}".
+                {% elif tipo %}
+                Não há unidades do tipo {{ tipo }} cadastradas.
+                {% elif cidade %}
+                Não há unidades cadastradas na cidade {{ cidade }}.
+                {% else %}
+                Não há unidades cadastradas no sistema.
+                {% endif %}
+            </p>
+            <a href="{{ url_for('unidades.listar') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Filtros
+            </a>
+            {% if current_user.is_admin() %}
+            <a href="{{ url_for('unidades.novo') }}" class="btn btn-primary ms-2">
+                <i class="bi bi-building-add me-1"></i> Adicionar Unidade
+            </a>
+            {% endif %}
+        </div>
         {% endif %}
-    </p>
-    {% if current_user.is_admin() %}
-    <a href="{{ url_for('unidades.novo') }}" class="btn btn-primary">
-        <i class="bi bi-building-add me-1"></i> Adicionar Unidade
-    </a>
-    {% endif %}
+    </div>
+    
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+        <div>
+            <span class="text-muted small">
+                {% if pagination.total > 0 %}
+                Mostrando {{ (pagination.page - 1) * pagination.per_page + 1 }} a 
+                {{ (pagination.page - 1) * pagination.per_page + pagination.items|length }} 
+                de {{ pagination.total }} registros
+                {% else %}
+                Nenhum registro encontrado
+                {% endif %}
+            </span>
+        </div>
+        <div>
+            {% if current_user.is_admin() %}
+            <a href="{{ url_for('unidades.novo') }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-building-add me-1"></i> Nova Unidade
+            </a>
+            {% endif %}
+        </div>
+    </div>
 </div>
-{% endif %}
 
 <!-- Estatísticas (apenas para administradores) -->
-{% if current_user.is_admin() and unidades %}
+{% if current_user.is_admin() and pagination.items %}
 <div class="card mt-4">
     <div class="card-header bg-white">
         <h5 class="card-title mb-0">Estatísticas</h5>
     </div>
     <div class="card-body">
         <div class="row g-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 p-3 rounded-circle bg-primary bg-opacity-10">
                         <i class="bi bi-building fs-4 text-primary"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-0">Total de Unidades</h6>
-                        <h3 class="mb-0">{{ unidades|length }}</h3>
+                        <h3 class="mb-0">{{ pagination.total }}</h3>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 p-3 rounded-circle bg-primary bg-opacity-10">
-                        <i class="bi bi-geo-alt fs-4 text-primary"></i>
+                        <i class="bi bi-building fs-4 text-primary"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-0">Cidades Atendidas</h6>
-                        <h3 class="mb-0">{{ unidades|map(attribute='cidade')|unique|list|length }}</h3>
+                        <h6 class="mb-0">Fatecs</h6>
+                        <h3 class="mb-0">{{ pagination.items|selectattr('tipo', 'equalto', 'Fatec')|list|length }}</h3>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0 p-3 rounded-circle bg-primary bg-opacity-10">
-                        <i class="bi bi-mortarboard-fill fs-4 text-primary"></i>
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-success bg-opacity-10">
+                        <i class="bi bi-building fs-4 text-success"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-0">Total de Cursos</h6>
-                        <h3 class="mb-0">{{ unidades|map(attribute='cursos')|map('length')|sum }}</h3>
+                        <h6 class="mb-0">Etecs</h6>
+                        <h3 class="mb-0">{{ pagination.items|selectattr('tipo', 'equalto', 'Etec')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-info bg-opacity-10">
+                        <i class="bi bi-geo-alt fs-4 text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Cidades</h6>
+                        <h3 class="mb-0">{{ pagination.items|map(attribute='cidade')|unique|list|length }}</h3>
                     </div>
                 </div>
             </div>
@@ -323,26 +378,100 @@
     </div>
 </div>
 {% endif %}
-
 {% endblock %}
 
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Adiciona funcionalidade de ordenação à tabela
-        const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+        // Aplicação de filtros automática ao alterar valores
+        const autoSubmitElements = document.querySelectorAll('#tipo, #per_page');
+        autoSubmitElements.forEach(element => {
+            element.addEventListener('change', function() {
+                document.getElementById('filtrosForm').submit();
+            });
+        });
         
-        const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
-            v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
-        )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+        // Ordenação da tabela
+        const thSortable = document.querySelectorAll('.th-sortable');
         
-        document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
-            const table = th.closest('table');
-            const tbody = table.querySelector('tbody');
-            Array.from(tbody.querySelectorAll('tr'))
-                .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
-                .forEach(tr => tbody.appendChild(tr) );
-        })));
+        thSortable.forEach(th => {
+            th.addEventListener('click', function() {
+                const sortKey = this.getAttribute('data-sort');
+                const currentSort = this.getAttribute('data-sort-direction');
+                const newSort = currentSort === 'asc' ? 'desc' : 'asc';
+                
+                // Atualiza a direção da ordenação no elemento
+                this.setAttribute('data-sort-direction', newSort);
+                
+                // Remove classes de ordenação de todos os cabeçalhos
+                thSortable.forEach(header => {
+                    header.classList.remove('text-primary');
+                    const icon = header.querySelector('.sort-icon');
+                    icon.classList.remove('bi-arrow-up', 'bi-arrow-down');
+                    icon.classList.add('bi-arrow-down-up');
+                });
+                
+                // Adiciona classes para o cabeçalho atual
+                this.classList.add('text-primary');
+                const icon = this.querySelector('.sort-icon');
+                icon.classList.remove('bi-arrow-down-up');
+                
+                if (newSort === 'asc') {
+                    icon.classList.add('bi-arrow-up');
+                } else {
+                    icon.classList.add('bi-arrow-down');
+                }
+                
+                // Ordena a tabela
+                const table = this.closest('table');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                
+                // Função para obter o valor da célula
+                const getCellValue = (tr, idx) => {
+                    const cell = tr.children[idx];
+                    const content = cell.textContent.trim();
+                    
+                    // Converte para número se for um número
+                    if (!isNaN(content) && content !== '') {
+                        return parseFloat(content);
+                    }
+                    return content;
+                };
+                
+                // Obtém o índice da coluna a ser ordenada
+                const columnIndex = Array.from(th.parentNode.children).indexOf(th);
+                
+                // Função de comparação para ordenação
+                rows.sort((rowA, rowB) => {
+                    const valA = getCellValue(rowA, columnIndex);
+                    const valB = getCellValue(rowB, columnIndex);
+                    
+                    if (typeof valA === 'number' && typeof valB === 'number') {
+                        return newSort === 'asc' ? valA - valB : valB - valA;
+                    } else {
+                        return newSort === 'asc' 
+                            ? valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' }) 
+                            : valB.localeCompare(valA, 'pt-BR', { sensitivity: 'base' });
+                    }
+                });
+                
+                // Reordena as linhas na tabela
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+        
+        // Habilita tooltips para os botões de ação
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Mantém o filtro aberto se houver filtros ativos
+        const hasActiveFilters = {{ 'true' if search or tipo or cidade else 'false' }};
+        if (!hasActiveFilters) {
+            document.getElementById('filtrosCollapse').classList.remove('show');
+        }
     });
 </script>
 {% endblock %}
