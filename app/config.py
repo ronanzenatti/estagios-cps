@@ -35,15 +35,26 @@ class ProductionConfig(Config):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
     
-    # Configurações adicionais para SSL
+    # Configurações adicionais para SQL
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_recycle": 299,  # Reconecta após 299 segundos
+        "pool_timeout": 20,   # Timeout de 20 segundos
+        "pool_pre_ping": True, # Verifica conexão antes de usar
+        "max_overflow": 5,    # Conexões extras permitidas
+        "pool_size": 10       # Tamanho do pool de conexões
+    }
+    
+    # Adiciona configuração SSL se necessário
     if SQLALCHEMY_DATABASE_URI and 'mysql+pymysql' in SQLALCHEMY_DATABASE_URI and not 'ssl_disabled=True' in SQLALCHEMY_DATABASE_URI:
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            "connect_args": {
+        cert_path = "/home/site/wwwroot/DigiCertGlobalRootCA.crt.pem"
+        # Verifica se o certificado existe
+        import os
+        if os.path.exists(cert_path):
+            SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {
                 "ssl": {
-                    "ca": "/home/site/wwwroot/DigiCertGlobalRootCA.crt.pem"  # Caminho para o certificado no App Service
+                    "ca": cert_path
                 }
             }
-        }
 
 
 class TestingConfig(Config):

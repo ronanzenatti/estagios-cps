@@ -121,6 +121,19 @@ def diretor_redirect():
     flash('Você não tem permissão para acessar a área de diretor.', 'danger')
     return redirect(url_for('main.dashboard'))
 
+@main_bp.route('/test-db')
+def test_db_connection():
+    """Rota temporária para testar a conexão com o banco de dados"""
+    try:
+        # Tentativa de consulta simples
+        from ..models import User
+        user_count = User.query.count()
+        return f"Conexão com o banco de dados bem-sucedida! Número de usuários: {user_count}"
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        return f"Erro ao conectar com o banco de dados: {str(e)}<br><pre>{error_trace}</pre>", 500
+
 def handle_error_404():
     """Manipulador personalizado para erro 404 (Página não encontrada)"""
     return render_template('errors/404.html'), 404
@@ -129,6 +142,6 @@ def handle_error_403():
     """Manipulador personalizado para erro 403 (Acesso proibido)"""
     return render_template('errors/403.html'), 403
 
-def handle_error_500():
+def handle_error_500(e):
     """Manipulador personalizado para erro 500 (Erro interno do servidor)"""
     return render_template('errors/500.html'), 500
