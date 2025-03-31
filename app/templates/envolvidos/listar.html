@@ -86,6 +86,23 @@
         font-size: 0.85rem;
         margin-top: 0.5rem;
     }
+    .pagination-info {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .page-link {
+        color: #0d6efd;
+    }
+    .page-link:hover {
+        color: #0a58ca;
+    }
+    .page-link:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
 </style>
 {% endblock %}
 
@@ -181,6 +198,10 @@
             {% if unidade %}
             <input type="hidden" name="unidade_id" value="{{ unidade.id }}">
             {% endif %}
+            <!-- Mantém o parâmetro de página na busca -->
+            {% if request.args.get('page') %}
+            <input type="hidden" name="page" value="{{ request.args.get('page') }}">
+            {% endif %}
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Buscar por nome ou CPF" 
                        name="q" value="{{ request.args.get('q', '') }}">
@@ -194,7 +215,7 @@
 
 <!-- Lista de envolvidos -->
 {% if envolvidos %}
-<div class="table-responsive d-none d-md-block">
+<div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead class="table-light">
             <tr>
@@ -208,7 +229,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for envolvido in envolvidos %}
+            {% for envolvido in envolvidos.items %}
             <tr>
                 <td><strong>{{ envolvido.nome }}</strong></td>
                 <td><span class="envolvido-cpf">{{ envolvido.cpf }}</span></td>
@@ -286,100 +307,65 @@
     </table>
 </div>
 
-<!-- Visão em cards para dispositivos móveis -->
-<div class="d-md-none">
-    <div class="row g-3">
-        {% for envolvido in envolvidos %}
-        <div class="col-12">
-            <div class="card envolvido-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title mb-0">{{ envolvido.nome }}</h5>
-                        {% if envolvido.ativo %}
-                        <span class="badge bg-success">Ativo</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Inativo</span>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-2">
-                        {% if envolvido.tipo == 'Orientador' %}
-                        <span class="envolvido-type type-orientador">Orientador</span>
-                        {% elif envolvido.tipo == 'Coordenador' %}
-                        <span class="envolvido-type type-coordenador">Coordenador</span>
-                        {% elif envolvido.tipo == 'ATA' %}
-                        <span class="envolvido-type type-ata">ATA</span>
-                        {% elif envolvido.tipo == 'Facilitador' %}
-                        <span class="envolvido-type type-facilitador">Facilitador</span>
-                        {% elif envolvido.tipo == 'Apoio' %}
-                        <span class="envolvido-type type-apoio">Apoio</span>
-                        {% endif %}
-                        <span class="ms-2">{{ envolvido.cargo }}</span>
-                    </div>
-                    
-                    <p class="card-text mb-1">
-                        <i class="bi bi-person-badge me-1 text-muted"></i> CPF: <span class="envolvido-cpf">{{ envolvido.cpf }}</span>
-                    </p>
-                    
-                    <p class="card-text mb-1">
-                        <i class="bi bi-envelope me-1 text-muted"></i> {{ envolvido.email_institucional }}
-                    </p>
-                    
-                    <p class="card-text mb-3">
-                        <i class="bi bi-telephone me-1 text-muted"></i> {{ envolvido.celular }}
-                    </p>
-                    
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-eye me-1"></i> Visualizar
-                        </a>
-                        
-                        <div>
-                            <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    data-bs-toggle="modal" data-bs-target="#deleteModalMobile{{ envolvido.id }}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Modal de Confirmação de Exclusão Mobile -->
-                        <div class="modal fade" id="deleteModalMobile{{ envolvido.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Confirmar Exclusão</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
-                                        <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
-                                        
-                                        {% if envolvido.is_orientador or envolvido.is_coordenador %}
-                                        <div class="alert alert-warning">
-                                            <i class="bi bi-info-circle-fill me-2"></i> 
-                                            <strong>Atenção:</strong> Este {{ envolvido.tipo|lower }} está associado a cursos.
-                                            A exclusão removerá estas associações.
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                        <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="btn btn-danger">Excluir Envolvido</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+<!-- Paginação -->
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <div class="pagination-info">
+        Mostrando <strong>{{ envolvidos.items|length }}</strong> de <strong>{{ envolvidos.total }}</strong> envolvidos
+        {% if envolvidos.total > 0 %}
+        (página <strong>{{ envolvidos.page }}</strong> de <strong>{{ envolvidos.pages }}</strong>)
+        {% endif %}
     </div>
+    
+    <nav aria-label="Navegação de páginas">
+        <ul class="pagination">
+            <!-- Botão Anterior -->
+            <li class="page-item {% if not envolvidos.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{% if envolvidos.has_prev %}{{ url_for('envolvidos.listar', page=envolvidos.prev_num, unidade_id=unidade.id if unidade else None, tipo=tipo_filtro, q=request.args.get('q', '')) }}{% else %}#{% endif %}" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            
+            <!-- Páginas específicas -->
+            {% set start_page = [1, envolvidos.page - 2]|max %}
+            {% set end_page = [start_page + 4, envolvidos.pages]|min %}
+            {% set start_page = [end_page - 4, 1]|max %}
+            
+            {% if start_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('envolvidos.listar', page=1, unidade_id=unidade.id if unidade else None, tipo=tipo_filtro, q=request.args.get('q', '')) }}">1</a>
+            </li>
+            {% if start_page > 2 %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#">...</a>
+            </li>
+            {% endif %}
+            {% endif %}
+            
+            {% for page_num in range(start_page, end_page + 1) %}
+            <li class="page-item {% if page_num == envolvidos.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('envolvidos.listar', page=page_num, unidade_id=unidade.id if unidade else None, tipo=tipo_filtro, q=request.args.get('q', '')) }}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if end_page < envolvidos.pages %}
+            {% if end_page < envolvidos.pages - 1 %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#">...</a>
+            </li>
+            {% endif %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('envolvidos.listar', page=envolvidos.pages, unidade_id=unidade.id if unidade else None, tipo=tipo_filtro, q=request.args.get('q', '')) }}">{{ envolvidos.pages }}</a>
+            </li>
+            {% endif %}
+            
+            <!-- Botão Próximo -->
+            <li class="page-item {% if not envolvidos.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{% if envolvidos.has_next %}{{ url_for('envolvidos.listar', page=envolvidos.next_num, unidade_id=unidade.id if unidade else None, tipo=tipo_filtro, q=request.args.get('q', '')) }}{% else %}#{% endif %}" aria-label="Próximo">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 {% else %}
@@ -405,7 +391,7 @@
 {% endif %}
 
 <!-- Estatísticas (somente para administradores ou diretores) -->
-{% if envolvidos and (current_user.is_admin() or current_user.is_diretor()) %}
+{% if envolvidos and envolvidos.total > 0 and (current_user.is_admin() or current_user.is_diretor()) %}
 <div class="card mt-4">
     <div class="card-header bg-white">
         <h5 class="card-title mb-0">Estatísticas</h5>
@@ -419,7 +405,7 @@
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-0">Total de Envolvidos</h6>
-                        <h3 class="mb-0">{{ envolvidos|length }}</h3>
+                        <h3 class="mb-0">{{ envolvidos.total }}</h3>
                     </div>
                 </div>
             </div>
@@ -433,7 +419,7 @@
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-0">Orientadores</h6>
-                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list|length }}</h3>
+                        <h3 class="mb-0">{{ tipo_stats.get('Orientador', 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -444,7 +430,7 @@
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-0">Coordenadores</h6>
-                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'Coordenador')|list|length }}</h3>
+                        <h3 class="mb-0">{{ tipo_stats.get('Coordenador', 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -457,7 +443,7 @@
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-0">ATAs</h6>
-                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'ATA')|list|length }}</h3>
+                        <h3 class="mb-0">{{ tipo_stats.get('ATA', 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -468,7 +454,7 @@
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-0">Facilitadores</h6>
-                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list|length }}</h3>
+                        <h3 class="mb-0">{{ tipo_stats.get('Facilitador', 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -481,7 +467,7 @@
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="mb-0">Apoio</h6>
-                        <h3 class="mb-0">{{ envolvidos|selectattr('tipo', 'equalto', 'Apoio')|list|length }}</h3>
+                        <h3 class="mb-0">{{ tipo_stats.get('Apoio', 0) }}</h3>
                     </div>
                 </div>
             </div>
@@ -494,29 +480,18 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Adiciona funcionalidade de ordenação à tabela
-        const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+        // Funções para mostrar/ocultar informações sobre os tipos
+        function showTipoInfo(id) {
+            document.getElementById(id).style.display = 'block';
+        }
         
-        const comparer = (idx, asc) => (a, b) => ((v1, v2) => 
-            v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
-        )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+        function hideTipoInfo(id) {
+            document.getElementById(id).style.display = 'none';
+        }
         
-        document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
-            const table = th.closest('table');
-            const tbody = table.querySelector('tbody');
-            Array.from(tbody.querySelectorAll('tr'))
-                .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
-                .forEach(tr => tbody.appendChild(tr) );
-        })));
+        // Adiciona as funções ao escopo global para uso pelos elementos HTML
+        window.showTipoInfo = showTipoInfo;
+        window.hideTipoInfo = hideTipoInfo;
     });
-    
-    // Funções para mostrar/ocultar informações sobre os tipos
-    function showTipoInfo(id) {
-        document.getElementById(id).style.display = 'block';
-    }
-    
-    function hideTipoInfo(id) {
-        document.getElementById(id).style.display = 'none';
-    }
 </script>
 {% endblock %}

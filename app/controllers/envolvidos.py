@@ -4,32 +4,61 @@ from datetime import datetime
 
 from ..models import db, Envolvido, Unidade, Curso
 
-def get_all_envolvidos():
+def get_all_envolvidos(page=1, per_page=10, search=None):
     """
-    Retorna todos os envolvidos cadastrados, ordenados por nome.
+    Retorna todos os envolvidos cadastrados, ordenados por nome, com paginação.
     
+    Args:
+        page (int): Número da página atual
+        per_page (int): Número de itens por página
+        search (str, optional): Termo de busca para filtrar os resultados
+        
     Returns:
-        list: Lista de objetos Envolvido
+        Pagination: Objeto de paginação com os envolvidos
     """
-    return Envolvido.query.order_by(Envolvido.nome).all()
+    query = Envolvido.query.order_by(Envolvido.nome)
+    
+    # Aplica filtro de busca se fornecido
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (Envolvido.nome.ilike(search_term)) | 
+            (Envolvido.cpf.ilike(search_term))
+        )
+    
+    # Retorna resultado paginado
+    return query.paginate(page=page, per_page=per_page, error_out=False)
 
-def get_envolvidos_by_unidade(unidade_id, tipo=None):
+def get_envolvidos_by_unidade(unidade_id, tipo=None, page=1, per_page=10, search=None):
     """
-    Retorna todos os envolvidos de uma unidade, filtrados por tipo (opcional).
+    Retorna todos os envolvidos de uma unidade, filtrados por tipo (opcional), com paginação.
     
     Args:
         unidade_id (int): ID da unidade
         tipo (str, optional): Tipo de envolvido ('Orientador', 'Coordenador', 'ATA', 'Facilitador', 'Apoio')
+        page (int): Número da página atual
+        per_page (int): Número de itens por página
+        search (str, optional): Termo de busca para filtrar os resultados
         
     Returns:
-        list: Lista de objetos Envolvido
+        Pagination: Objeto de paginação com os envolvidos
     """
     query = Envolvido.query.filter_by(unidade_id=unidade_id)
     
     if tipo:
         query = query.filter_by(tipo=tipo)
     
-    return query.order_by(Envolvido.nome).all()
+    # Aplica filtro de busca se fornecido
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (Envolvido.nome.ilike(search_term)) | 
+            (Envolvido.cpf.ilike(search_term))
+        )
+    
+    # Ordem e paginação
+    query = query.order_by(Envolvido.nome)
+    return query.paginate(page=page, per_page=per_page, error_out=False)
 
 def get_envolvido_by_id(envolvido_id):
     """
@@ -56,6 +85,44 @@ def get_envolvido_by_cpf(cpf):
     # Formata o CPF para garantir consistência
     cpf_formatado = Envolvido.formatar_cpf(cpf)
     return Envolvido.query.filter_by(cpf=cpf_formatado).first()
+
+def get_tipo_stats(unidade_id=None, search=None):
+    """
+    Retorna estatísticas de quantidade de envolvidos por tipo.
+    
+    Args:
+        unidade_id (int, optional): ID da unidade para filtrar
+        search (str, optional): Termo de busca para filtrar os resultados
+        
+    Returns:
+        dict: Dicionário com as contagens por tipo
+    """
+    from sqlalchemy import func
+    
+    # Construir a query base
+    query = db.session.query(Envolvido.tipo, func.count(Envolvido.id).label('count'))
+    
+    # Aplicar filtros
+    if unidade_id:
+        query = query.filter(Envolvido.unidade_id == unidade_id)
+        
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (Envolvido.nome.ilike(search_term)) | 
+            (Envolvido.cpf.ilike(search_term))
+        )
+    
+    # Agrupar por tipo e executar
+    query = query.group_by(Envolvido.tipo)
+    results = query.all()
+    
+    # Converter para dicionário
+    stats = {}
+    for tipo, count in results:
+        stats[tipo] = count
+    
+    return stats
 
 def create_envolvido(nome, cpf, cargo, tipo, unidade_id, 
                     email_institucional, celular,

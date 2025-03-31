@@ -1,16 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Todos os Envolvidos - Sistema de Envolvidos nos Estágios - CPS{% endblock %}
+{% block title %}Todos os Envolvidos - Sistema de Envolvidos nos Estágios - CPS
+</script>
+{% endblock %}
 
 {% block styles %}
 <style>
-    .envolvido-card {
-        transition: all 0.2s;
-    }
-    .envolvido-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
     .envolvido-type {
         display: inline-block;
         padding: 0.25rem 0.5rem;
@@ -106,6 +101,23 @@
     .status-inactive {
         background-color: #dc3545;
     }
+    .pagination-info {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .page-link {
+        color: #0d6efd;
+    }
+    .page-link:hover {
+        color: #0a58ca;
+    }
+    .page-link:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
 </style>
 {% endblock %}
 
@@ -129,7 +141,7 @@
                 </div>
                 <div>
                     <span class="d-block text-muted">Total</span>
-                    <span class="fs-4 fw-bold">{{ envolvidos|length }}</span>
+                    <span class="fs-4 fw-bold">{{ envolvidos.total }}</span>
                 </div>
             </div>
         </div>
@@ -140,7 +152,7 @@
                 </div>
                 <div>
                     <span class="d-block text-muted">Orientadores</span>
-                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'Orientador')|list|length }}</span>
+                    <span class="fs-4 fw-bold">{{ tipo_stats.get('Orientador', 0) }}</span>
                 </div>
             </div>
         </div>
@@ -151,7 +163,7 @@
                 </div>
                 <div>
                     <span class="d-block text-muted">Coordenadores</span>
-                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'Coordenador')|list|length }}</span>
+                    <span class="fs-4 fw-bold">{{ tipo_stats.get('Coordenador', 0) }}</span>
                 </div>
             </div>
         </div>
@@ -162,7 +174,7 @@
                 </div>
                 <div>
                     <span class="d-block text-muted">ATAs</span>
-                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'ATA')|list|length }}</span>
+                    <span class="fs-4 fw-bold">{{ tipo_stats.get('ATA', 0) }}</span>
                 </div>
             </div>
         </div>
@@ -173,7 +185,7 @@
                 </div>
                 <div>
                     <span class="d-block text-muted">Facilitadores</span>
-                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'Facilitador')|list|length }}</span>
+                    <span class="fs-4 fw-bold">{{ tipo_stats.get('Facilitador', 0) }}</span>
                 </div>
             </div>
         </div>
@@ -184,14 +196,14 @@
                 </div>
                 <div>
                     <span class="d-block text-muted">Apoio</span>
-                    <span class="fs-4 fw-bold">{{ envolvidos|selectattr('tipo', 'equalto', 'Apoio')|list|length }}</span>
+                    <span class="fs-4 fw-bold">{{ tipo_stats.get('Apoio', 0) }}</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-1">
+<div class="row g-4">
     <!-- Coluna de filtros -->
     <div class="col-lg-3">
         <div class="card mb-4">
@@ -315,132 +327,22 @@
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0"><i class="bi bi-list me-2"></i> Lista de Envolvidos</h5>
                 <div class="d-flex">
-                    <div class="input-group input-group-sm me-2">
-                        <input type="text" class="form-control" id="searchInput" placeholder="Buscar por nome ou CPF...">
-                        <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                    <form method="GET" action="{{ url_for('envolvidos.listar') }}" class="input-group input-group-sm me-2">
+                        {% if tipo_filtro %}
+                        <input type="hidden" name="tipo" value="{{ tipo_filtro }}">
+                        {% endif %}
+                        <input type="text" class="form-control" id="searchInput" name="q" 
+                               placeholder="Buscar por nome ou CPF..." value="{{ request.args.get('q', '') }}">
+                        <button class="btn btn-outline-secondary" type="submit">
                             <i class="bi bi-search"></i>
                         </button>
-                    </div>
-                    <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-secondary active" id="viewGrid">
-                            <i class="bi bi-grid"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" id="viewList">
-                            <i class="bi bi-list-ul"></i>
-                        </button>
-                    </div>
+                    </form>
                 </div>
             </div>
             
             <div class="card-body">
-                <!-- Visualização em Grade (padrão) -->
-                <div id="gridView">
-                    <div class="row g-3" id="envolvidosGrid">
-                        {% for envolvido in envolvidos %}
-                        <div class="col-md-6 col-lg-4 envolvido-item" 
-                             data-tipo="{{ envolvido.tipo }}" 
-                             data-status="{{ 'ativo' if envolvido.ativo else 'inativo' }}"
-                             data-unidade="{{ envolvido.unidade_id }}"
-                             data-tipo-unidade="{{ envolvido.unidade.tipo }}"
-                             data-nome="{{ envolvido.nome }}"
-                             data-cpf="{{ envolvido.cpf }}">
-                            <div class="card envolvido-card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h5 class="card-title mb-0">{{ envolvido.nome }}</h5>
-                                        {% if envolvido.ativo %}
-                                        <span class="badge bg-success">Ativo</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">Inativo</span>
-                                        {% endif %}
-                                    </div>
-                                    
-                                    <div class="mb-2">
-                                        {% if envolvido.tipo == 'Orientador' %}
-                                        <span class="envolvido-type type-orientador">Orientador</span>
-                                        {% elif envolvido.tipo == 'Coordenador' %}
-                                        <span class="envolvido-type type-coordenador">Coordenador</span>
-                                        {% elif envolvido.tipo == 'ATA' %}
-                                        <span class="envolvido-type type-ata">ATA</span>
-                                        {% elif envolvido.tipo == 'Facilitador' %}
-                                        <span class="envolvido-type type-facilitador">Facilitador</span>
-                                        {% elif envolvido.tipo == 'Apoio' %}
-                                        <span class="envolvido-type type-apoio">Apoio</span>
-                                        {% endif %}
-                                        <span class="unidade-badge ms-1">{{ envolvido.unidade.tipo }} {{ envolvido.unidade.numero }}</span>
-                                    </div>
-                                    
-                                    <p class="card-text mb-1">
-                                        <i class="bi bi-person-badge me-1 text-muted"></i> CPF: <span class="envolvido-cpf">{{ envolvido.cpf }}</span>
-                                    </p>
-                                    <p class="card-text mb-1">
-                                        <i class="bi bi-building me-1 text-muted"></i> {{ envolvido.unidade.nome }}
-                                    </p>
-                                    
-                                    <p class="card-text mb-1">
-                                        <i class="bi bi-envelope me-1 text-muted"></i> {{ envolvido.email_institucional }}
-                                    </p>
-                                    
-                                    <p class="card-text mb-3">
-                                        <i class="bi bi-telephone me-1 text-muted"></i> {{ envolvido.celular }}
-                                    </p>
-                                </div>
-                                <div class="card-footer bg-white border-top">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <a href="{{ url_for('envolvidos.visualizar', id=envolvido.id) }}" class="btn btn-sm btn-primary">
-                                            <i class="bi bi-eye me-1"></i> Visualizar
-                                        </a>
-                                        
-                                        <div>
-                                            <a href="{{ url_for('envolvidos.editar', id=envolvido.id) }}" class="btn btn-sm btn-outline-secondary">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ envolvido.id }}">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Modal de Confirmação de Exclusão -->
-                            <div class="modal fade" id="deleteModal{{ envolvido.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Confirmar Exclusão</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
-                                            <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
-                                            
-                                            {% if envolvido.allows_cursos and envolvido.cursos %}
-                                            <div class="alert alert-warning">
-                                                <i class="bi bi-info-circle-fill me-2"></i> 
-                                                <strong>Atenção:</strong> Este {{ envolvido.tipo | lower }} está associado a {{ envolvido.cursos|length }} curso(s). 
-                                                A exclusão removerá estas associações.
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                            <form method="POST" action="{{ url_for('envolvidos.excluir', id=envolvido.id) }}">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="btn btn-danger">Excluir</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                
-                <!-- Visualização em Lista (alternativa) -->
-                <div id="listView" style="display: none;">
+                <!-- Visualização em Lista (apenas tabela) -->
+                <div id="listView">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
@@ -455,14 +357,14 @@
                                 </tr>
                             </thead>
                             <tbody id="envolvidosTable">
-                                {% for envolvido in envolvidos %}
+                                {% for envolvido in envolvidos.items %}
                                 <tr class="envolvido-item"
                                     data-tipo="{{ envolvido.tipo }}" 
                                     data-status="{{ 'ativo' if envolvido.ativo else 'inativo' }}"
                                     data-unidade="{{ envolvido.unidade_id }}"
                                     data-tipo-unidade="{{ envolvido.unidade.tipo }}"
                                     data-nome="{{ envolvido.nome }}"
-                                    data-cpf="{{ envolvido.cpf }}" style="display: table-row;">
+                                    data-cpf="{{ envolvido.cpf }}">
                                     <td><strong>{{ envolvido.nome }}</strong></td>
                                     <td><span class="envolvido-cpf">{{ envolvido.cpf }}</span></td>
                                     <td>
@@ -513,6 +415,14 @@
                                                     <div class="modal-body">
                                                         <p>Você tem certeza que deseja excluir <strong>{{ envolvido.nome }}</strong>?</p>
                                                         <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Esta ação não pode ser desfeita.</p>
+                                                        
+                                                        {% if envolvido.allows_cursos and envolvido.cursos %}
+                                                        <div class="alert alert-warning">
+                                                            <i class="bi bi-info-circle-fill me-2"></i> 
+                                                            <strong>Atenção:</strong> Este {{ envolvido.tipo | lower }} está associado a {{ envolvido.cursos|length }} curso(s). 
+                                                            A exclusão removerá estas associações.
+                                                        </div>
+                                                        {% endif %}
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -532,24 +442,93 @@
                     </div>
                 </div>
                 
+                <!-- Paginação -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="pagination-info">
+                        Mostrando <strong>{{ envolvidos.items|length }}</strong> de <strong>{{ envolvidos.total }}</strong> envolvidos
+                        {% if envolvidos.total > 0 %}
+                        (página <strong>{{ envolvidos.page }}</strong> de <strong>{{ envolvidos.pages }}</strong>)
+                        {% endif %}
+                    </div>
+                    
+                    <nav aria-label="Navegação de páginas">
+                        <ul class="pagination">
+                            <!-- Botão Anterior -->
+                            <li class="page-item {% if not envolvidos.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{% if envolvidos.has_prev %}{{ url_for('envolvidos.listar', page=envolvidos.prev_num, tipo=tipo_filtro, q=request.args.get('q', '')) }}{% else %}#{% endif %}" aria-label="Anterior">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            
+                            <!-- Páginas específicas -->
+                            {% set start_page = [1, envolvidos.page - 2]|max %}
+                            {% set end_page = [start_page + 4, envolvidos.pages]|min %}
+                            {% set start_page = [end_page - 4, 1]|max %}
+                            
+                            {% if start_page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('envolvidos.listar', page=1, tipo=tipo_filtro, q=request.args.get('q', '')) }}">1</a>
+                            </li>
+                            {% if start_page > 2 %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">...</a>
+                            </li>
+                            {% endif %}
+                            {% endif %}
+                            
+                            {% for page_num in range(start_page, end_page + 1) %}
+                            <li class="page-item {% if page_num == envolvidos.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('envolvidos.listar', page=page_num, tipo=tipo_filtro, q=request.args.get('q', '')) }}">{{ page_num }}</a>
+                            </li>
+                            {% endfor %}
+                            
+                            {% if end_page < envolvidos.pages %}
+                            {% if end_page < envolvidos.pages - 1 %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">...</a>
+                            </li>
+                            {% endif %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('envolvidos.listar', page=envolvidos.pages, tipo=tipo_filtro, q=request.args.get('q', '')) }}">{{ envolvidos.pages }}</a>
+                            </li>
+                            {% endif %}
+                            
+                            <!-- Botão Próximo -->
+                            <li class="page-item {% if not envolvidos.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{% if envolvidos.has_next %}{{ url_for('envolvidos.listar', page=envolvidos.next_num, tipo=tipo_filtro, q=request.args.get('q', '')) }}{% else %}#{% endif %}" aria-label="Próximo">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+                
                 <!-- Estado vazio (quando filtro não retornar resultados) -->
-                <div id="emptyState" class="empty-state" style="display: none;">
+                {% if envolvidos.total == 0 %}
+                <div id="emptyState" class="empty-state">
                     <div class="empty-state-icon">
                         <i class="bi bi-people"></i>
                     </div>
                     <h4>Nenhum envolvido encontrado</h4>
                     <p class="text-muted" id="emptyStateMessage">
+                        {% if request.args.get('q') %}
+                        Não encontramos envolvidos correspondentes à sua busca "{{ request.args.get('q') }}".
+                        {% elif tipo_filtro %}
+                        Não há {{ tipo_filtro|lower }}es cadastrados no sistema.
+                        {% else %}
                         Não há envolvidos que correspondam aos critérios de busca selecionados.
+                        {% endif %}
                     </p>
-                    <button type="button" class="btn btn-primary" id="clearFiltersBtn">
+                    <a href="{{ url_for('envolvidos.listar') }}" class="btn btn-primary">
                         <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Filtros
-                    </button>
+                    </a>
                 </div>
+                {% endif %}
             </div>
             
             <div class="card-footer bg-white d-flex justify-content-between align-items-center">
                 <div>
-                    <span id="resultCount" class="text-muted small">Exibindo {{ envolvidos|length }} envolvidos</span>
+                    <span id="resultCount" class="text-muted small">Exibindo {{ envolvidos.items|length }} de {{ envolvidos.total }} envolvidos</span>
                 </div>
                 <div>
                     <a href="{{ url_for('envolvidos.novo') }}" class="btn btn-sm btn-primary">
@@ -567,40 +546,16 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Variáveis para os elementos DOM
         const content = document.getElementById('contentdiv');
-        const viewGrid = document.getElementById('viewGrid');
-        const viewList = document.getElementById('viewList');
-        const gridView = document.getElementById('gridView');
-        const listView = document.getElementById('listView');
-        const emptyState = document.getElementById('emptyState');
-        const emptyStateMessage = document.getElementById('emptyStateMessage');
-        const resultCount = document.getElementById('resultCount');
         const searchInput = document.getElementById('searchInput');
-        const searchButton = document.getElementById('searchButton');
         const resetFilters = document.getElementById('resetFilters');
-        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
         const unidadeSearch = document.getElementById('unidadeSearch');
         const unidadeListItems = document.querySelectorAll('.unidade-list-item');
         const radioTipos = document.querySelectorAll('input[name="tipoFilter"]');
         const radioStatus = document.querySelectorAll('input[name="statusFilter"]');
         const radioTipoUnidade = document.querySelectorAll('input[name="tipoUnidadeFilter"]');
-        const envolvidoItems = document.querySelectorAll('.envolvido-item');
 
+        // Aumentar largura do container para melhor visualização
         content.classList.replace('container', 'container-fluid');
-
-        // Função para alternar entre visualização em grade e lista
-        viewGrid.addEventListener('click', function() {
-            gridView.style.display = 'block';
-            listView.style.display = 'none';
-            viewGrid.classList.add('active');
-            viewList.classList.remove('active');
-        });
-
-        viewList.addEventListener('click', function() {
-            gridView.style.display = 'none';
-            listView.style.display = 'block';
-            viewList.classList.add('active');
-            viewGrid.classList.remove('active');
-        });
 
         // Função para filtrar envolvidos
         function filterEnvolvidos() {
@@ -609,52 +564,39 @@
             const tipoUnidadeSelecionado = document.querySelector('input[name="tipoUnidadeFilter"]:checked').value;
             const searchTerm = searchInput.value.toLowerCase();
             const unidadeSelecionada = document.querySelector('.unidade-list-item.active').getAttribute('data-unidade');
-
-            let totalVisibles = 0;
-
-            envolvidoItems.forEach(item => {
-                const tipo = item.getAttribute('data-tipo');
-                const status = item.getAttribute('data-status');
-                const tipoUnidade = item.getAttribute('data-tipo-unidade');
-                const nome = item.getAttribute('data-nome').toLowerCase();
-                const cpf = item.getAttribute('data-cpf');
-                const unidade = item.getAttribute('data-unidade');
-
-                const tipoMatch = tipoSelecionado === 'todos' || tipo === tipoSelecionado;
-                const statusMatch = statusSelecionado === 'todos' || status === statusSelecionado;
-                const tipoUnidadeMatch = tipoUnidadeSelecionado === 'todas' || tipoUnidade === tipoUnidadeSelecionado;
-                const unidadeMatch = unidadeSelecionada === 'todas' || unidade === unidadeSelecionada;
-                const searchMatch = searchTerm === '' || 
-                    nome.includes(searchTerm) || 
-                    cpf.includes(searchTerm);
-
-                const isVisible = tipoMatch && statusMatch && tipoUnidadeMatch && unidadeMatch && searchMatch;
-
-                item.style.display = isVisible ? 'table-row' : 'none';
-
-                if (isVisible) totalVisibles++;
-            });
-
-            // Atualiza a contagem de resultados
-            resultCount.textContent = `Exibindo ${totalVisibles} envolvidos`;
-
-            // Mostra/esconde estado vazio
-            if (totalVisibles === 0) {
-                emptyState.style.display = 'block';
-                emptyStateMessage.textContent = 'Não há envolvidos que correspondam aos critérios de busca selecionados.';
-            } else {
-                emptyState.style.display = 'none';
+            
+            // Construir URL com parâmetros de filtro
+            let url = "{{ url_for('envolvidos.listar') }}";
+            let params = [];
+            
+            // Adicionar tipo se não for 'todos'
+            if (tipoSelecionado !== 'todos') {
+                params.push(`tipo=${tipoSelecionado}`);
             }
+            
+            // Adicionar termo de busca se não estiver vazio
+            if (searchTerm) {
+                params.push(`q=${encodeURIComponent(searchTerm)}`);
+            }
+            
+            // Adicionar unidade se não for 'todas'
+            if (unidadeSelecionada !== 'todas') {
+                params.push(`unidade_id=${unidadeSelecionada}`);
+            }
+            
+            // Construir a URL final
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+            
+            // Redirecionar para a URL construída
+            window.location.href = url;
         }
 
         // Adiciona eventos de filtro
         radioTipos.forEach(radio => radio.addEventListener('change', filterEnvolvidos));
         radioStatus.forEach(radio => radio.addEventListener('change', filterEnvolvidos));
         radioTipoUnidade.forEach(radio => radio.addEventListener('change', filterEnvolvidos));
-
-        // Busca
-        searchButton.addEventListener('click', filterEnvolvidos);
-        searchInput.addEventListener('input', filterEnvolvidos);
 
         // Filtro por unidade
         unidadeSearch.addEventListener('input', function() {
@@ -681,31 +623,45 @@
             document.getElementById('tipoUnidadeTodas').checked = true;
             searchInput.value = '';
             unidadeSearch.value = '';
+            
+            // Reset das unidades na lista
+            unidadeListItems.forEach(item => {
+                item.style.display = 'block';
+            });
+            
+            // Seleciona a opção "Todas as unidades"
             document.querySelector('.unidade-list-item[data-unidade="todas"]').classList.add('active');
             unidadeListItems.forEach((item, index) => {
                 if (index !== 0) item.classList.remove('active');
             });
 
-            filterEnvolvidos();
+            // Redireciona para a lista sem filtros
+            window.location.href = "{{ url_for('envolvidos.listar') }}";
         });
-
-        clearFiltersBtn.addEventListener('click', function() {
-            // Reseta todos os filtros para o estado padrão
-            document.getElementById('tipoTodos').checked = true;
-            document.getElementById('statusTodos').checked = true;
-            document.getElementById('tipoUnidadeTodas').checked = true;
-            searchInput.value = '';
-            unidadeSearch.value = '';
-            document.querySelector('.unidade-list-item[data-unidade="todas"]').classList.add('active');
-            unidadeListItems.forEach((item, index) => {
-                if (index !== 0) item.classList.remove('active');
-            });
-
-            filterEnvolvidos();
-        });
-
-        // Inicializa os filtros
-        filterEnvolvidos();
+        
+        // Inicializa o estado dos filtros com base nos parâmetros da URL
+        function initializeFilters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Inicializa filtro de tipo
+            const tipoParam = urlParams.get('tipo');
+            if (tipoParam) {
+                const tipoRadio = document.getElementById(`tipo${tipoParam}`);
+                if (tipoRadio) tipoRadio.checked = true;
+            }
+            
+            // Inicializa filtro de unidade
+            const unidadeParam = urlParams.get('unidade_id');
+            if (unidadeParam) {
+                unidadeListItems.forEach(item => {
+                    if (item.getAttribute('data-unidade') === unidadeParam) {
+                        unidadeListItems.forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                    }
+                });
+            }
+        }
+        
+        // Inicializa os filtros quando a página carrega
+        initializeFilters();
     });
-</script>
-{% endblock %}

@@ -17,6 +17,9 @@ def listar():
     """Lista todos os envolvidos (admin) ou apenas os envolvidos da unidade do diretor"""
     unidade_id = request.args.get('unidade_id', type=int)
     tipo = request.args.get('tipo')
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('q', '')
+    per_page = 10  # Número de envolvidos por página
     
     # Para diretores, força a visualização apenas da sua unidade
     if current_user.is_diretor():
@@ -31,22 +34,45 @@ def listar():
             flash('Você não tem permissão para visualizar envolvidos desta unidade.', 'danger')
             return redirect(url_for('main.dashboard'))
         
-        # Obtém os envolvidos da unidade, filtrando por tipo se especificado
-        envolvidos = envolvidos_controller.get_envolvidos_by_unidade(unidade_id, tipo)
+        # Obtém os envolvidos da unidade, filtrando por tipo se especificado, com paginação
+        envolvidos = envolvidos_controller.get_envolvidos_by_unidade(
+            unidade_id, 
+            tipo=tipo, 
+            page=page, 
+            per_page=per_page,
+            search=search if search else None
+        )
+        
+        # Obtém estatísticas por tipo para esta unidade
+        tipo_stats = envolvidos_controller.get_tipo_stats(
+            unidade_id=unidade_id,
+            search=search if search else None
+        )
         
         return render_template('envolvidos/listar.html', 
                               envolvidos=envolvidos, 
                               unidade=unidade,
-                              tipo_filtro=tipo)
+                              tipo_filtro=tipo,
+                              tipo_stats=tipo_stats)
     
     # Se não especificou unidade e é admin, mostra todos os envolvidos
     if current_user.is_admin():
-        envolvidos = envolvidos_controller.get_all_envolvidos()
+        envolvidos = envolvidos_controller.get_all_envolvidos(
+            page=page, 
+            per_page=per_page,
+            search=search if search else None
+        )
         unidades = Unidade.query.order_by(Unidade.tipo, Unidade.numero).all()
+        
+        # Obtém estatísticas globais por tipo
+        tipo_stats = envolvidos_controller.get_tipo_stats(
+            search=search if search else None
+        )
         
         return render_template('envolvidos/listar_todos.html', 
                               envolvidos=envolvidos,
-                              unidades=unidades)
+                              unidades=unidades,
+                              tipo_stats=tipo_stats)
     
     # Se chegou aqui é porque é diretor mas não tem unidade associada
     flash('Não foi possível encontrar sua unidade. Entre em contato com o administrador.', 'danger')
@@ -281,6 +307,9 @@ def listar_por_tipo(tipo):
         abort(404)
     
     unidade_id = request.args.get('unidade_id', type=int)
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('q', '')
+    per_page = 10  # Número de envolvidos por página
     
     # Para diretores, força a visualização apenas da sua unidade
     if current_user.is_diretor():
@@ -295,22 +324,53 @@ def listar_por_tipo(tipo):
             flash(f'O tipo {tipo} não é aplicável a unidades {unidade.tipo}.', 'warning')
             return redirect(url_for('envolvidos.listar', unidade_id=unidade_id))
         
-        # Obtém os envolvidos do tipo especificado na unidade
-        envolvidos = envolvidos_controller.get_envolvidos_by_unidade(unidade_id, tipo)
+        # Obtém os envolvidos do tipo especificado na unidade, com paginação
+        envolvidos = envolvidos_controller.get_envolvidos_by_unidade(
+            unidade_id, 
+            tipo=tipo, 
+            page=page, 
+            per_page=per_page,
+            search=search if search else None
+        )
+        
+        # Obtém estatísticas por tipo para esta unidade
+        tipo_stats = envolvidos_controller.get_tipo_stats(
+            unidade_id=unidade_id,
+            search=search if search else None
+        )
         
         return render_template('envolvidos/listar.html', 
                               envolvidos=envolvidos, 
                               unidade=unidade, 
-                              tipo_filtro=tipo)
+                              tipo_filtro=tipo,
+                              tipo_stats=tipo_stats)
     
     # Para administradores sem unidade especificada
     if current_user.is_admin() and not unidade_id:
-        # Obtém todos os envolvidos do tipo especificado
-        envolvidos = Envolvido.query.filter_by(tipo=tipo).order_by(Envolvido.nome).all()
+        # Obtém todos os envolvidos do tipo especificado, com paginação
+        query = Envolvido.query.filter_by(tipo=tipo)
+        
+        # Aplica filtro de busca se fornecido
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                (Envolvido.nome.ilike(search_term)) | 
+                (Envolvido.cpf.ilike(search_term))
+            )
+        
+        # Ordem e paginação
+        query = query.order_by(Envolvido.nome)
+        envolvidos = query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        # Obtém estatísticas globais por tipo
+        tipo_stats = envolvidos_controller.get_tipo_stats(
+            search=search if search else None
+        )
         
         return render_template('envolvidos/listar_todos.html', 
                               envolvidos=envolvidos, 
-                              tipo_filtro=tipo)
+                              tipo_filtro=tipo,
+                              tipo_stats=tipo_stats)
     
     # Para administradores com unidade especificada
     if current_user.is_admin() and unidade_id:
@@ -323,13 +383,26 @@ def listar_por_tipo(tipo):
             flash(f'O tipo {tipo} não é aplicável a unidades {unidade.tipo}.', 'warning')
             return redirect(url_for('envolvidos.listar', unidade_id=unidade_id))
         
-        # Obtém os envolvidos do tipo especificado na unidade
-        envolvidos = envolvidos_controller.get_envolvidos_by_unidade(unidade_id, tipo)
+        # Obtém os envolvidos do tipo especificado na unidade, com paginação
+        envolvidos = envolvidos_controller.get_envolvidos_by_unidade(
+            unidade_id, 
+            tipo=tipo, 
+            page=page, 
+            per_page=per_page,
+            search=search if search else None
+        )
+        
+        # Obtém estatísticas por tipo para esta unidade
+        tipo_stats = envolvidos_controller.get_tipo_stats(
+            unidade_id=unidade_id,
+            search=search if search else None
+        )
         
         return render_template('envolvidos/listar.html', 
                               envolvidos=envolvidos, 
                               unidade=unidade, 
-                              tipo_filtro=tipo)
+                              tipo_filtro=tipo,
+                              tipo_stats=tipo_stats)
     
     abort(403)  # Acesso negado
 
