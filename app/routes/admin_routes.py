@@ -20,13 +20,30 @@ def dashboard():
     stats = admin_controller.get_statistics()
     return render_template('admin/dashboard.html', stats=stats)
 
+# Substituir a rota existente em app/routes/admin_routes.py
+
 @admin_bp.route('/usuarios')
 @login_required
 @admin_required
 def listar_usuarios():
-    """Lista todos os usuários do sistema"""
-    usuarios = User.query.order_by(User.role, User.email).all()
-    return render_template('admin/usuarios/listar.html', usuarios=usuarios)
+    """Lista todos os usuários do sistema com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    search = request.args.get('q', None)
+    role = request.args.get('role', None)
+    
+    # Obtém os usuários com paginação
+    pagination = auth_controller.get_all_users_paginated(
+        page=page, 
+        per_page=per_page,
+        search=search,
+        role=role
+    )
+    
+    return render_template('admin/usuarios/listar.html', 
+                          pagination=pagination,
+                          search=search,
+                          role=role)
 
 @admin_bp.route('/usuarios/novo', methods=['GET', 'POST'])
 @login_required

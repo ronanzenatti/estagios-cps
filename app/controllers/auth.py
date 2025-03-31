@@ -134,3 +134,39 @@ def reset_password(email):
         current_app.logger.error(f"Erro ao resetar senha: {str(e)}")
         db.session.rollback()
         return False
+
+# Função a ser adicionada ao app/controllers/auth.py
+
+def get_all_users_paginated(page=1, per_page=50, search=None, role=None):
+    """
+    Retorna todos os usuários do sistema com paginação.
+    
+    Args:
+        page (int): Número da página atual
+        per_page (int): Quantidade de itens por página
+        search (str, optional): Termo de busca para filtrar usuários
+        role (str, optional): Papel para filtrar ('admin' ou 'diretor')
+        
+    Returns:
+        Pagination: Objeto de paginação do SQLAlchemy com os usuários
+    """
+    from ..models import User, Unidade
+    from sqlalchemy import or_
+    
+    query = User.query
+    
+    # Aplicar filtros se fornecidos
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                User.email.ilike(search_term),
+                User.nome.ilike(search_term)
+            )
+        )
+    
+    if role and role in ['admin', 'diretor']:
+        query = query.filter(User.role == role)
+    
+    # Ordenar e paginar
+    return query.order_by(User.role, User.email).paginate(page=page, per_page=per_page, error_out=False)

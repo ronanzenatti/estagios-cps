@@ -38,6 +38,25 @@
         color: #dee2e6;
         margin-bottom: 1.5rem;
     }
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .th-sortable {
+        cursor: pointer;
+    }
+    .th-sortable:hover {
+        background-color: #f8f9fa;
+    }
+    .sort-icon {
+        font-size: 0.75rem;
+        margin-left: 0.25rem;
+    }
 </style>
 {% endblock %}
 
@@ -51,205 +70,458 @@
     </div>
 </div>
 
-<!-- Filtros e busca -->
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="btn-group me-2" role="group" aria-label="Filtrar por papel">
-            <a href="{{ url_for('admin.listar_usuarios') }}" class="btn btn-outline-secondary{% if not request.args.get('role') %} active{% endif %}">Todos</a>
-            <a href="{{ url_for('admin.listar_usuarios', role='admin') }}" class="btn btn-outline-primary{% if request.args.get('role') == 'admin' %} active{% endif %}">Administradores</a>
-            <a href="{{ url_for('admin.listar_usuarios', role='diretor') }}" class="btn btn-outline-success{% if request.args.get('role') == 'diretor' %} active{% endif %}">Diretores</a>
-        </div>
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0"><i class="bi bi-funnel me-2"></i> Filtros</h5>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filtrosCollapse">
+            <i class="bi bi-chevron-down"></i>
+        </button>
     </div>
-    <div class="col-md-4">
-        <form method="GET" action="{{ url_for('admin.listar_usuarios') }}">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Buscar por email ou nome" 
-                       name="q" value="{{ request.args.get('q', '') }}">
-                <button class="btn btn-outline-secondary" type="submit">
-                    <i class="bi bi-search"></i>
-                </button>
-            </div>
-        </form>
+    <div class="collapse show" id="filtrosCollapse">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.listar_usuarios') }}" id="filtrosForm">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label for="q" class="form-label">Buscar</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="q" name="q" placeholder="Email ou nome" value="{{ search or '' }}">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="role" class="form-label">Papel</label>
+                        <select class="form-select" id="role" name="role">
+                            <option value="" {% if not role %}selected{% endif %}>Todos</option>
+                            <option value="admin" {% if role == 'admin' %}selected{% endif %}>Administradores</option>
+                            <option value="diretor" {% if role == 'diretor' %}selected{% endif %}>Diretores</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="per_page" class="form-label">Itens por página</label>
+                        <select class="form-select" id="per_page" name="per_page">
+                            <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25</option>
+                            <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50</option>
+                            <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter me-2"></i> Filtrar
+                        </button>
+                        <a href="{{ url_for('admin.listar_usuarios') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Filtros
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <span class="text-muted small">
+                        Exibindo {{ pagination.items|length }} de {{ pagination.total }} usuários
+                    </span>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <!-- Lista de usuários -->
-{% if usuarios %}
-<div class="table-responsive d-none d-md-block">
-    <table class="table table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>#</th>
-                <th>Email</th>
-                <th>Nome</th>
-                <th>Papel</th>
-                <th>Unidade</th>
-                <th>Último Login</th>
-                <th>Criado em</th>
-                <th class="text-end">Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for usuario in usuarios %}
-            <tr>
-                <td>{{ usuario.id }}</td>
-                <td>{{ usuario.email }}</td>
-                <td>{{ usuario.nome or '—' }}</td>
-                <td>
-                    {% if usuario.role == 'admin' %}
-                    <span class="user-role role-admin">Administrador</span>
-                    {% elif usuario.role == 'diretor' %}
-                    <span class="user-role role-diretor">Diretor</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if usuario.unidade %}
-                    <a href="{{ url_for('unidades.visualizar', id=usuario.unidade.id) }}">
-                        {{ usuario.unidade.tipo }} {{ usuario.unidade.numero }}
-                    </a>
-                    {% else %}
-                    —
-                    {% endif %}
-                </td>
-                <td>
-                    {% if usuario.last_login %}
-                    <small class="text-muted">{{ usuario.last_login.strftime('%d/%m/%Y %H:%M') }}</small>
-                    {% else %}
-                    <small class="text-muted">Nunca</small>
-                    {% endif %}
-                </td>
-                <td>
-                    <small class="text-muted">{{ usuario.created_at.strftime('%d/%m/%Y') }}</small>
-                </td>
-                <td class="text-end user-actions">
-                    <form method="POST" action="{{ url_for('admin.resetar_senha_usuario', id=usuario.id) }}" 
-                          class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha deste usuário?');">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Resetar Senha">
-                            <i class="bi bi-key"></i>
-                        </button>
-                    </form>
-                    
-                    {% if usuario.id != current_user.id %}
-                    <form method="POST" action="{{ url_for('admin.excluir_usuario', id=usuario.id) }}" 
-                          class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir Usuário">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </form>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<!-- Visão em cards para dispositivos móveis -->
-<div class="d-md-none">
-    <div class="row g-3">
-        {% for usuario in usuarios %}
-        <div class="col-12">
-            <div class="card user-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title mb-0">
-                            {{ usuario.nome or usuario.email }}
-                        </h5>
-                        <div>
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0"><i class="bi bi-table me-2"></i> Lista de Usuários</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if pagination.items %}
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="th-sortable" data-sort="id">#</th>
+                        <th class="th-sortable" data-sort="email">Email <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="nome">Nome <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="role">Papel <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="unidade">Unidade <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="last_login">Último Login <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="th-sortable" data-sort="created_at">Criado em <i class="bi bi-arrow-down-up sort-icon"></i></th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in pagination.items %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>{{ usuario.nome or '—' }}</td>
+                        <td>
                             {% if usuario.role == 'admin' %}
-                            <span class="user-role role-admin">Admin</span>
+                            <span class="user-role role-admin">Administrador</span>
                             {% elif usuario.role == 'diretor' %}
                             <span class="user-role role-diretor">Diretor</span>
                             {% endif %}
-                        </div>
-                    </div>
-                    
-                    <p class="card-text">
-                        <i class="bi bi-envelope me-1 text-muted"></i> {{ usuario.email }}
-                    </p>
-                    
-                    {% if usuario.unidade %}
-                    <p class="card-text">
-                        <i class="bi bi-building me-1 text-muted"></i> 
-                        <a href="{{ url_for('unidades.visualizar', id=usuario.unidade.id) }}">
-                            {{ usuario.unidade.tipo }} {{ usuario.unidade.numero }}
-                        </a>
-                    </p>
-                    {% endif %}
-                    
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <small class="text-muted">
-                            {% if usuario.last_login %}
-                            Último acesso: {{ usuario.last_login.strftime('%d/%m/%Y %H:%M') }}
+                        </td>
+                        <td>
+                            {% if usuario.unidade %}
+                            <a href="{{ url_for('unidades.visualizar', id=usuario.unidade.id) }}">
+                                {{ usuario.unidade.tipo }} {{ usuario.unidade.numero }}
+                            </a>
                             {% else %}
-                            Nunca acessou
+                            —
                             {% endif %}
-                        </small>
-                        
-                        <div>
+                        </td>
+                        <td>
+                            {% if usuario.last_login %}
+                            <small class="text-muted">{{ usuario.last_login.strftime('%d/%m/%Y %H:%M') }}</small>
+                            {% else %}
+                            <small class="text-muted">Nunca</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ usuario.created_at.strftime('%d/%m/%Y') }}</small>
+                        </td>
+                        <td class="text-end user-actions">
                             <form method="POST" action="{{ url_for('admin.resetar_senha_usuario', id=usuario.id) }}" 
-                                class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha deste usuário?');">
+                                  class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha deste usuário?');">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-warning" title="Resetar Senha">
-                                    <i class="bi bi-key"></i> Resetar Senha
+                                    <i class="bi bi-key"></i>
                                 </button>
                             </form>
                             
                             {% if usuario.id != current_user.id %}
                             <form method="POST" action="{{ url_for('admin.excluir_usuario', id=usuario.id) }}" 
-                                class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');">
+                                  class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir Usuário">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
                             {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visão em cards para dispositivos móveis -->
+        <div class="d-md-none">
+            <div class="row g-3 p-3">
+                {% for usuario in pagination.items %}
+                <div class="col-12">
+                    <div class="card user-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">
+                                    {{ usuario.nome or usuario.email }}
+                                </h5>
+                                <div>
+                                    {% if usuario.role == 'admin' %}
+                                    <span class="user-role role-admin">Admin</span>
+                                    {% elif usuario.role == 'diretor' %}
+                                    <span class="user-role role-diretor">Diretor</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <p class="card-text">
+                                <i class="bi bi-envelope me-1 text-muted"></i> {{ usuario.email }}
+                            </p>
+                            
+                            {% if usuario.unidade %}
+                            <p class="card-text">
+                                <i class="bi bi-building me-1 text-muted"></i> 
+                                <a href="{{ url_for('unidades.visualizar', id=usuario.unidade.id) }}">
+                                    {{ usuario.unidade.tipo }} {{ usuario.unidade.numero }}
+                                </a>
+                            </p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">
+                                    {% if usuario.last_login %}
+                                    Último acesso: {{ usuario.last_login.strftime('%d/%m/%Y %H:%M') }}
+                                    {% else %}
+                                    Nunca acessou
+                                    {% endif %}
+                                </small>
+                                
+                                <div>
+                                    <form method="POST" action="{{ url_for('admin.resetar_senha_usuario', id=usuario.id) }}" 
+                                        class="d-inline" onsubmit="return confirm('Tem certeza que deseja resetar a senha deste usuário?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" title="Resetar Senha">
+                                            <i class="bi bi-key"></i> Resetar
+                                        </button>
+                                    </form>
+                                    
+                                    {% if usuario.id != current_user.id %}
+                                    <form method="POST" action="{{ url_for('admin.excluir_usuario', id=usuario.id) }}" 
+                                        class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir Usuário">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Paginação -->
+        <div class="pagination-container">
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination">
+                    <!-- Botão para a primeira página -->
+                    <li class="page-item {% if pagination.page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.listar_usuarios', page=1, per_page=pagination.per_page, q=search, role=role) }}" aria-label="Primeira">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Botão para a página anterior -->
+                    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.listar_usuarios', page=pagination.prev_num, per_page=pagination.per_page, q=search, role=role) }}" aria-label="Anterior">
+                            <span aria-hidden="true">&lsaquo;</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Páginas numeradas -->
+                    {% set start_page = [pagination.page - 2, 1]|max %}
+                    {% set end_page = [start_page + 4, pagination.pages]|min %}
+                    {% set start_page = [end_page - 4, 1]|max %}
+                    
+                    {% for page_num in range(start_page, end_page + 1) %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.listar_usuarios', page=page_num, per_page=pagination.per_page, q=search, role=role) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    
+                    <!-- Botão para a próxima página -->
+                    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.listar_usuarios', page=pagination.next_num, per_page=pagination.per_page, q=search, role=role) }}" aria-label="Próxima">
+                            <span aria-hidden="true">&rsaquo;</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Botão para a última página -->
+                    <li class="page-item {% if pagination.page == pagination.pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.listar_usuarios', page=pagination.pages, per_page=pagination.per_page, q=search, role=role) }}" aria-label="Última">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        {% else %}
+        <!-- Estado vazio -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <h4>Nenhum usuário encontrado</h4>
+            <p class="text-muted">
+                {% if search %}
+                Não encontramos usuários correspondentes à sua busca "{{ search }}".
+                {% elif role %}
+                Não há usuários do tipo {{ role }} cadastrados.
+                {% else %}
+                Não há usuários cadastrados no sistema.
+                {% endif %}
+            </p>
+            <a href="{{ url_for('admin.listar_usuarios') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Filtros
+            </a>
+            <a href="{{ url_for('admin.novo_usuario') }}" class="btn btn-primary ms-2">
+                <i class="bi bi-person-plus-fill me-1"></i> Adicionar Usuário
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+        <div>
+            <span class="text-muted small">
+                {% if pagination.total > 0 %}
+                Mostrando {{ (pagination.page - 1) * pagination.per_page + 1 }} a 
+                {{ (pagination.page - 1) * pagination.per_page + pagination.items|length }} 
+                de {{ pagination.total }} registros
+                {% else %}
+                Nenhum registro encontrado
+                {% endif %}
+            </span>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.novo_usuario') }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-person-plus-fill me-1"></i> Novo Administrador
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas -->
+{% if pagination.items %}
+<div class="card mt-4">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0">Estatísticas</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-primary bg-opacity-10">
+                        <i class="bi bi-people fs-4 text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Total de Usuários</h6>
+                        <h3 class="mb-0">{{ pagination.total }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-primary bg-opacity-10">
+                        <i class="bi bi-person-gear fs-4 text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Administradores</h6>
+                        <h3 class="mb-0">{{ pagination.items|selectattr('role', 'equalto', 'admin')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-success bg-opacity-10">
+                        <i class="bi bi-person-fill fs-4 text-success"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Diretores</h6>
+                        <h3 class="mb-0">{{ pagination.items|selectattr('role', 'equalto', 'diretor')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 p-3 rounded-circle bg-info bg-opacity-10">
+                        <i class="bi bi-calendar2-check fs-4 text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0">Acessos Recentes</h6>
+                        <h3 class="mb-0">{{ pagination.items|selectattr('last_login', 'defined')|list|length }}</h3>
                     </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
     </div>
-</div>
-
-{% else %}
-<!-- Estado vazio -->
-<div class="empty-state">
-    <div class="empty-state-icon">
-        <i class="bi bi-people"></i>
-    </div>
-    <h4>Nenhum usuário encontrado</h4>
-    <p class="text-muted">
-        {% if request.args.get('q') %}
-        Não encontramos usuários correspondentes à sua busca "{{ request.args.get('q') }}".
-        {% else %}
-        Não há usuários cadastrados no sistema.
-        {% endif %}
-    </p>
-    <a href="{{ url_for('admin.novo_usuario') }}" class="btn btn-primary">
-        <i class="bi bi-person-plus-fill me-1"></i> Adicionar Usuário
-    </a>
 </div>
 {% endif %}
-
 {% endblock %}
 
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Adiciona confirmação para exclusão de usuários
-        const deleteButtons = document.querySelectorAll('.btn-outline-danger');
-        deleteButtons.forEach(function(button) {
-            button.addEventListener('click', function(e) {
-                const confirmDelete = confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');
-                if (!confirmDelete) {
-                    e.preventDefault();
-                }
+        // Aplicação de filtros automática ao alterar valores
+        const autoSubmitElements = document.querySelectorAll('#role, #per_page');
+        autoSubmitElements.forEach(element => {
+            element.addEventListener('change', function() {
+                document.getElementById('filtrosForm').submit();
             });
         });
+        
+        // Ordenação da tabela
+        const thSortable = document.querySelectorAll('.th-sortable');
+        
+        thSortable.forEach(th => {
+            th.addEventListener('click', function() {
+                const sortKey = this.getAttribute('data-sort');
+                const currentSort = this.getAttribute('data-sort-direction');
+                const newSort = currentSort === 'asc' ? 'desc' : 'asc';
+                
+                // Atualiza a direção da ordenação no elemento
+                this.setAttribute('data-sort-direction', newSort);
+                
+                // Remove classes de ordenação de todos os cabeçalhos
+                thSortable.forEach(header => {
+                    header.classList.remove('text-primary');
+                    const icon = header.querySelector('.sort-icon');
+                    if (icon) {
+                        icon.classList.remove('bi-arrow-up', 'bi-arrow-down');
+                        icon.classList.add('bi-arrow-down-up');
+                    }
+                });
+                
+                // Adiciona classes para o cabeçalho atual
+                this.classList.add('text-primary');
+                const icon = this.querySelector('.sort-icon');
+                if (icon) {
+                    icon.classList.remove('bi-arrow-down-up');
+                    
+                    if (newSort === 'asc') {
+                        icon.classList.add('bi-arrow-up');
+                    } else {
+                        icon.classList.add('bi-arrow-down');
+                    }
+                }
+                
+                // Ordena a tabela
+                const table = this.closest('table');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                
+                // Função para obter o valor da célula
+                const getCellValue = (tr, idx) => {
+                    const cell = tr.children[idx];
+                    const content = cell.textContent.trim();
+                    
+                    // Converte para número se for um número
+                    if (!isNaN(content) && content !== '') {
+                        return parseFloat(content);
+                    }
+                    return content;
+                };
+                
+                // Obtém o índice da coluna a ser ordenada
+                const columnIndex = Array.from(th.parentNode.children).indexOf(th);
+                
+                // Função de comparação para ordenação
+                rows.sort((rowA, rowB) => {
+                    const valA = getCellValue(rowA, columnIndex);
+                    const valB = getCellValue(rowB, columnIndex);
+                    
+                    if (typeof valA === 'number' && typeof valB === 'number') {
+                        return newSort === 'asc' ? valA - valB : valB - valA;
+                    } else {
+                        return newSort === 'asc' 
+                            ? valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' }) 
+                            : valB.localeCompare(valA, 'pt-BR', { sensitivity: 'base' });
+                    }
+                });
+                
+                // Reordena as linhas na tabela
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+        
+        // Habilita tooltips para os botões de ação
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Mantém o filtro aberto se houver filtros ativos
+        const hasActiveFilters = {{ 'true' if search or role else 'false' }};
+        if (!hasActiveFilters) {
+            document.getElementById('filtrosCollapse').classList.remove('show');
+        }
     });
 </script>
 {% endblock %}
