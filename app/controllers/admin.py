@@ -20,7 +20,10 @@ def get_statistics():
         'total_cursos': Curso.query.count(),
         'total_envolvidos': Envolvido.query.count(),
         'total_orientadores': Envolvido.query.filter_by(tipo='Orientador').count(),
+        'total_coordenadores': Envolvido.query.filter_by(tipo='Coordenador').count(),
+        'total_atas': Envolvido.query.filter_by(tipo='ATA').count(),
         'total_facilitadores': Envolvido.query.filter_by(tipo='Facilitador').count(),
+        'total_apoio': Envolvido.query.filter_by(tipo='Apoio').count(),
         'unidades_por_tipo': {
             'Fatec': Unidade.query.filter_by(tipo='Fatec').count(),
             'Etec': Unidade.query.filter_by(tipo='Etec').count()
@@ -28,7 +31,6 @@ def get_statistics():
         'cidades': db.session.query(Unidade.cidade, db.func.count(Unidade.id))
                    .group_by(Unidade.cidade)
                    .order_by(db.func.count(Unidade.id).desc())
-                   .limit(10)
                    .all()
     }
     
